@@ -1,5 +1,4 @@
 import { MdOutlineHome } from "react-icons/md";
-import { BiUserPlus } from "react-icons/bi";
 
 const MenuItems = [
   {
@@ -7,11 +6,6 @@ const MenuItems = [
     text: "Dashboard",
     icon: <MdOutlineHome />,
   },
-  // {
-  //   path: "/users",
-  //   text: "Users",
-  //   icon: <BiUserPlus />,
-  // },
 ];
 
 export default MenuItems;

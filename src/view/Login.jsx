@@ -20,25 +20,21 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-   
     if (!formData.email || !formData.password) {
       NotifyData("Please enter email and password.", "error");
       return;
     }
 
     try {
-     
       const response = await dispatch(loginUser(formData));
 
       if (response?.meta?.requestStatus === "fulfilled") {
         NotifyData("Login Success", "success");
-        navigate("/users");
+        navigate("/dashboard");
       } else {
-     
         NotifyData(response?.payload || "Invalid email or password", "error");
       }
     } catch (error) {
-    
       console.error("Unexpected error during login:", error);
       NotifyData("Something went wrong. Please try again later.", "error");
     }
