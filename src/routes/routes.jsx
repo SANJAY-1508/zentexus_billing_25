@@ -3,6 +3,8 @@ import Login from "../view/Login";
 import Parties from "../view/listings/Parties/Parties";
 import items from "../view/listings/Items/items";
 import Sale from "../view/listings/Sale/sale";
+import PurchaseAndExpanse from "../view/listings/PurchaseAndExpanse/PuchaseAndExpanse";
+
  
 const routes = [
   {
@@ -23,7 +25,12 @@ const routes = [
   },
   {
     path:"/Sale",
-    component: Sale, }
+    component: Sale, 
+  },
+  {
+    path:"/purchaseAndExpanse",
+    component: PurchaseAndExpanse,
+  },
   
  
 ];

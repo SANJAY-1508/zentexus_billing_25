@@ -1,7 +1,11 @@
 import { MdOutlineHome } from "react-icons/md";
 import { MdOutlineGroup } from "react-icons/md"; 
 import { MdOutlineShoppingBag } from "react-icons/md";
-//import { MdOutliesaleShoppingCart } from "react-icons/md";
+import { MdOutlineSell } from "react-icons/md";
+import { MdOutlineShoppingCart } from "react-icons/md";
+
+
+
 
 
 const MenuItems = [
@@ -21,12 +25,16 @@ const MenuItems = [
     icon: <MdOutlineShoppingBag/>,
 
   },
-  [
+  {
     path: "/sale",
     text: "Sale",
-    icon: <MdOutlineShell/>,
-  ]
-
+    icon: <MdOutlineSell/>,
+  },
+  {
+    path:"/purchaseandexpanse",
+    text:"Purchase and Expanse",
+    icon: <MdOutlineShoppingCart/>,
+  },
 ];
 
 export default MenuItems;

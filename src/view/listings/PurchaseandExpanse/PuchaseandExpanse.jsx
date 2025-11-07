@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Col, Row } from "react-bootstrap";
 
-const PurchaseandExpanse = () => {
+const PurchaseAndExpanse = () => {
   return (
     <div id="main">
       <Container>
@@ -13,4 +13,4 @@ const PurchaseandExpanse = () => {
   );
 };
 
-export default PurchaseandExpanse;
+export default PurchaseAndExpanse;
