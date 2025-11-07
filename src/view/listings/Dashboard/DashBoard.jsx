@@ -6,7 +6,7 @@ const DashBoard = () => {
     <div id="main">
       <Container>
         <Row>
-          <Col xl="12"></Col>
+          <Col xl="12">eresgjk</Col>
         </Row>
       </Container>
     </div>
