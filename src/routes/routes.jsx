@@ -1,9 +1,10 @@
-import DashBoard from "../view/listings/Dashboard/Dashboard";
+import dashboard from "../view/listings/Dashboard/dashboard";
 import Login from "../view/Login";
-import Parties from "../view/listings/Parties/Parties";
+import parties from "../view/listings/Parties/parties";
 import items from "../view/listings/Items/items";
-import Sale from "../view/listings/Sale/sale";
-import PurchaseAndExpanse from "../view/listings/PurchaseAndExpanse/PuchaseAndExpanse";
+import sale from "../view/listings/Sale/sale";
+import purchaseandexpanse from "../view/listings/Purchaseandexpanse/purchaseandexpanse";
+import grow from "../view/listings/Grow/grow";
 
  
 const routes = [
@@ -12,24 +13,28 @@ const routes = [
     component: Login,
   },
   {
-    path: "/dashboard",
-    component: DashBoard,
+    path: "/Dashboard",
+    component: dashboard,
   },
   {
     path: "/parties",
-    component: Parties,
+    component: parties,
   },
   {
     path: "/items",
     component: items,
   },
   {
-    path:"/Sale",
-    component: Sale, 
+    path:"/sale",
+    component: sale,
   },
   {
-    path:"/purchaseAndExpanse",
-    component: PurchaseAndExpanse,
+    path:"/purchaseandexpanse",
+    component: purchaseandexpanse,
+  },
+  {
+    path:"/grow",
+    component: grow,
   },
   
  

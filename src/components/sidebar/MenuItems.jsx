@@ -35,6 +35,11 @@ const MenuItems = [
     text:"Purchase and Expanse",
     icon: <MdOutlineShoppingCart/>,
   },
+  {
+    path:"/grow",
+    tetx:"Grow Your Business"
+    
+  }
 ];
 
 export default MenuItems;

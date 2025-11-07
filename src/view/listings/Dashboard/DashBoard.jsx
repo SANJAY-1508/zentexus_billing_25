@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Col, Row } from "react-bootstrap";
 
-const DashBoard = () => {
+const DashBoard= () => {
   return (
     <div id="main">
       <Container>

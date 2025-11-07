@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Col, Row } from "react-bootstrap";
 
-const GrowYourBusiness = () => {
+const Grow = () => {
   return (
     <div id="main">
       <Container>
@@ -13,4 +13,4 @@ const GrowYourBusiness = () => {
   );
 };
 
-export default GrowYourBusiness;
+export default Grow;
