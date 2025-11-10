@@ -1,9 +1,10 @@
-import DashBoard from "../view/listings/Dashboard/Dashboard";
+import DashBoard from "../view/listings/Dashboard/DashBoard";
 import Login from "../view/Login";
 import Parties from "../view/listings/Parties/Parties";
-import items from "../view/listings/Items/items";
-import Sale from "../view/listings/Sale/sale";
-import PurchaseAndExpanse from "../view/listings/PurchaseAndExpanse/PuchaseAndExpanse";
+import items from "../view/listings/items/items";
+import Sale from "../view/listings/sale/sale";
+import PurchaseAndExpanse from "../view/listings/PurchaseandExpanse/PuchaseandExpanse";
+
 
  
 const routes = [
@@ -18,6 +19,7 @@ const routes = [
   {
     path: "/parties",
     component: Parties,
+    
   },
   {
     path: "/items",
@@ -31,6 +33,8 @@ const routes = [
     path:"/purchaseAndExpanse",
     component: PurchaseAndExpanse,
   },
+ 
+  
   
  
 ];
