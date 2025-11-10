@@ -1,4 +1,4 @@
-import DashBoard from "../view/listings/Dashboard/dashboard";
+
 import Login from "../view/Login";
 import Parties from "../view/listings/Parties/Parties";
 import items from "../view/listings/Items/items";
@@ -9,6 +9,8 @@ import Cash from "../view/listings/Cash/cash";
 import Reports from "../view/listings/Reports/reports";
 import Sync from "../view/listings/Sync/sync";
 import Updates from "../view/listings/Updates/updates";
+import DashBoard from "../view/listings/Dashboard/DashBoard";
+
 
  
 const routes = [
@@ -23,6 +25,7 @@ const routes = [
   {
     path: "/parties",
     component: Parties,
+    
   },
   {
     path: "/items",
@@ -56,6 +59,8 @@ const routes = [
     path: "/updates",
     component: Updates,
   },
+ 
+  
   
  
 ];
