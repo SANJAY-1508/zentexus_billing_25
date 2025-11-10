@@ -1,6 +1,9 @@
 import React from "react";
 import { Container, Row, Col, Card, Button, Dropdown } from "react-bootstrap";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+
 
 const DashBoard = () => {
   return (
@@ -12,6 +15,15 @@ const DashBoard = () => {
             <div className="mb-2 d-flex align-items-center">
               <span style={{ color: "red", fontWeight: "bold", fontSize: "1.5rem" }}>•</span>
               <span className="ms-2 text-muted">Enter Business Name</span>
+              {/* button */}
+              <div className="ms-auto d-flex align-items-center gap-2"> 
+                <Button variant="danger" 
+                style={{ fontWeight:600, borderRadius:"20px", minWidth:"110px"}} > +Add Sale
+                </Button>
+                 <Button variant="primary" 
+                style={{ fontWeight:600, borderRadius:"20px", minWidth:"110px"}} > +Add Purchase
+                </Button>
+               </div>  
             </div>
 
             {/* Receivable and Payable Cards */}

@@ -228,7 +228,7 @@ ul {
 
 .content {
   flex: 1;
-  margin-left: 235px;
+  /* margin-left: 235px; */
   transition: margin-left 0.3s ease;
   padding: 20px;
 }
@@ -242,12 +242,7 @@ ul {
   margin-left: 0;
 }
 /* Fix for content hidden behind header */
-.content {
-  margin-left: 235px;
-  margin-top: 75px; /* Push page below header */
-  padding: 20px;
-  transition: all 0.3s ease;
-}
+
 
 .toggle-sidebar .content {
   margin-left: 0;
