@@ -112,19 +112,19 @@ ul {
   transform: rotate(90deg); /* Adjust the rotation angle as needed */
 }
 
-/* #main,
+#main,
 #footer {
   margin-left: 228px;
   padding: 0 20px;
-} */
+}
 .toggle-sidebar .top-navbar {
   width: 100% !important;
 }
-/* .toggle-sidebar #main,
+.toggle-sidebar #main,
 .toggle-sidebar #footer,
 .toggle-sidebar .top-navbar {
   margin-left: 0px;
-} */
+}
 
 #main {
   margin-top: 0px;
@@ -182,6 +182,7 @@ ul {
 .side-bar::-webkit-scrollbar-corner {
   background: transparent; /* Hide the corner where both scrollbars meet */
 }
+<<<<<<< HEAD
 
 
 
@@ -264,3 +265,5 @@ ul {
 .toggle-sidebar .content {
   margin-left: 0;
 }   */
+=======
+>>>>>>> ddb2b3d1be645f253baa6963dbc566821ca5d21d
