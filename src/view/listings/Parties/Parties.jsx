@@ -5,7 +5,7 @@ import { addParty } from "../../../slice/partySlice";
 // import { FaPen } from "react-icons/fa";
 import { FaWhatsapp, FaClock, FaPen, FaCommentDots ,FaSearch} from "react-icons/fa";
 
- import {  } from "react-icons/fa";
+ import { Button } from "react-bootstrap";
 
 import PartyModal from "../Parties/PartyModal";
 // import "../Parties/Parties.css"
@@ -15,9 +15,12 @@ function Parties() {
   const { parties, selectedParty } = useSelector((state) => state.party);
   const [showModal, setShowModal] = useState(false);
 
-  const handleShow = () => setShowModal(true);
+  // const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
   const [isEdit, setIsEdit] = useState(false);
+   const [isEditing, setIsEditing] = useState(false);
+    const [businessName, setBusinessName] = useState("");
+  
 
 
   // Add default static party
@@ -43,9 +46,65 @@ function Parties() {
     <div className="d-flex vh-100">
       <div className="flex-grow-1 p-0 bg-light mt-5">
        
-        <div className="d-flex justify-content-end align-items-center mb-3 gap-4">
-  <h6 className="text-danger m-0 me-auto mt-0" style={{ lineHeight: "2.2" }}>• Enter Business Name</h6>
+        {/* <div className="d-flex justify-content-end align-items-center mb-3 gap-4"> */}
+  {/* <h6 className="text-danger m-0 me-auto mt-0" style={{ lineHeight: "2.2" }}>• Enter Business Name</h6> */}
   
+ <div className="mb-2 d-flex align-items-center justify-content-end">
+              <span
+                style={{ color: "red", fontWeight: "bold", fontSize: "1.5rem" }}
+              >
+                •
+              </span>
+
+              {isEditing ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginLeft: "8px",
+                  }}
+                >
+                  <input
+                className="text-danger m-0 me-auto mt-0"
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Enter Business Name"
+                    autoFocus
+                    style={{
+                      border: "1px solid #ccc",
+                      borderRadius: "6px",
+                      padding: "5px 10px",
+                      fontSize: "1rem",
+                      width: "250px",
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setIsEditing(false);
+                    }}
+                  />
+                  {/* Save Button */}
+                  <Button
+                    variant="info"
+                    onClick={() => {
+                      console.log("Saved business:", businessName);
+                      setIsEditing(false); // hide input after save
+                    }}
+                    style={{ borderRadius: "6px", fontWeight: 600, color:"white" }}
+                  >
+                    Save
+                  </Button>
+                </div>
+              ) : (
+                <span
+                  className="ms-2 text-muted"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setIsEditing(true)}
+                >
+                  {businessName || "Enter Business Name"}
+                </span>
+              )}
+ <div className="ms-auto d-flex align-items-center gap-2">
   <button
     type="button"
 
@@ -86,13 +145,13 @@ function Parties() {
     +
   </button>
 </div>
-
+</div>
 
         {/* Main Card */}
         <div className="card" style={{ border: "5px solid #cce7f3", borderTop: "transparent" }}>
           {/* Card Header */}
           <div className="bg-white d-flex justify-content-between align-items-center" style={{ borderBottom: "5px solid #cce7f3" }}>
-            <h5 className="m-4" style={{ borderTop: "transparent" }}>Parties</h5>
+            <h5 className="m-4" style={{ borderTop: "transparent", borderLeft:"transparent"}}>Parties</h5>
             {/* <button className="btn btn-danger rounded-pill px-3 mx-4" onClick={handleShow}>+ Add Party</button> */}
             
 <button
