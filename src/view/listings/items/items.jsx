@@ -1,26 +1,22 @@
 import React, { useState } from "react";
 import { Button, Table, Row, Col, Nav, Card } from "react-bootstrap";
-import { FaSearch,FaFilter } from "react-icons/fa";
+import { FaSearch, FaFilter } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./items.css"
- import { FaFileExcel } from "react-icons/fa";
- import ProModal from "./AdjustItem";
- import AddItem from "./AddItem";
- import AddCate from "./AddCate";
+import "./items.css";
+import { FaFileExcel } from "react-icons/fa";
+import AdjustItem from "./AdjustItem";
+import AddItem from "./AddItem";
+import AddCate from "./AddCate";
 import AddUnit from "./AddUnit";
 import AddConvo from "./AddConvo";
 
-
-
-
-
 function Items() {
   const [activeTab, setActiveTab] = useState("PRODUCT");
-  const [showProModal, setShowProModal] = useState(false);
-const [showAddItem, setShowAddItem] = useState(false);
-const [showCategoryModal, setShowCategoryModal] = useState(false);
-const [showUnitModal, setShowUnitModal] = useState(false);
-const [showConvoModal, setShowConvoModal] = useState(false);
+  const [showAdjustItem, setShowAdjustItem] = useState(false);
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showUnitModal, setShowUnitModal] = useState(false);
+  const [showConvoModal, setShowConvoModal] = useState(false);
 
   return (
     <div id="main" style={{ height: "100vh", overflow: "hidden" }}>
@@ -50,11 +46,8 @@ const [showConvoModal, setShowConvoModal] = useState(false);
           <Card className="vh-100">
             <Card.Body className="d-flex flex-column p-0">
               <div className="p-3 d-flex justify-content-between align-items-center">
-               <FaSearch 
-                     
-                    />
-               
-               
+                <FaSearch />
+
                 {/* <Button
   variant="warning"
   className="text-white fw-bold px-3"
@@ -71,27 +64,26 @@ const [showConvoModal, setShowConvoModal] = useState(false);
     ? "+ Add Category"
     : `+ Add ${activeTab}`}
 </Button> */}
-<Button
-  variant="warning"
-  className="text-white fw-bold px-3"
-  onClick={() => {
-    if (activeTab === "CATEGORY") setShowCategoryModal(true);
-    else if (activeTab === "UNITS") setShowUnitModal(true); // <-- new
-    else setShowAddItem(true);
-  }}
->
-  {activeTab === "PRODUCT"
-    ? "+ Add Item"
-    : activeTab === "SERVICE"
-    ? "+ Add Service"
-    : activeTab === "CATEGORY"
-    ? "+ Add Category"
-    : activeTab === "UNITS"
-    ? "+ Add Unit"
-    : `+ Add ${activeTab}`}
-</Button>
-
-
+                <Button
+                  variant="warning"
+                  className="text-white fw-bold px-3"
+                  onClick={() => {
+                    if (activeTab === "CATEGORY") setShowCategoryModal(true);
+                    else if (activeTab === "UNITS")
+                      setShowUnitModal(true); // <-- new
+                    else setShowAddItem(true);
+                  }}
+                >
+                  {activeTab === "PRODUCT"
+                    ? "+ Add Item"
+                    : activeTab === "SERVICE"
+                    ? "+ Add Service"
+                    : activeTab === "CATEGORY"
+                    ? "+ Add Category"
+                    : activeTab === "UNITS"
+                    ? "+ Add Unit"
+                    : `+ Add ${activeTab}`}
+                </Button>
               </div>
 
               {/* <div className="flex-grow-1 overflow-auto">
@@ -110,62 +102,65 @@ const [showConvoModal, setShowConvoModal] = useState(false);
                   </tbody>
                 </Table>
               </div> */}
-        <Table responsive bordered hover size="sm" className="mb-0 text-start">
-  <thead>
-    <tr>
-      {activeTab === "PRODUCT" ? (
-        <>
-          <th>ITEM</th>
-          <th>QUANTITY</th>
-        </>
-      ) : activeTab === "SERVICE" ? (
-        <th>ITEM</th>
-      ) : activeTab === "CATEGORY" ? (
-        <>
-          <th>CATEGORY</th>
-          <th>ITEM</th>
-        </>
-      ):(
-        <>
-        <th>FULL NAME</th>
-        <th>SHORT NAME</th>
-        </>
-      )}
-    </tr>
-  </thead>
+              <Table
+                responsive
+                bordered
+                hover
+                size="sm"
+                className="mb-0 text-start"
+              >
+                <thead>
+                  <tr>
+                    {activeTab === "PRODUCT" ? (
+                      <>
+                        <th>ITEM</th>
+                        <th>QUANTITY</th>
+                      </>
+                    ) : activeTab === "SERVICE" ? (
+                      <th>ITEM</th>
+                    ) : activeTab === "CATEGORY" ? (
+                      <>
+                        <th>CATEGORY</th>
+                        <th>ITEM</th>
+                      </>
+                    ) : (
+                      <>
+                        <th>FULL NAME</th>
+                        <th>SHORT NAME</th>
+                      </>
+                    )}
+                  </tr>
+                </thead>
 
-  <tbody>
-    {activeTab === "PRODUCT" ? (
-      <tr>
-        <td>sampleee</td>
-        <td>0</td>
-      </tr>
-    ) : activeTab === "SERVICE" ? (
-      <tr>
-        <td>serviceee</td>
-      </tr>
-    ) : activeTab === "CATEGORY" ? (
-      <tr>
-        <td>Items not in category</td>
-       <td>2</td>
-      </tr>
-    ):(
-      <>
-      <tr>
-        <td>Bags</td>
-        <td>Bag</td>
-      </tr>
-       <tr>
-        <td>Bottles</td>
-        <td>Btl</td>
-      </tr>
-      
-      </>
-    )}
-  </tbody>
-</Table>
-
-
+                <tbody>
+                  {activeTab === "PRODUCT" ? (
+                    <tr>
+                      <td>sampleee</td>
+                      <td>0</td>
+                    </tr>
+                  ) : activeTab === "SERVICE" ? (
+                    <tr>
+                      <td>serviceee</td>
+                    </tr>
+                  ) : activeTab === "CATEGORY" ? (
+                    <tr>
+                      <td>Items not in category</td>
+                      <td>2</td>
+                    </tr>
+                  ) : (
+                    <>
+                      <tr>
+                        <td>Bags</td>
+                        <td>Bag</td>
+                      </tr>
+                      <tr>
+                        <td>Bottles</td>
+                        <td>Btl</td>
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </Table>
             </Card.Body>
           </Card>
         </Col>
@@ -193,15 +188,14 @@ const [showConvoModal, setShowConvoModal] = useState(false);
                     </div>
                   </div>
                   <div className="text-end">
-                    
                     <Button
-  variant="primary bg-primary p-3"
-  className="mb-2 fw-semibold text-white"
-  style={{ borderRadius: "6px" }}
-  onClick={() => setShowProModal(true)} // <-- show modal
->
-  ADJUST ITEM
-</Button>
+                      variant="primary bg-primary p-3"
+                      className="mb-2 fw-semibold text-white"
+                      style={{ borderRadius: "6px" }}
+                      onClick={() => setShowAdjustItem(true)} // <-- show modal
+                    >
+                      ADJUST ITEM
+                    </Button>
 
                     <div className="small fw-normal">
                       <span className="text-danger"> ⚠ </span> STOCK QUANTITY:{" "}
@@ -265,7 +259,7 @@ const [showConvoModal, setShowConvoModal] = useState(false);
                       variant="primary bg-primary p-3"
                       className="mb-2 fw-semibold text-white"
                       style={{ borderRadius: "6px" }}
-                       onClick={() => setShowConvoModal(true)} 
+                      onClick={() => setShowConvoModal(true)}
                     >
                       ADD CONVERSATION
                     </Button>
@@ -306,59 +300,111 @@ const [showConvoModal, setShowConvoModal] = useState(false);
                       }}
                     />
                   </div>
-           
 
-<Button variant="light">
-  <FaFileExcel size={20} color="#217346" />
-</Button>
-
+                  <Button variant="light">
+                    <FaFileExcel size={20} color="#217346" />
+                  </Button>
                 </div>
               </div>
 
               {/* Tables for each tab */}
               {activeTab === "PRODUCT" && (
-                <Table responsive bordered hover size="sm" className="pro-table text-center mt-auto" >
-                  <thead >
-                    <tr >
-                      <th >TYPE<FaFilter className="fa-filter"/></th>
-                      <th>INVOICE <FaFilter className="fa-filter"/></th>
-                      <th>NAME<FaFilter className="fa-filter"/></th>
-                      <th>DATE<FaFilter className="fa-filter"/></th>
-                      <th>QUANTITY<FaFilter className="fa-filter"/></th>
-                      <th>PRICE<FaFilter className="fa-filter"/></th>
-                      <th>STATUS<FaFilter className="fa-filter"/></th>
+                <Table
+                  responsive
+                  bordered
+                  hover
+                  size="sm"
+                  className="pro-table text-center mt-auto"
+                >
+                  <thead>
+                    <tr>
+                      <th>
+                        TYPE
+                        <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        INVOICE <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        NAME
+                        <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        DATE
+                        <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        QUANTITY
+                        <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        PRICE
+                        <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        STATUS
+                        <FaFilter className="fa-filter" />
+                      </th>
                     </tr>
                   </thead>
                 </Table>
               )}
 
               {activeTab === "SERVICE" && (
-                <Table responsive bordered hover size="sm" className="pro-table text-center mt-auto">
+                <Table
+                  responsive
+                  bordered
+                  hover
+                  size="sm"
+                  className="pro-table text-center mt-auto"
+                >
                   <thead>
                     <tr>
-                      <th>TYPE <FaFilter className="fa-filter"/></th>
-                      <th>INVOICE <FaFilter className="fa-filter"/></th>
-                      <th>NAME <FaFilter className="fa-filter"/></th>
-                      <th>DATE <FaFilter className="fa-filter"/></th>
-                      <th>QUANTITY <FaFilter className="fa-filter"/></th>
-                      <th>PRICE <FaFilter className="fa-filter"/></th>
-                      <th>STATUS <FaFilter className="fa-filter"/></th>
+                      <th>
+                        TYPE <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        INVOICE <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        NAME <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        DATE <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        QUANTITY <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        PRICE <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        STATUS <FaFilter className="fa-filter" />
+                      </th>
                     </tr>
                   </thead>
                 </Table>
               )}
 
               {activeTab === "CATEGORY" && (
-                <Table responsive bordered
+                <Table
+                  responsive
+                  bordered
                   hover
                   size="sm"
                   className="pro-table text-center mt-auto text-muted"
                 >
                   <thead>
                     <tr>
-                      <th>NAME <FaFilter className="fa-filter"/></th>
-                      <th>QUANTITY <FaFilter className="fa-filter"/></th>
-                      <th>STOCK VALUE <FaFilter className="fa-filter"/></th>
+                      <th>
+                        NAME <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        QUANTITY <FaFilter className="fa-filter" />
+                      </th>
+                      <th>
+                        STOCK VALUE <FaFilter className="fa-filter" />
+                      </th>
                     </tr>
                     <tr>
                       <td>Sampleee</td>
@@ -375,7 +421,13 @@ const [showConvoModal, setShowConvoModal] = useState(false);
               )}
 
               {activeTab === "UNITS" && (
-                <Table responsive bordered hover size="sm" className="pro-table mt-auto">
+                <Table
+                  responsive
+                  bordered
+                  hover
+                  size="sm"
+                  className="pro-table mt-auto"
+                >
                   <thead>
                     <tr>
                       <th>CONVERSION </th>
@@ -392,33 +444,25 @@ const [showConvoModal, setShowConvoModal] = useState(false);
           </Card>
         </Col>
       </Row>
-      <ProModal
-  show={showProModal}
-  onHide={() => setShowProModal(false)}
-  itemName="SAMPLEEE" 
-/>
-{/* <AddModal show={showAddModal} onHide={() => setShowAddModal(false)} />
- */}
- <AddItem
-  show={showAddItem}
-  onHide={() => setShowAddItem(false)}
-  activeTab={activeTab}
-/>
+      <AdjustItem
+        show={showAdjustItem}
+        onHide={() => setShowAdjustItem(false)}
+        itemName="SAMPLEEE"
+      />
+      {/* <AddModal show={showAddModal} onHide={() => setShowAddModal(false)} />
+       */}
+      <AddItem
+        show={showAddItem}
+        onHide={() => setShowAddItem(false)}
+        activeTab={activeTab}
+      />
 
-
-<AddCate
-  show={showCategoryModal}
-  onHide={() => setShowCategoryModal(false)}
-/>
-<AddUnit
-  show={showUnitModal}
-  onHide={() => setShowUnitModal(false)}
-/>
-<AddConvo
-  show={showConvoModal}
-  onHide={() => setShowConvoModal(false)}
-/>
-
+      <AddCate
+        show={showCategoryModal}
+        onHide={() => setShowCategoryModal(false)}
+      />
+      <AddUnit show={showUnitModal} onHide={() => setShowUnitModal(false)} />
+      <AddConvo show={showConvoModal} onHide={() => setShowConvoModal(false)} />
     </div>
   );
 }

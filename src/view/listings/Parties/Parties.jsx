@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   FaWhatsapp,
@@ -7,7 +6,7 @@ import {
   FaCommentDots,
   FaSearch,
 } from "react-icons/fa";
-import { Button ,Table } from "react-bootstrap";
+import { Button, Table } from "react-bootstrap";
 import PartyModal from "./PartyModal";
 
 function Parties() {
@@ -147,26 +146,26 @@ function Parties() {
         </div>
 
         {/* Outer Card */}
-       
-          {/* Header */}
-          <div
-            className="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded shadow-sm"
-            style={{
-              marginBottom: "15px",
+
+        {/* Header */}
+        <div
+          className="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded shadow-sm"
+          style={{
+            marginBottom: "15px",
+          }}
+        >
+          <h5 className="m-0">Parties</h5>
+          <button
+            className="btn btn-danger rounded-pill px-3"
+            onClick={() => {
+              setShowModal(true);
+              setIsEdit(false);
             }}
           >
-            <h5 className="m-0">Parties</h5>
-            <button
-              className="btn btn-danger rounded-pill px-3"
-              onClick={() => {
-                setShowModal(true);
-                setIsEdit(false);
-              }}
-            >
-              + Add Party
-            </button>
-          </div>
- <div
+            + Add Party
+          </button>
+        </div>
+        <div
           className="card mx-auto shadow-sm mt-3"
           style={{
             border: "none",
@@ -280,7 +279,13 @@ function Parties() {
                   {/* Transactions Card */}
                   <div className="bg-white shadow-sm rounded p-4 vh-100">
                     <h6 className="mb-3">Transactions</h6>
-                    <Table responsive bordered hover size="sm" className=" table align-middle text-center">
+                    <Table
+                      responsive
+                      bordered
+                      hover
+                      size="sm"
+                      className=" table align-middle text-center"
+                    >
                       <thead>
                         <tr>
                           <td className="text-secondary">Type</td>

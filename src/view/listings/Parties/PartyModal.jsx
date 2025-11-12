@@ -1,11 +1,18 @@
 
+ 
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col, Nav } from "react-bootstrap";
 import StateSelect from "./States";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function PartyModal({ show, handleClose, isEdit }) {
   const [activeTab, setActiveTab] = useState("gst");
-
+  const [asOfDate, setAsOfDate] = useState(new Date());
+  const [limitType, setLimitType] = useState("no"); // "no" or "custom"
+  const [creditLimit, setCreditLimit] = useState("");
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+const [shippingAddress, setShippingAddress] = useState("");
 
 
   return (
@@ -15,6 +22,7 @@ function PartyModal({ show, handleClose, isEdit }) {
       </Modal.Header>
 
       <Modal.Body>
+        {/* Top fields */}
         <Row className="mb-3">
           <Col>
             <Form.Control type="text" placeholder="Party Name *" />
@@ -27,6 +35,7 @@ function PartyModal({ show, handleClose, isEdit }) {
           </Col>
         </Row>
 
+        {/* Tabs */}
         <Nav
           variant="tabs"
           activeKey={activeTab}
@@ -44,6 +53,7 @@ function PartyModal({ show, handleClose, isEdit }) {
           </Nav.Item>
         </Nav>
 
+        {/* GST TAB */}
         {activeTab === "gst" && (
           <Row>
             <Col md={4}>
@@ -72,39 +82,216 @@ function PartyModal({ show, handleClose, isEdit }) {
             <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Billing Address</Form.Label>
-                <Form.Control as="textarea" rows={3} placeholder="Billing Address" />
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  placeholder="Billing Address"
+                />
+              </Form.Group>
+            </Col>
+
+           
+
+<Col md={4}>
+  <Form.Label>Shipping Address</Form.Label>
+  <div>
+    {isEditingAddress ? (
+      <div>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          placeholder="Enter address"
+          value={shippingAddress}
+          onChange={(e) => setShippingAddress(e.target.value)}
+          autoFocus
+        />
+        <div className="text-end mt-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsEditingAddress(false)}
+            style={{ backgroundColor: "#4a93dcff", border: "none" }}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <Button
+        variant="link"
+        className="p-0 text-primary"
+        onClick={() => setIsEditingAddress(true)}
+      >
+        {shippingAddress ? shippingAddress : "+ Add Address"}
+      </Button>
+    )}
+  </div>
+</Col>
+
+          </Row>
+        )}
+
+        {/* CREDIT TAB */}
+        {activeTab === "credit" && (
+          <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Control type="number" placeholder="Opening Balance" />
               </Form.Group>
             </Col>
 
             <Col md={4}>
-              <Form.Label>Shipping Address</Form.Label>
-              <div>
-                <Button variant="link" className="p-0 text-primary">
-                  + Add New Address
-                </Button>
-              </div>
+              <Form.Group className="mb-3">
+                <DatePicker
+                  selected={asOfDate}
+                  onChange={(date) => setAsOfDate(date)}
+                  className="form-control"
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="As of Date"
+                />
+              </Form.Group>
+            </Col>
+
+            
+              <Form.Group className="mb-3">
+                {/* Toggle between No Limit and Custom Limit */}
+                <div
+                  className="d-flex position-relative mt-2"
+                  style={{
+                    marginLeft:"0",
+                    width: "290px",
+                    borderRadius: "50px",
+                    padding: "2px",
+                    justifyContent: "space-between",
+                    backgroundColor: "#e9f3ff",
+                  }}
+                >
+                  <div
+                    className="position-absolute bg-primary"
+                    style={{
+                      width: "130px",
+                      height: "85%",
+                      borderRadius: "50px",
+                      transition: "transform 0.3s",
+                      transform:
+                        limitType === "no"
+                          ? "translateX(0%)"
+                          : "translateX(calc(100% + 24px))",
+                    }}
+                  ></div>
+
+                  <Button
+                    variant="transparent"
+                    className={`flex-grow-1 ${
+                      limitType === "no" ? "text-white" : "text-primary"
+                    }`}
+                    onClick={() => setLimitType("no")}
+                    style={{
+                      zIndex: 1,
+                      borderRadius: "50px",
+                      width: "130px",
+                    }}
+                  >
+                    No Limit
+                  </Button>
+
+                  <div
+                    className="px-1"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#0d6efd",
+                      fontSize: "1.2rem",
+                      zIndex: 1,
+                    }}
+                  >
+                    ⇄
+                  </div>
+
+                  <Button
+                    variant="transparent"
+                    className={`flex-grow-1 ${
+                      limitType === "custom" ? "text-white" : "text-primary"
+                    }`}
+                    onClick={() => setLimitType("custom")}
+                    style={{
+                      zIndex: 1,
+                      borderRadius: "50px",
+                      width: "130px",
+                    }}
+                  >
+                    Custom Limit
+                  </Button>
+                </div>
+
+                {limitType === "custom" && (
+                  <Form.Control
+                    type="number"
+                    placeholder="Enter Credit Limit"
+                    value={creditLimit}
+                    onChange={(e) => setCreditLimit(e.target.value)}
+                    className="mt-3"
+                  />
+                )}
+              </Form.Group>
+            
+          </Row>
+        )}
+
+        {/* ADDITIONAL TAB */}
+        {activeTab === "additional" && (
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3 d-flex align-items-center">
+                <Form.Check type="checkbox" className="me-2" />
+                <Form.Control type="text" placeholder="Additional Field 1" />
+              </Form.Group>
+
+              <Form.Group className="mb-3 d-flex align-items-center">
+                <Form.Check type="checkbox" className="me-2" />
+                <Form.Control type="text" placeholder="Additional Field 2" />
+              </Form.Group>
+
+              <Form.Group className="mb-3 d-flex align-items-center">
+                <Form.Check type="checkbox" className="me-2" />
+                <Form.Control type="text" placeholder="Additional Field 3" />
+              </Form.Group>
+
+              <Form.Group className="mb-3 d-flex align-items-center">
+                <Form.Check type="checkbox" className="me-2" />
+                
+
+                <DatePicker
+                  selected={asOfDate}
+                  onChange={(date) => setAsOfDate(date)}
+                  className="form-control"
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select Date"
+                />
+              </Form.Group>
             </Col>
           </Row>
         )}
       </Modal.Body>
 
-      {/* Footer Buttons */}
+      {/* Footer */}
       <Modal.Footer>
         {isEdit ? (
           <>
-            <Button variant="danger" className="px-4 py-2" >
+            <Button variant="danger" className="px-4 py-2">
               Delete
             </Button>
-            <Button variant="primary bg-primary" className="text-white px-4 py-2">
+            <Button
+              variant="primary bg-primary"
+              className="text-white px-4 py-2"
+            >
               Update
             </Button>
           </>
         ) : (
           <>
-            <Button variant="outline-primary" className="">
-              Save & New
-            </Button>
-            <Button variant="primary bg-primary" className=" text-white px-4 py-2">
+            <Button variant="outline-primary">Save & New</Button>
+            <Button variant="primary bg-primary" className="text-white px-4 py-2">
               Save
             </Button>
           </>

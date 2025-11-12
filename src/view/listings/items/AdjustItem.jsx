@@ -13,15 +13,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "./items.css";
 
-function ProModal({ show, onHide, itemName = "sampleee" }) {
+function AdjustItem({ show, onHide, itemName = "sampleee" }) {
   const [type, setType] = useState("add");
-  const [qty, setQty] = useState("");
-  const [price, setPrice] = useState("");
-  const [details, setDetails] = useState("");
+  // const [qty, setQty] = useState("");
+  // const [price, setPrice] = useState("");
+  // const [details, setDetails] = useState("");
   const [date, setDate] = useState(new Date());
 
   const handleSave = () => {
-    console.log({ type, qty, price, details, date });
+    console.log({ type,   date });
     onHide();
   };
 
@@ -95,8 +95,8 @@ function ProModal({ show, onHide, itemName = "sampleee" }) {
               <Form.Control
                 type="number"
                 placeholder="Total Qty"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
+                // value={qty}
+                // onChange={(e) => setQty(e.target.value)}
               />
             </Form.Group>
           </Col>
@@ -105,8 +105,8 @@ function ProModal({ show, onHide, itemName = "sampleee" }) {
               <Form.Control
                 type="number"
                 placeholder="At Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                // value={price}
+                // onChange={(e) => setPrice(e.target.value)}
               />
             </Form.Group>
           </Col>
@@ -115,8 +115,8 @@ function ProModal({ show, onHide, itemName = "sampleee" }) {
               <Form.Control
                 type="text"
                 placeholder="Details"
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
+                // value={details}
+                // onChange={(e) => setDetails(e.target.value)}
               />
             </Form.Group>
           </Col>
@@ -124,7 +124,7 @@ function ProModal({ show, onHide, itemName = "sampleee" }) {
 
         {/* Footer */}
         <div className="text-end">
-          <Button variant="primary" onClick={handleSave}>
+          <Button variant="primary"  onClick={handleSave}>
             Save
           </Button>
         </div>
@@ -133,4 +133,4 @@ function ProModal({ show, onHide, itemName = "sampleee" }) {
   );
 }
 
-export default ProModal;
+export default AdjustItem;
