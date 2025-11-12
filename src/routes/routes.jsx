@@ -58,14 +58,12 @@ const routes = [
     component: Updates,
   },
   {
-  path: "/dashboardsale",
-  component: DashboardSale,
+    path: "/dashboardsale",
+    component: DashboardSale,
   },
   {
-    path:"/dashboardpurchase",
+    path: "/dashboardpurchase",
     component: DashboardPurchase,
   },
-
-
 ];
 export default routes;
