@@ -93,16 +93,7 @@ const DashboardPurchase= () => {
         <Col>
           <h5 className="sale-title">
             Purchase{" "}
-            <span
-              className={`credit-toggle ${credit ? "active" : ""}`}
-              onClick={toggleCredit}>Credit</span>{" "}
-            <Form.Check
-              type="switch"
-              id="credit-switch"
-              checked={credit}
-              onChange={toggleCredit}
-              className="mx-2"/>
-            <span className={`cash-label ${!credit ? "active" : ""}`}>Cash</span>
+            
           </h5>
         </Col>
          <Col xs="auto" className="ms-auto">

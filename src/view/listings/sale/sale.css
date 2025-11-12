@@ -179,3 +179,12 @@
 .btn-sale{
   background-color: red;
 }
+/* In your CSS file (e.g., style.css or component.css) */
+.custom-tall-button {
+  min-height: 45px; /* Define the minimum height you require */
+  display: flex; /* Use flex to vertically center content */
+  align-items: center;
+  justify-content: center;
+}
+
+

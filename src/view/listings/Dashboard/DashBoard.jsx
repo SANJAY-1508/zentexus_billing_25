@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Container, Row, Col, Card, Button, Dropdown } from "react-bootstrap";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useNavigate } from "react-router-dom";
 
 
 
 const DashBoard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [businessName, setBusinessName] = useState("");
+  const navigate = useNavigate();
 
   return (
     <div id="main" style={{backgroundColor:"#DEE2E6",minHeight: "100vh"}}>
@@ -79,6 +81,7 @@ const DashBoard = () => {
                     borderRadius: "20px",
                     minWidth: "110px",
                   }}
+                  onClick={() => navigate("/dashboardsale")}
                 >
                   +Add Sale
                 </Button>
@@ -88,7 +91,7 @@ const DashBoard = () => {
                     fontWeight: 600,
                     borderRadius: "20px",
                     minWidth: "110px",
-                  }}
+                  }}onClick={() => navigate("/dashboardpurchase")}
                 >
                   +Add Purchase
                 </Button>

@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import {Container, Row, Col, Form, Button, InputGroup,Table,} from "react-bootstrap";
+import { Container, Row, Col, Form, Button, InputGroup, Table, } from "react-bootstrap";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const initialRows = [
-  {id: 1,item: "", qty: "", unit: "NONE",priceUnitType: "Without Tax",price: "",discountPercent: "",discountAmount: "",
-    taxPercent: "",taxAmount: "", amount: "",
+  {
+    id: 1, item: "", qty: "", unit: "NONE", priceUnitType: "Without Tax", price: "", discountPercent: "", discountAmount: "",
+    taxPercent: "", taxAmount: "", amount: "",
   },
 ];
 
@@ -51,8 +52,9 @@ const DashboardSale = () => {
         // Calculate discount amount from percent if not directly set
         let discAmt = discountAmountNum;
         if (discountPercentNum && !discountAmountNum) {
-          discAmt = ((priceNum * qtyNum) * discountPercentNum) / 100;}
-        
+          discAmt = ((priceNum * qtyNum) * discountPercentNum) / 100;
+        }
+
 
         // Calculate tax amount based on taxable amount after discount
         const taxableAmount = priceNum * qtyNum - discAmt;
@@ -75,8 +77,10 @@ const DashboardSale = () => {
   // Add new row to the items table
   const addRow = () => {
     const newId = rows.length ? rows[rows.length - 1].id + 1 : 1;
-    const newRow = {id: newId,item: "",qty: "",unit: "NONE",priceUnitType: "Without Tax", price: "",discountPercent: "",
-       discountAmount: "",taxPercent: "", taxAmount: "", amount: "",};setRows([...rows, newRow]);
+    const newRow = {
+      id: newId, item: "", qty: "", unit: "NONE", priceUnitType: "Without Tax", price: "", discountPercent: "",
+      discountAmount: "", taxPercent: "", taxAmount: "", amount: "",
+    }; setRows([...rows, newRow]);
   };
 
   // Calculate totals for qty, discount, tax, and amount
@@ -92,67 +96,68 @@ const DashboardSale = () => {
 
   return (
     <div id="main">
-      
+
       <Container fluid className="dashboard-sale-container">
-        
+
         {/* Header with Sale and Credit/Cash toggle */}
         <Row className="sale-header align-items-center mt-5">
           <Col xs="auto" className="d-flex align-items-center">
-  <h5 className="mb-0 me-2" style={{ fontWeight: 'bold' }}>Sale</h5>
+            <h5 className="mb-0 me-2" style={{ fontWeight: 'bold' }}>Sale</h5>
 
-  <span
-    className="me-2"
-    onClick={() => setCredit(true)}
-    style={{ 
-      cursor: "pointer", 
-      color: credit ? "blue" : "black", 
-      fontWeight: credit? "bold" : "normal",
-      userSelect: 'none'
-    }}
-  >
-    Credit
-  </span>
+            <span
+              className="me-2"
+              onClick={() => setCredit(true)}
+              style={{
+                cursor: "pointer",
+                color: credit ? "black" : "blue",
+                fontWeight: credit ? "normal" : "bold",
+                userSelect: 'none'
+              }}
+            >
+              Credit
+            </span>
 
-  <Form.Check
-    type="switch"
-    id="credit-switch"
-    checked={credit}
-    onChange={() => setCredit(prev => !prev)}
-    // className="mx-2"
-    style={{ cursor: "pointer" }}
-  />
+            <Form.Check
+              type="switch"
+              id="credit-switch"
+              checked={credit}
+              onChange={() => setCredit(prev => !prev)}
+              // className="mx-2"
+              style={{ cursor: "pointer" }}
+            />
 
-  <span
-    // className="ms-2"
-    onClick={() => setCredit(false)}
-    style={{ 
-      cursor: "pointer", 
-      color: !credit ? "blue" : "black",
-      fontWeight: !credit ? "bold" : "normal",
-      userSelect: 'none'
-    }}
-  >
-    Cash
-  </span>
-</Col>
+            <span
+              // className="ms-2"
+              onClick={() => setCredit(false)}
+              style={{
+                cursor: "pointer",
+                color: !credit ? "black" : "blue",
+                fontWeight: !credit ? "normal" : "bold",
+                userSelect: 'none'
+              }}
+            >
+              Cash
+            </span>
+          </Col>
 
           <Col xs="auto" className="ms-auto">
-        <Button
-           variant="light"
-           onClick={() => navigate("/sale")}
-           style={{
-           border: "1px solid #ccc",
-           borderRadius: "50%",
-           padding: "4px 8px",
-         }}><FaTimes /></Button>
-     </Col>
-      
-    
- 
-      </Row>
+            <Button
+              variant="light"
+              onClick={() => navigate("/sale")}
+              style={{
+                border: "1px solid #ccc",
+                borderRadius: "50%",
+                padding: "4px 8px",
+              }}><FaTimes /></Button>
+          </Col>
+
+
+
+        </Row>
 
         {/* Top form: Customer, Billing Name, Phone No. */}
         <Row className="mb-3 align-items-center">
+          
           <Col xs={2}>
             <Form.Group controlId="customerSelect">
               <Form.Label>
@@ -161,10 +166,10 @@ const DashboardSale = () => {
               <Form.Select
                 value={customer}
                 onChange={(e) => setCustomer(e.target.value)}>
-              
-                
+
+
                 <option value="Customer 1">Customer</option>
-              
+
               </Form.Select>
             </Form.Group>
           </Col>
@@ -185,20 +190,21 @@ const DashboardSale = () => {
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone No."/>
-              </Form.Group>
+                placeholder="Phone No." />
+            </Form.Group>
           </Col>
-          <Col xs={2}>
+          <Col xs={2} className="ms-auto"></Col>
           
-            
+         
 
+          <Col xs={2}>
             <Form.Group controlId="invoiceNumber">
               <Form.Label>Invoice Number</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Invoice Number"
                 value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}/>
+                onChange={(e) => setInvoiceNumber(e.target.value)} />
             </Form.Group>
           </Col>
           <Col xs={2}>
@@ -207,61 +213,63 @@ const DashboardSale = () => {
               <Form.Control
                 type="date"
                 value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}/>  
+                onChange={(e) => setInvoiceDate(e.target.value)} />
             </Form.Group>
           </Col>
-          
+
+          <Col xs={2}>
+              <Form.Group controlId="stateOfSupply" className="state-supply-group">
+                <Form.Label>State of supply</Form.Label>
+                <Form.Select
+                  value={stateOfSupply}
+                  onChange={(e) => setStateOfSupply(e.target.value)}
+                  className="state-select">
+                  <option value="">Select</option>
+                  <option value="AndraPradesh">AndraPradesh</option>
+                  <option value="Kerala">Kerala</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Maharastra">Maharastra</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Mumbai">Munbai</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+
         </Row>
 
         {/* Addresses: Billing Address, Shipping Address */}
-        {!credit && (
-        <Row className="mb-4">
-          <Col xs={3}>
-            <Form.Group controlId="billingAddress">
-              <Form.Label>Billing Address</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={billingAddress}
-                onChange={(e) => setBillingAddress(e.target.value)}
-                placeholder="Billing Address"/>
-              
-            </Form.Group>
-          </Col>
-          <Col xs={3}>
-            <Form.Group controlId="shippingAddress">
-              <Form.Label>Shipping Address</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)}
-                placeholder="Shipping Address"/>
-            </Form.Group>
-          </Col>
-          <Col xs={2}>
-            <Form.Group controlId="stateOfSupply" className="state-supply-group">
-              <Form.Label>State of supply</Form.Label>
-              <Form.Select
-                value={stateOfSupply}
-                onChange={(e) => setStateOfSupply(e.target.value)}
-                className="state-select">
-                <option value="">Select</option>
-                <option value="AndraPradesh">AndraPradesh</option>
-                <option value="Kerala">Kerala</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Maharastra">Maharastra</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Mumbai">Munbai</option>
-              </Form.Select>
-            </Form.Group>
-          </Col>
-          
-        </Row>
+        {credit && (
+          <Row className="mb-4">
+            <Col xs={3}>
+              <Form.Group controlId="billingAddress">
+                <Form.Label>Billing Address</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={billingAddress}
+                  onChange={(e) => setBillingAddress(e.target.value)}
+                  placeholder="Billing Address" />
+
+              </Form.Group>
+            </Col>
+            <Col xs={3}>
+              <Form.Group controlId="shippingAddress">
+                <Form.Label>Shipping Address</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="Shipping Address" />
+              </Form.Group>
+            </Col>
+            
+          </Row>
         )}
         {/* Invoice info on a single row */}
         {/* <Row className="customer-info-row mb-4"> */}
-          
+
         {/* </Row> */}
 
         {/* Items table */}
