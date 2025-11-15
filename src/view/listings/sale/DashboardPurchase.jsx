@@ -17,6 +17,7 @@ import {
   DropDown,
   Calender,
 } from "../../../components/Forms";
+import PartyModal from "../Parties/PartyModal";
 const units = ["NONE", "KG", "Litre", "Piece"];
 const priceUnitTypes = ["Without Tax", "With Tax"];
 const taxOptions = ["Select", "5%", "12%", "18%", "28%"];
@@ -56,6 +57,7 @@ const stateOfSupplyOptions = [
 ];
 const DashboardPurchase = () => {
   // State variables for top form section
+  
   const [credit, setCredit] = useState(true);
   const [customer, setCustomer] = useState("");
   const [billingName, setBillingName] = useState("");
@@ -69,7 +71,13 @@ const DashboardPurchase = () => {
   const [stateOfSupply, setStateOfSupply] = useState("");
   const [rows, setRows] = useState(initialRows);
   const [roundOff, setRoundOff] = useState(0);
- 
+//add party 
+
+ const [showPartyModal, setShowPartyModal] = useState(false);
+
+ // ➕ Add Party Modal Handler
+  const openPartyModel = () =>setShowPartyModal(true);
+  const closePartyModel = () =>setShowPartyModal(false);
   // Handle row value change, calculates amounts dynamically
   const onRowChange = (id, field, value) => {
     const updatedRows = rows.map((row) => {
@@ -172,12 +180,22 @@ const DashboardPurchase = () => {
                       Name<span style={{ color: "red" }}>*</span>
                     </span>
                   }
-                  placeholder="Select Customer"
+                
                   value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  name="customer"
-                  options={customerOptions}
-                />
+                   onChange={(e) => {
+                    if (e.target.value === "add_party") {
+                      setShowPartyModal(true);
+                    } else {
+                      setCustomer(e.target.value);
+                    }
+                  }}
+                
+                 name="customer"
+                  options={[
+                    ...customer,
+                    { value: "add_party", label: "+ Add Party" },
+                  ]}
+                  />
               </Col>
               <Col xs={6} lg={6}>
                 <TextInputform
@@ -463,6 +481,11 @@ const DashboardPurchase = () => {
           </Col>
         </Row>
       </Container>
+      {/* PARTY MODAL */}
+            <PartyModal
+              show={showPartyModal}
+              handleClose={closePartyModel}
+              isEdit={false}/>
     </div>
   );
 };
