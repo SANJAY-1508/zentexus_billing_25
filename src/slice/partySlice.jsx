@@ -5,7 +5,7 @@ import * as partyService from "../services/PartyService";
 // Fetch all parties
 // src/slice/partySlice.js
 
-<<<<<<< HEAD
+
 // Fetch all parties
 export const fetchParties = createAsyncThunk(
   "party/fetchParties",
@@ -26,7 +26,7 @@ export const fetchParties = createAsyncThunk(
   }
 );
 
-=======
+
 // const partySlice = createSlice({
 //   name: "party",
 //   initialState: {
@@ -49,33 +49,33 @@ export const fetchParties = createAsyncThunk(
 // export const { setParties, addParty } = partySlice.actions;
 // export default partySlice.reducer;
 // src/slice/partySlice.js
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import * as partyService from "../services/PartyService";
+// import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// import * as partyService from "../services/PartyService";
 
-// Fetch all parties
-// src/slice/partySlice.js
+// // Fetch all parties
+// // src/slice/partySlice.js
 
-// Fetch all parties
-export const fetchParties = createAsyncThunk(
-  "party/fetchParties",
-  // FIX: Accept 'searchText' here
-  async (searchText, { rejectWithValue }) => {
-    try {
-      // 1. Await the response from the service, PASSING searchText
-      const response = await partyService.getParties(searchText); 
+// // Fetch all parties
+// export const fetchParties = createAsyncThunk(
+//   "party/fetchParties",
+//   // FIX: Accept 'searchText' here
+//   async (searchText, { rejectWithValue }) => {
+//     try {
+//       // 1. Await the response from the service, PASSING searchText
+//       const response = await partyService.getParties(searchText); 
       
-      // 2. Extract the actual array from the nested 'body.parties' property
-      const partiesArray = response?.body?.parties || []; 
+//       // 2. Extract the actual array from the nested 'body.parties' property
+//       const partiesArray = response?.body?.parties || []; 
       
-      // 3. Return only the array to Redux
-      return partiesArray; 
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
+//       // 3. Return only the array to Redux
+//       return partiesArray; 
+//     } catch (error) {
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
 
->>>>>>> 71e4bea4fb31dd9e36f9164421fe14d3a7738b81
+
 // ... other code remains the same
 
 // Add new party

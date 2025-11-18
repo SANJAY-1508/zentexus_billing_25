@@ -38,21 +38,32 @@ const Sale = () => {
   const [invoiceType, setInvoiceType] = useState("Sale Invoices");
   const [selectedPeriod, setSelectedPeriod] = useState("This Month");
   const [selectedFirm, setSelectedFirm] = useState("All Firms");
-  const [editingSale, setEditingSale] = useState(null); // sale object being edited
-const [showEditModal, setShowEditModal] = useState(false);
+//   const [editingSale, setEditingSale] = useState(null); // sale object being edited
+// const [showEditModal, setShowEditModal] = useState(false);
 const [addingSale, setAddingSale] = useState(false);
 const [addOrUpdateSale, setAddOrUpdateSale] = useState(null);
 
+
+
+const handleView = (sale) => {
+  navigate("/dashboardsale", { state: { saleData: sale, readOnly: true } });
+};
   
 
   const [salesList, setSalesList] = useState([]);
+  console.log(salesList)
 
   // Fetch sales from API (using getParties for now — replace when sales API ready)
   useEffect(() => {
     const fetchSales = async () => {
-      const data = await getSales(""); // returns array
-      setSalesList(data);
-    };
+      const response = await getSales();
+      try{
+      const sales=response?.body?.sales ||response|| [];
+      setSalesList(sales);
+    } catch (err) {
+      console.error("failed to fetch",err)
+    }
+  };
 
     fetchSales();
   }, []);
@@ -81,10 +92,10 @@ const [addOrUpdateSale, setAddOrUpdateSale] = useState(null);
     alert("Something went wrong while deleting the sale.");
   }
 };
-const handleEdit = (sale) => {
-  setEditingSale(sale);
-  setShowEditModal(true);
-};
+// const handleEdit = (sale) => {
+//   setEditingSale(sale);
+//   setShowEditModal(true);
+// };
 
 
   return (
@@ -302,7 +313,7 @@ const handleEdit = (sale) => {
             {/* Transactions section */}
             <Row className="transactions-header align-items-center mb-2">
               <Col>
-                <div className="transactions-title">Transactions</div>
+                <div className="transactions-title font-size:50px">Transactions</div>
               </Col>
 
               <Col className="d-flex justify-content-end gap-2">
@@ -359,7 +370,7 @@ const handleEdit = (sale) => {
                         <td>Sale Invoice</td>
                         <td>{sale.payment_type || "Cash"}</td>
 
-                        <td>₹ {parseFloat(sale.total || 0).toFixed(2)}</td>
+                        <td>₹ {Number(sale.total || 0).toFixed(2)}</td>
 
                         <td>₹ 0</td>
 
@@ -410,8 +421,13 @@ const handleEdit = (sale) => {
                             </Dropdown.Toggle>
 
                             <Dropdown.Menu>
-                              <Dropdown.Item>View</Dropdown.Item>
-                              <Dropdown.Item onClick={() => handleEdit(sale)}>Edit</Dropdown.Item>
+                              {/* <Dropdown.Item>View</Dropdown.Item> */}
+                              <Dropdown.Item onClick={() => handleView(sale)}>View</Dropdown.Item>
+
+                             <Dropdown.Item onClick={() => navigate("/dashboardsale", { state: { sale } })}>
+                               Edit
+                              </Dropdown.Item>
+
 
                               {/* <Dropdown.Item>Edit</Dropdown.Item> */}
                               {/* <Dropdown.Item>Delete</Dropdown.Item> */}
@@ -425,7 +441,7 @@ const handleEdit = (sale) => {
                   </tbody>
 
                 </Table>
-                {showEditModal && editingSale && (
+                {/* {showEditModal && editingSale && (
   <div className="edit-modal">
     <div className="modal-content p-3">
       <h5>Edit Sale - {editingSale.invoice_no}</h5>
@@ -500,7 +516,7 @@ const handleEdit = (sale) => {
       </Form>
     </div>
   </div>
-)}
+)} */}
 
               </Col>
             </Row>
