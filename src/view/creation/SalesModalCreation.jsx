@@ -12,18 +12,18 @@ import {
 import { FaTimes, FaPlus } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { getParties, addOrUpdateSale } from "../../../services/saleService";
+import { getParties, addOrUpdateSale } from "../../services/saleService";
 import Select from "react-select";
-import PartyModal from "../Parties/PartyModal";
+import PartyModal from "./PartyModalCreation";
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchParties } from "../../../slice/saleSlice";
+import { fetchParties } from "../../slice/saleSlice";
 
 import {
   TextInputform,
   TextArea,
   DropDown,
   Calender,
-} from "../../../components/Forms";
+} from "../../components/Forms";
 
 // STATIC OPTIONS
 const units = ["NONE", "KG", "Litre", "Piece"];

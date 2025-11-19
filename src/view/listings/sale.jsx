@@ -21,12 +21,12 @@ import {
   FaReply,
 } from "react-icons/fa";
 
-import "./sale.css";
+import "../../App.css";
 import { useNavigate } from "react-router-dom";
-import { getParties } from "../../../services/saleService";
-import { getSales } from "../../../services/saleService";
+import { getParties } from "../../services/saleService";
+import { getSales } from "../../services/saleService";
 // sale.jsx (Around line 10, wherever you import service functions)
-import { deleteSale } from "../../../services/saleService"; // ⭐️ Import deleteSale
+import { deleteSale } from "../../services/saleService"; // ⭐️ Import deleteSale
 
 
 

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react"; // 🌟 ADDED useEffect
 import { Modal, Button, Form, Row, Col, Nav } from "react-bootstrap";
-import StateSelect from "./States";
+import StateSelect from "../listings/States";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useDispatch } from "react-redux";
 // 🌟 UPDATED: Import new thunks
-import { addNewParty, fetchParties, updateExistingParty, deleteExistingParty } from "../../../slice/partySlice" 
+import { addNewParty, fetchParties, updateExistingParty, deleteExistingParty } from "../../slice/partySlice" 
 
 
 // 🌟 UPDATED: Accept partyToEdit prop

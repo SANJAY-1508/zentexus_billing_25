@@ -16,8 +16,8 @@ import {
   TextArea,
   DropDown,
   Calender,
-} from "../../../components/Forms";
-import PartyModal from "../Parties/PartyModal";
+} from "../../components/Forms";
+import PartyModal from "./PartyModalCreation";
 const units = ["NONE", "KG", "Litre", "Piece"];
 const priceUnitTypes = ["Without Tax", "With Tax"];
 const taxOptions = ["Select", "5%", "12%", "18%", "28%"];

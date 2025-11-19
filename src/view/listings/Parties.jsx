@@ -8,9 +8,9 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { Button, Table } from "react-bootstrap";
-import PartyModal from "./PartyModal";
+import PartyModal from "../creation/PartyModalCreation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchParties } from "../../../slice/partySlice";
+import { fetchParties } from "../../slice/partySlice";
 
 function Parties() {
 const dispatch = useDispatch();
