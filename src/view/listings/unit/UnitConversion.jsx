@@ -1,7 +1,7 @@
 // AddConvo.jsx
 import React from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import "./items.css";
+// import "../items.css";
 
 function AddConvo({ show, onHide }) {
 //   const [baseUnit, setBaseUnit] = useState("");
