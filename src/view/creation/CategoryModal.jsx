@@ -149,7 +149,7 @@
 // AddCategoryModal.jsx
 import React, { useState } from "react"; 
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
-import { createCategory } from '../../../services/ItemService'; // <-- NEW: Import service
+import { createCategory } from '../../services/ItemService'; // <-- NEW: Import service
 
 // Accept onSaveSuccess prop to notify parent component on successful save
 function AddCate({ show, onHide, onSaveSuccess }) { 

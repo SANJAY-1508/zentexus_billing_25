@@ -39,9 +39,11 @@ export const updateParty = async (party) => {
       ...party, // Contains all party data
       edit_parties_id: party.parties_id, // PHP expects this specific key for editing
     });
+    console.log("Update party response:", response);
 
+    console.log("Update response:", response.data);
     if (response.data.head.code !== 200) {
-      throw new Error(response.data.head.msg || "Failed to update party");
+      throw new Error(response.data.head.msg || "server to update party");
     }
 
     // Return the updated party object
@@ -58,6 +60,7 @@ export const deleteParty = async (parties_id) => {
     const response = await axios.post(`${BASE_URL}/parties.php`, {
       delete_parties_id: parties_id, // PHP expects this specific key for deletion
     });
+     console.log("Update party response:", response);
 
     if (response.data.head.code !== 200) {
       throw new Error(response.data.head.msg || "Failed to delete party");
