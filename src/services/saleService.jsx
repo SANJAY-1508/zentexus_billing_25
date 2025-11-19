@@ -1,4 +1,3 @@
-// services/saleService.js
 import axiosInstance from "../config/API";
 
 const API_ENDPOINT = "/sales.php";
@@ -17,7 +16,7 @@ export const searchSalesApi = async (searchText = "") => {
 
 export const createSaleApi = async (saleData) => {
   const payload = { ...saleData };
-  delete payload.edit_sales_id; // Ensure no edit_sales_id for creation
+  delete payload.edit_sales_id;
 
   const response = await axiosInstance.post(API_ENDPOINT, payload);
   const { data } = response;

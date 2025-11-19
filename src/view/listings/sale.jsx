@@ -1,4 +1,3 @@
-// Sale.js
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Container, Row, Col, Button, Form, Table } from "react-bootstrap";

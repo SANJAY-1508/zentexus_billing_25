@@ -1,4 +1,3 @@
-// slice/saleSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   searchSalesApi,
