@@ -73,3 +73,76 @@ export const deleteParty = async (parties_id) => {
     throw new Error(error.response?.data?.head?.msg || "Failed to delete party");
   }
 };
+
+
+// AgentService.js
+import axiosInstance from "../config/API";
+const API_ENDPOINT = "/agent.php";
+
+// Fetch all Agents
+export const fetchAgentsApi = async () => {
+  const payload = {
+    action: "listAgent",
+  };
+  const response = await axiosInstance.post(API_ENDPOINT, payload);
+  const data = response.data;
+  if (data.head && data.head.code !== 200) {
+    throw new Error(data.head.msg || "Failed to fetch agents");
+  }
+  return data.body.agents;
+};
+
+// Fetch a single Agent by ID
+export const fetchAgentByIdApi = async (id) => {
+  const response = await axiosInstance.get(`${API_ENDPOINT}/${id}`);
+  const data = response.data;
+  if (data.head && data.head.code !== 200) {
+    throw new Error(data.head.msg || "Failed to fetch agent");
+  }
+  return data.body.data;
+};
+
+// Add a new Agent
+export const addAgentApi = async (AgentData) => {
+  const payload = {
+    action: "createAgent",
+    agent_name: AgentData.agent_name,
+  };
+  const response = await axiosInstance.post(API_ENDPOINT, payload);
+  const data = response.data;
+  if (data.head && data.head.code !== 200) {
+    throw new Error(data.head.msg || "Failed to create agent");
+  }
+  console.log("add Agent :", data);
+  return data.body.agents;
+};
+
+// Update a Agent by ID
+export const updateAgentApi = async (id, agent_name) => {
+  const payload = {
+    action: "updateAgent",
+    edit_agent_id: id,
+    agent_name: agent_name,
+  };
+  const response = await axiosInstance.post(API_ENDPOINT, payload);
+  const data = response.data;
+  if (data.head && data.head.code !== 200) {
+    throw new Error(data.head.msg || "Failed to update agent");
+  }
+  console.log("response", data);
+  return data.head.id;
+};
+
+// Delete a Agent by ID
+export const deleteAgentApi = async (id) => {
+  const payload = {
+    action: "deleteAgent",
+    delete_agent_id: id,
+  };
+  const response = await axiosInstance.post(API_ENDPOINT, payload);
+  const data = response.data;
+  if (data.head && data.head.code !== 200) {
+    throw new Error(data.head.msg || "Failed to delete agent");
+  }
+  return id;
+};

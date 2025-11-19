@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Nav } from "react-bootstrap";
 import StateSelect from "../listings/States"; 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-// 🌟 REMOVED: Redux imports are no longer needed here as the parent handles all thunks
+
 
 function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSubmit, handleSaveAndNew, handleDelete }) {
   const [activeTab, setActiveTab] = useState("gst");
@@ -14,13 +14,13 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
     { id: '4', name: "Unregistered" },
   ];
   
-  // HANDLER: For simple text/number inputs
+ 
   const handleInputChange = (e) => {
       const { name, value } = e.target;
       setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // HANDLER: GST Type change
+
   const handleGstTypeChange = (e) => {
       const newId = e.target.value;
       const selectedGst = gstTypes.find(type => String(type.id) === newId);
@@ -32,7 +32,7 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
       }));
   };
   
-  // 🌟 HANDLER: Additional Field changes
+  
   const handleAdditionalFieldChange = (id, key, value) => {
       setFormData(prev => ({
           ...prev,
@@ -42,12 +42,12 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
       }));
   };
   
-  // 🌟 HANDLER: Date change (updates the 'date' field in formData)
+  
   const handleDateChange = (date) => {
       setFormData(prev => ({ ...prev, date }));
   };
   
-  // 🌟 HANDLER: Credit Limit Type toggle
+  
   const handleLimitTypeToggle = (type) => {
       setFormData(prev => ({ 
           ...prev, 
@@ -63,10 +63,8 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
       </Modal.Header>
 
       <Modal.Body>
-        {/* Top fields */}
         <Row className="mb-3">
           <Col>
-            {/* Party Name */}
             <Form.Control 
                 type="text" 
                 placeholder="Party Name *" 
@@ -76,7 +74,6 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
             />
           </Col>
           <Col>
-            {/* GSTIN */}
             <Form.Control 
                 type="text" 
                 placeholder="GSTIN" 
@@ -86,7 +83,6 @@ function PartyModal({ show, handleClose, isEdit, formData, setFormData, handleSu
             />
           </Col>
           <Col>
-            {/* Phone Number */}
             <Form.Control 
                 type="text" 
                 placeholder="Phone Number" 

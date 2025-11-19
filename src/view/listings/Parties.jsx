@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchParties, addNewParty, updateExistingParty, deleteExistingParty } from "../../slice/partySlice"; 
 
 
-const INITIAL_STATE = {
+const Initialstate = {
   id: null, 
   name: "",
   gstin: "",
@@ -48,7 +48,7 @@ function Parties() {
   const [isEditing, setIsEditing] = useState(false);
   const [businessName, setBusinessName] = useState("");
 
-  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [formData, setFormData] = useState(Initialstate);
 
   useEffect(() => {
     dispatch(fetchParties(searchText)); 
@@ -84,7 +84,7 @@ function Parties() {
         limitType: parseFloat(party.creditlimit) > 0 ? "custom" : "no",
         date: party.date ? new Date(party.date) : new Date(),
         transactionType: party.transactionType || "pay",
-        additionalFields: INITIAL_STATE.additionalFields, 
+        additionalFields: Initialstate.additionalFields, 
       };
 
      
@@ -92,7 +92,7 @@ function Parties() {
         try {
           const parsedFields = JSON.parse(party.additional_field);
           if (Array.isArray(parsedFields)) {
-            newState.additionalFields = INITIAL_STATE.additionalFields.map(
+            newState.additionalFields = Initialstate.additionalFields.map(
               defaultField => {
                 const pField = parsedFields.find(f => f.id === defaultField.id);
                 return pField 
@@ -110,7 +110,7 @@ function Parties() {
     } else {
   
       setIsEdit(false);
-      setFormData(INITIAL_STATE);
+      setFormData(Initialstate);
     }
     setShowModal(true);
   };
@@ -169,7 +169,7 @@ function Parties() {
      
       dispatch(fetchParties());
       setShowModal(false);
-      setFormData(INITIAL_STATE);
+      setFormData(Initialstate);
     }
   };
   
@@ -187,7 +187,7 @@ function Parties() {
 
     if (success) {
         dispatch(fetchParties());
-        setFormData(INITIAL_STATE); 
+        setFormData(Initialstate); 
     }
   };
   
@@ -360,7 +360,7 @@ function Parties() {
         show={showModal}
         handleClose={() => {
             setShowModal(false);
-            setFormData(INITIAL_STATE);
+            setFormData(Initialstate);
         }}
         isEdit={isEdit}
         
