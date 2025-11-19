@@ -11,7 +11,7 @@ import {
 import DatePicker from "react-datepicker";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
-import "./items.css";
+import "../listings/Items/items.css";
 
 function AdjustItem({ show, onHide, itemName = "sampleee" }) {
   const [type, setType] = useState("add");

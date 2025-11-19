@@ -371,7 +371,7 @@ import { FaCamera, FaCog } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
-import "./items.css";
+import "../listings/Items/items.css";
 
 
 // 💡 Added units prop
