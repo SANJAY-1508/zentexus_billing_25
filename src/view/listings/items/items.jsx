@@ -14,7 +14,7 @@ import AddConvo from "../unit/UnitConversion";
 // Assume ItemService has fetchUnits and fetchCategories function
 import { fetchUnits, fetchCategories } from '../../../services/ItemService'; 
 
-function Items() {
+function items() {
   const [activeTab, setActiveTab] = useState("PRODUCT");
   const [showAdjustItem, setShowAdjustItem] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);

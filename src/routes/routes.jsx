@@ -1,6 +1,6 @@
 import Login from "../view/Login";
 import Parties from "../view/listings/Parties/Parties";
-import items from "../view/listings/Items/items";
+import items from "../view/listings/items/items";
 import Sale from "../view/listings/Sale/sale";
 import Purchase from "../view/listings/Purchase/purchase";
 import Grow from "../view/listings/Grow/grow";
