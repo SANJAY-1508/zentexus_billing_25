@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   FaWhatsapp,
@@ -10,31 +9,207 @@ import {
 import { Button, Table } from "react-bootstrap";
 import PartyModal from "../creation/PartyModalCreation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchParties } from "../../slice/partySlice";
+
+import { fetchParties, addNewParty, updateExistingParty, deleteExistingParty } from "../../slice/partySlice"; 
+
+
+const INITIAL_STATE = {
+  id: null, 
+  name: "",
+  gstin: "",
+  phone: "",
+  email: "",
+  gstin_type_id: "",        
+  gstin_type_name: "",      
+  state_of_supply: "",      
+  billing_address: "",
+  shipping_address: "",
+  isEditingAddress: false, 
+  amount: "", 
+  limitType: "no",
+  creditlimit: "", 
+  date: new Date(),
+  transactionType: "pay", 
+  additionalFields: [
+    { id: 1, name: "Additional Field 1", isChecked: false, value: "" },
+    { id: 2, name: "Additional Field 2", isChecked: false, value: "" },
+    { id: 3, name: "Additional Field 3", isChecked: false, value: "" },
+  ],
+};
+
 
 function Parties() {
-const dispatch = useDispatch();
-const parties = useSelector((state) => state.parties.parties);
-const [searchText, setSearchText] = useState("");
+  const dispatch = useDispatch();
+  const parties = useSelector((state) => state.parties.parties);
+  const [searchText, setSearchTerm] = useState(""); // Corrected naming convention
   const [selectedParty, setSelectedParty] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [businessName, setBusinessName] = useState("");
-  
 
- useEffect(() => {
-    // Pass the search text to the Redux thunk
-    dispatch(fetchParties(searchText)); 
-  }, [dispatch, searchText,setSearchText]); // Re-fetch when searchText changes
+  const [formData, setFormData] = useState(INITIAL_STATE);
 
   useEffect(() => {
-    if (parties.length > 0 && !selectedParty) {
+    dispatch(fetchParties(searchText)); 
+  }, [dispatch, searchText]); 
+
+  useEffect(() => {
+    if (parties?.length > 0 && !selectedParty) {
       setSelectedParty(parties[0]);
     }
-  // }, [parties]);
   }, [parties, selectedParty, setSelectedParty]);
 
+
+  const handleOpenModal = (party = null) => {
+    if (party) {
+   
+      setIsEdit(true);
+      
+      
+      let newState = {
+        id: party.parties_id || party.id, 
+        name: party.name || "",
+        gstin: party.gstin || "",
+        phone: party.phone || "",
+        email: party.email || "",
+        gstin_type_id: String(party.gstin_type_id || ""),
+        gstin_type_name: party.gstin_type_name || "",
+        state_of_supply: party.state_of_supply || "",
+        billing_address: party.billing_address || "",
+        shipping_address: party.shipping_address || "",
+        isEditingAddress: !!(party.shipping_address && party.shipping_address !== party.billing_address),
+        amount: String(party.amount || ""), 
+        creditlimit: String(party.creditlimit || ""),
+        limitType: parseFloat(party.creditlimit) > 0 ? "custom" : "no",
+        date: party.date ? new Date(party.date) : new Date(),
+        transactionType: party.transactionType || "pay",
+        additionalFields: INITIAL_STATE.additionalFields, 
+      };
+
+     
+      if (party.additional_field) {
+        try {
+          const parsedFields = JSON.parse(party.additional_field);
+          if (Array.isArray(parsedFields)) {
+            newState.additionalFields = INITIAL_STATE.additionalFields.map(
+              defaultField => {
+                const pField = parsedFields.find(f => f.id === defaultField.id);
+                return pField 
+                  ? { ...defaultField, name: pField.name, value: pField.value, isChecked: true }
+                  : defaultField;
+              }
+            );
+          }
+        } catch (e) {
+          console.error("Error parsing additional fields on edit:", e);
+        }
+      }
+      setFormData(newState);
+
+    } else {
+  
+      setIsEdit(false);
+      setFormData(INITIAL_STATE);
+    }
+    setShowModal(true);
+  };
+  
+
+  const createPayload = () => {
+ 
+    const additionalFieldsPayload = JSON.stringify(
+        formData.additionalFields.filter(f => f.isChecked && f.name)
+        .map(f => ({ id: f.id, name: f.name, value: f.value || "" }))
+    );
+
+    const payload = { 
+        name: formData.name,
+        gstin: formData.gstin,
+        phone: formData.phone,
+        email: formData.email,
+        gstin_type_id: formData.gstin_type_id,
+        gstin_type_name: formData.gstin_type_name,
+        state_of_supply: formData.state_of_supply,
+        billing_address: formData.billing_address,
+        shipping_address: formData.shipping_address,
+        amount: parseFloat(formData.amount) || 0,
+        creditlimit: formData.limitType === "custom" ? (parseFloat(formData.creditlimit) || 0) : 0,
+        transactionType: formData.transactionType,
+        additional_field: additionalFieldsPayload,
+    };
+    
+    
+    if (isEdit) {
+        payload.id = formData.id;
+        payload.parties_id = formData.id; 
+    }
+
+    return payload;
+  }
+
+  const handleSubmit = async () => {
+    const dataToSend = createPayload();
+    let success = false;
+
+    try {
+        if (isEdit) {
+            await dispatch(updateExistingParty(dataToSend)).unwrap();
+            console.log("Updating Party:", dataToSend);
+        } else {
+            await dispatch(addNewParty(dataToSend)).unwrap();
+            console.log("Creating Party:", dataToSend);
+        }
+        success = true;
+    } catch (error) {
+        console.error("Submission failed:", error);
+    }
+
+    if (success) {
+     
+      dispatch(fetchParties());
+      setShowModal(false);
+      setFormData(INITIAL_STATE);
+    }
+  };
+  
+  
+  const handleSaveAndNew = async () => {
+    const dataToSend = createPayload();
+    let success = false;
+
+    try {
+        await dispatch(addNewParty(dataToSend)).unwrap();
+        success = true;
+    } catch (error) {
+        console.error("Save & New failed:", error);
+    }
+
+    if (success) {
+        dispatch(fetchParties());
+        setFormData(INITIAL_STATE); 
+    }
+  };
+  
+  const handleDelete = async () => {
+    const idToDelete = formData.id;
+    if (!idToDelete) return; 
+
+    if (!window.confirm(`Are you sure you want to delete ${formData.name}?`)) {
+      return;
+    }
+
+    try {
+      await dispatch(deleteExistingParty(idToDelete)).unwrap();
+      dispatch(fetchParties()); 
+      setShowModal(false);
+      setSelectedParty(null); 
+    } catch (error) {
+      console.error("Failed to delete party: ", error);
+    }
+  };
+  
+  
 
   return (
     <div id="main">
@@ -45,105 +220,7 @@ const [searchText, setSearchText] = useState("");
           padding: "20px",
         }}
       >
-        {/* Top Bar */}
-        <div className="mb-0 d-flex align-items-center justify-content-end bg-white p-4 rounded shadow-sm">
-          <span
-            style={{
-              color: "red",
-              fontWeight: "bold",
-              fontSize: "1.5rem",
-            }}
-          >
-            •
-          </span>
-
-          {isEditing ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginLeft: "8px",
-              }}
-            >
-              <input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter Business Name"
-                autoFocus
-                style={{
-                  borderRadius: "6px",
-                  padding: "5px 10px",
-                  fontSize: "1rem",
-                  width: "250px",
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") setIsEditing(false);
-                }}
-              />
-              <Button
-                variant="info"
-                onClick={() => setIsEditing(false)}
-                style={{
-                  borderRadius: "6px",
-                  fontWeight: 600,
-                  color: "white",
-                }}
-              >
-                Save
-              </Button>
-            </div>
-          ) : (
-            <span
-              className="ms-2 text-muted"
-              style={{ cursor: "pointer" }}
-              onClick={() => setIsEditing(true)}
-            >
-              {businessName || "Enter Business Name"}
-            </span>
-          )}
-
-          <div className="ms-auto d-flex align-items-center gap-2">
-            <button
-              className="rounded-pill"
-              style={{
-                backgroundColor: "#f8d7da",
-                color: "red",
-                border: "none",
-                padding: "6px 15px",
-              }}
-            >
-              + Add Sale
-            </button>
-            <button
-              className="rounded-pill"
-              style={{
-                backgroundColor: "#cce7f3",
-                color: "blue",
-                border: "none",
-                padding: "6px 15px",
-              }}
-            >
-              + Add Purchase
-            </button>
-            <button
-              className="rounded-pill"
-              style={{
-                backgroundColor: "#cce7f3",
-                color: "blue",
-                border: "none",
-                padding: "6px 15px",
-              }}
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        {/* Outer Card */}
-
-        {/* Header */}
+       
         <div
           className="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded shadow-sm"
           style={{
@@ -153,10 +230,7 @@ const [searchText, setSearchText] = useState("");
           <h5 className="m-0">Parties</h5>
           <button
             className="btn btn-danger rounded-pill px-3"
-            onClick={() => {
-              setShowModal(true);
-              setIsEdit(false);
-            }}
+            onClick={() => handleOpenModal(null)} 
           >
             + Add Party
           </button>
@@ -170,10 +244,10 @@ const [searchText, setSearchText] = useState("");
             backgroundColor: "#f0f2f5",
           }}
         >
-          {/* Inner Panels */}
+         
           <div className="d-flex gap-3">
-            {/* Left Panel */}
-            <div
+        
+             <div
               className="bg-white shadow-sm rounded"
               style={{
                 width: "35%",
@@ -201,6 +275,8 @@ const [searchText, setSearchText] = useState("");
                     border: "1px solid #ccc",
                     outline: "none",
                   }}
+                  value={searchText}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
@@ -223,13 +299,12 @@ const [searchText, setSearchText] = useState("");
                       }}
                     >
                       <td>{p.name}</td>
-                      <td>{p.amount.toFixed(2)}</td>
+                      <td>{p.amount?.toFixed(2) || '0.00'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
             {/* Right Panel */}
             <div
               className="flex-grow-1 d-flex flex-column gap-3"
@@ -247,10 +322,7 @@ const [searchText, setSearchText] = useState("");
                         <FaPen
                           className="text-primary"
                           style={{ cursor: "pointer" }}
-                          onClick={() => {
-                            setShowModal(true);
-                            setIsEdit(true);
-                          }}
+                          onClick={() => handleOpenModal(selectedParty)} // 🌟 Use new handler for Edit
                         />
                       </div>
                       <div className="d-flex align-items-center gap-3">
@@ -273,42 +345,9 @@ const [searchText, setSearchText] = useState("");
                         <p className="mb-0 text-secondary">Billing Address</p>
                         <p className="mb-0">{selectedParty.billing_address}</p>
                       </div>
-
                     </div>
                   </div>
-
-                  {/* Transactions Card */}
-                  <div className="bg-white shadow-sm rounded p-4 vh-100">
-                    <h6 className="mb-3">Transactions</h6>
-                    <Table
-                      responsive
-                      bordered
-                      hover
-                      size="sm"
-                      className=" table align-middle text-center"
-                    >
-                      <thead>
-                        <tr>
-                          <td className="text-secondary">Type</td>
-                          <td className="text-secondary">Number</td>
-                          <td className="text-secondary">Date</td>
-                          <td className="text-secondary">Total</td>
-                          <td className="text-secondary">Balance</td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(selectedParty.transactions || []).map((txn, i) => (
-                          <tr key={i} className="bg-light">
-                            <td>{txn.type}</td>
-                            <td>{txn.number}</td>
-                            <td>{txn.date}</td>
-                            <td>₹ {txn.total}</td>
-                            <td>₹ {txn.balance}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
+                  
                 </>
               )}
             </div>
@@ -317,13 +356,20 @@ const [searchText, setSearchText] = useState("");
       </div>
 
       {/* Party Modal */}
-      {/* Party Modal */}
       <PartyModal
         show={showModal}
-        handleClose={() => setShowModal(false)}
+        handleClose={() => {
+            setShowModal(false);
+            setFormData(INITIAL_STATE);
+        }}
         isEdit={isEdit}
-        partyToEdit={selectedParty}
-        />
+        
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit} 
+        handleSaveAndNew={handleSaveAndNew}
+        handleDelete={handleDelete}
+      />
     </div>
   );
 }
