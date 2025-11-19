@@ -1,89 +1,201 @@
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getParties, addOrUpdateSale } from "../services/saleService";
+import {
+  fetchSalesApi,
+  searchSalesApi,
+  createSaleApi,
+  updateSaleApi,
+  deleteSaleApi,
+  fetchPartiesApi,
+} from "../services/saleService";
 
-
-// FETCH PARTIES
-export const fetchParties = createAsyncThunk(
-  "party/fetchParties",
+// Fetch all sales
+export const fetchSales = createAsyncThunk(
+  "sale/fetchSales",
   async (_, { rejectWithValue }) => {
     try {
-      const parties = await getParties();
-      return parties;
-    } catch (err) {
-      return rejectWithValue(err.message);
+      const response = await fetchSalesApi(); // ✅ Use exported fetchSalesApi (not getSales)
+      console.log("Fetched sales from API:", response);
+      return Array.isArray(response) ? response : []; // Ensure array
+    } catch (error) {
+      return rejectWithValue(error.message);
     }
   }
 );
 
-// SAVE SALE (Create or Update)
-export const saveSale = createAsyncThunk(
-  "party/saveSale",
+// Search sales
+export const searchSales = createAsyncThunk(
+  "sale/searchSales",
+  async (searchText, { rejectWithValue }) => {
+    try {
+      const response = await searchSalesApi(searchText); // ✅ Matches export
+      console.log("Searched sales from API:", response);
+      return Array.isArray(response) ? response : [];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Fetch parties
+export const fetchParties = createAsyncThunk(
+  "sale/fetchParties",
+  async (searchText = "", { rejectWithValue }) => {
+    try {
+      const response = await fetchPartiesApi(searchText); // ✅ Matches export
+      console.log("Fetched parties from API:", response);
+      return Array.isArray(response) ? response : [];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Create a new sale
+export const createSale = createAsyncThunk(
+  "sale/createSale",
   async (saleData, { rejectWithValue }) => {
     try {
-      const response = await addOrUpdateSale(saleData);
+      const response = await createSaleApi(saleData); // ✅ Matches export
+      console.log("Create sale API response:", response);
       return response;
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (error) {
+      return rejectWithValue(error.message);
     }
   }
 );
 
-// SLICE
-const saleSlice = createSlice({
-  name: "party",
-  initialState: {
-    list: [],
-    status: "idle",
-    error: null,
+// Update an existing sale
+export const updateSale = createAsyncThunk(
+  "sale/updateSale",
+  async (saleData, { rejectWithValue }) => {
+    try {
+      console.log("Sending data for update:", saleData);
+      const response = await updateSaleApi(saleData); // ✅ Matches export
+      console.log("Update sale API response:", response);
+      return { ...saleData, response }; // Return submitted data + response for reducer
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
-    saleStatus: "idle",
-    saleError: null,
+// Delete a sale
+export const deleteSale = createAsyncThunk(
+  "sale/deleteSale",
+  async (saleId, { rejectWithValue }) => {
+    try {
+      const response = await deleteSaleApi(saleId); // ✅ Matches export
+      console.log("Delete API response:", response);
+      return { saleId };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const saleSlice = createSlice({
+  name: "sales",
+  initialState: {
+    sales: [], // Initial empty array for sales
+    parties: [], // Initial empty array for parties
+    status: "idle",
+    partiesStatus: "idle",
+    error: null,
     saleResponse: null,
   },
-  reducers: {},
-  extraReducers: (builder) => {  
-    // Fetch Parties
+  reducers: {
+    clearSaleResponse: (state) => {
+      state.saleResponse = null;
+    },
+  },
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchParties.pending, (state) => {
+      // Fetch sales
+      .addCase(fetchSales.pending, (state) => {
         state.status = "loading";
-        state.error = null;
+      })
+      .addCase(fetchSales.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        console.log("Fetched sales payload:", action.payload);
+        state.sales = Array.isArray(action.payload) ? action.payload : []; // ✅ Ensure array
+      })
+      .addCase(fetchSales.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || action.error.message;
+      })
+      // Search sales
+      .addCase(searchSales.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(searchSales.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.sales = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(searchSales.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || action.error.message;
+      })
+      // Fetch parties
+      .addCase(fetchParties.pending, (state) => {
+        state.partiesStatus = "loading";
       })
       .addCase(fetchParties.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.list = action.payload;
+        state.partiesStatus = "succeeded";
+        console.log("Fetched parties payload:", action.payload);
+        state.parties = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchParties.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      });
-
-    // Save Sale
-    builder
-      .addCase(saveSale.pending, (state) => {
-        state.saleStatus = "loading";
-        state.saleError = null;
-        state.saleResponse = null;
+        state.partiesStatus = "failed";
+        state.error = action.payload || action.error.message;
       })
-      .addCase(saveSale.fulfilled, (state, action) => {
-        state.saleStatus = "succeeded";
+      // Create sale
+      .addCase(createSale.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(createSale.fulfilled, (state, action) => {
+        state.status = "succeeded";
         state.saleResponse = action.payload;
+        // Optionally add to list (uncomment if needed)
+        // if (action.payload.body?.sale) state.sales.unshift(action.payload.body.sale);
       })
-      .addCase(saveSale.rejected, (state, action) => {
-        state.saleStatus = "failed";
-        state.saleError = action.payload;
+      .addCase(createSale.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || action.error.message;
+      })
+      // Update sale
+      .addCase(updateSale.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateSale.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.saleResponse = action.payload.response;
+        // Update in list using submitted data (action.meta.arg)
+        const saleId = action.meta.arg.edit_sales_id;
+        const index = state.sales.findIndex((sale) => sale.sale_id === saleId);
+        if (index !== -1) {
+          state.sales[index] = { ...state.sales[index], ...action.meta.arg };
+        }
+      })
+      .addCase(updateSale.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || action.error.message;
+      })
+      // Delete sale
+      .addCase(deleteSale.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteSale.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.sales = state.sales.filter(
+          (sale) => sale.sale_id !== action.payload.saleId
+        );
+      })
+      .addCase(deleteSale.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || action.error.message;
       });
   },
 });
 
-// SELECTOR
-export const selectPartyOptions = (state) =>
-  state.party.list.map((p) => ({
-    value: p.id.toString(),
-    label: p.name,
-    phone: p.phone,
-    billingAddress: p.billingaddress,
-    shippingAddress: p.shippingaddress,
-  }));
-
+export const { clearSaleResponse } = saleSlice.actions;
 export default saleSlice.reducer;
