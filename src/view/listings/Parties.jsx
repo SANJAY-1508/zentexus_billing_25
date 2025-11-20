@@ -149,10 +149,13 @@ function Parties() {
   }
 
   const handleSubmit = async () => {
+    console.log("gfgh")
     const dataToSend = createPayload();
+    console.log("sent",dataToSend)
     let success = false;
-
+ console.log("hbfdgjhhhk")
     try {
+      console.log("55665656656")
         if (isEdit) {
             await dispatch(updateExistingParty(dataToSend)).unwrap();
             console.log("Updating Party:", dataToSend);
@@ -169,6 +172,7 @@ function Parties() {
      
       dispatch(fetchParties());
       setShowModal(false);
+      // setShowModal(isSaveAndNew);
       setFormData(Initialstate);
     }
   };
@@ -255,7 +259,7 @@ function Parties() {
                 height: "70vh",
               }}
             >
-              <div style={{ position: "relative", width: "100%" }}>
+              <div style={{position: "relative", width: "100%" }}>
                 <FaSearch
                   style={{
                     position: "absolute",
