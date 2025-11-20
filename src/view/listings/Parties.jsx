@@ -6,7 +6,6 @@ import {
   FaCommentDots,
   FaSearch,
 } from "react-icons/fa";
-import { Button, Table } from "react-bootstrap";
 import PartyModal from "../creation/PartyModalCreation";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -41,12 +40,11 @@ const Initialstate = {
 function Parties() {
   const dispatch = useDispatch();
   const parties = useSelector((state) => state.parties.parties);
-  const [searchText, setSearchTerm] = useState(""); // Corrected naming convention
+  const [searchText, setSearchTerm] = useState(""); 
   const [selectedParty, setSelectedParty] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [businessName, setBusinessName] = useState("");
+
 
   const [formData, setFormData] = useState(Initialstate);
 
@@ -229,11 +227,12 @@ function Parties() {
           className="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded shadow-sm"
           style={{
             marginBottom: "15px",
+            marginTop:"15px",
           }}
         >
           <h5 className="m-0">Parties</h5>
           <button
-            className="btn btn-danger rounded-pill px-3"
+            className="btn btn-danger rounded-pill px-3 mt-4"
             onClick={() => handleOpenModal(null)} 
           >
             + Add Party
