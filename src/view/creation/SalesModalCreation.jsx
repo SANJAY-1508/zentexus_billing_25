@@ -93,6 +93,8 @@ const SaleCreation = () => {
     invoice_date: new Date().toISOString().split("T")[0],
     state_of_supply: "",
     payment_type: "",
+    description: "",
+    add_image:"",
     rows: [INITIAL_ROW],
     rount_off: 0,
     round_off_amount: "0",
@@ -180,6 +182,8 @@ const SaleCreation = () => {
         saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
       state_of_supply: saleToEdit.state_of_supply || "",
       payment_type: saleToEdit.payment_type || "",
+      description: saleToEdit.description|| "",
+      add_image: saleToEdit.add_image ||"",
       rows,
       rount_off,
       round_off_amount,
@@ -446,6 +450,17 @@ const SaleCreation = () => {
             <Row className="mb-3">
               <Col md={9}>
                 <Row className="mb-3">
+                  {!isViewMode && (
+              <div className="mb-3">
+                <label className="me-2">Credit</label>
+                <input
+                  type="checkbox"
+                  checked={credit}
+                  onChange={toggleCredit}
+                />
+                <label className="me-2">Cash</label>
+              </div>
+            )}
                   <Col md={6}>
                     <label>Customer Name</label>
                     <div className="d-flex gap-2">
@@ -530,7 +545,7 @@ const SaleCreation = () => {
               </Col>
             </Row>
 
-            {!isViewMode && (
+            {/* {!isViewMode && (
               <div className="mb-3">
                 <label className="me-2">Credit</label>
                 <input
@@ -539,7 +554,7 @@ const SaleCreation = () => {
                   onChange={toggleCredit}
                 />
               </div>
-            )}
+            )} */}
 
             <Row className="item-table-row mt-4">
               <Col>
@@ -696,6 +711,27 @@ const SaleCreation = () => {
                   disabled={isDisabled}
                 />
               </Col>
+              <Row className="additional-actions mt-3 align-items-center">
+              <Col xs={3}>
+                  <TextInputform
+                   formLabel="Description"       
+                   value={formData.description || ""}   
+                   onChange={(e) => handleInputChange("description", e.target.value)}
+                   readOnly={isDisabled}          
+                    placeholder="Enter description (optional)" /></Col>
+ 
+              </Row>
+              <Row className="additional-actions mt-3 align-items-center">
+              <Col xs={3}>
+                  <TextInputform
+                  formLabel="Add Image" 
+                  value={formData.add_image}
+                  onChange={(e) =>
+                    handleInputChange("add_image", e.target.value)
+                  }
+                  
+                  disabled={isDisabled} /></Col>
+               </Row>
               <Col className="d-flex justify-content-end align-items-center gap-2">
                 <CheckBox
                   OnChange={handleRoundOffToggle}
@@ -715,22 +751,20 @@ const SaleCreation = () => {
               </Col>
             </Row>
 
-            {!isViewMode && (
+            
+            {/* Show Back button in View mode too, but hide Save/Update button */}
               <Row className="py-3">
-                <Col className="d-flex justify-content-between align-items-end">
-                  <Button variant="secondary" onClick={handleBack} size="lg">
-                    Back
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    onClick={handleSave}
-                    size="lg"
-                  >
-                    {isEditMode ? "Update Sale" : "Save Sale"}
-                  </Button>
-                </Col>
-              </Row>
-            )}
+               <Col className="d-flex justify-content-between align-items-end">
+                  <Button variant="secondary" onClick={handleBack} size="lg">Back </Button>
+            {/* Only show Save/Update button when not in View mode */}
+              {!isViewMode && (
+              <Button
+                variant="outline-primary"
+                onClick={handleSave}
+                size="lg">
+      {isEditMode ? "Update Sale" : "Save Sale"} </Button>)}
+     </Col>
+     </Row>
           </Col>
         </Row>
       </Container>
