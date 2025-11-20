@@ -26,7 +26,7 @@ export const addParty = async (partyData) => {
   const payload = {
     ...partyData,
   };
- 
+
   const response = await axiosInstance.post(API_ENDPOINT, payload);
   const data = response.data;
   checkApiResponse(data, "Failed to add party");
@@ -45,13 +45,14 @@ export const updateParty = async (partyData) => {
 
   checkApiResponse(data, "Failed to update party");
   console.log("response", data);
+  window.location.reload();
   return partyData;
 };
 
 // Delete a party
 export const deleteParty = async (parties_id) => {
   const payload = {
-    delete_parties_id: parties_id, 
+    delete_parties_id: parties_id,
   };
 
   const response = await axiosInstance.post(API_ENDPOINT, payload);
