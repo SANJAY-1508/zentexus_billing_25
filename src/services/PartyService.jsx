@@ -17,8 +17,7 @@ export const getParties = async (searchText = "") => {
   console.log("fetch list", data);
   return data.body.parties;
 
-  checkApiResponse(data, "Failed to fetch parties");
-  return data.body.parties;
+ 
 };
 
 // Add a new party

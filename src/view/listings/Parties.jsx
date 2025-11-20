@@ -44,13 +44,10 @@ const Initialstate = {
 function Parties() {
   const dispatch = useDispatch();
   const parties = useSelector((state) => state.parties.parties);
-  const [searchText, setSearchTerm] = useState(""); // Corrected naming convention
+  const [searchText, setSearchText] = useState(""); 
   const [selectedParty, setSelectedParty] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [businessName, setBusinessName] = useState("");
-
   const [formData, setFormData] = useState(Initialstate);
 
   useEffect(() => {
@@ -289,7 +286,7 @@ function Parties() {
                     outline: "none",
                   }}
                   value={searchText}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchText(e.target.value)}
                 />
               </div>
 
