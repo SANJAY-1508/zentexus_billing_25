@@ -52,8 +52,8 @@ ul {
   padding: 0 20px;
 }
 .tab-btn {
-  background: none !important;
-  border: none !important;
+  /* background: none !important; */
+  /* border: none !important; */
   padding: 4px 20px;
 }
 .bactive {
@@ -351,3 +351,7 @@ ul {
 
 
 
+.btn-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}

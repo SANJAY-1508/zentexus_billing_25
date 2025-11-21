@@ -224,7 +224,7 @@ const handlePartySelect = (selectedOption) => {
 const selectedParty = parties.find((p) => p.id === selectedOption.value);
     setFormData((prev) => ({
       ...prev,
-      parties_id: selectedOption.value,
+      parties_id:  selectedParty?.parties_id || "",
       name: selectedParty?.name || "",
       phone: selectedParty?.phone || "",
       billing_address: selectedParty?.billing_address || "",

@@ -44,13 +44,10 @@ const Initialstate = {
 function Parties() {
   const dispatch = useDispatch();
   const parties = useSelector((state) => state.parties.parties);
-  const [searchText, setSearchTerm] = useState(""); // Corrected naming convention
+  const [searchText, setSearchText] = useState(""); 
   const [selectedParty, setSelectedParty] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [businessName, setBusinessName] = useState("");
-
   const [formData, setFormData] = useState(Initialstate);
 
   useEffect(() => {
@@ -62,6 +59,7 @@ function Parties() {
       setSelectedParty(parties[0]);
     }
   }, [parties, selectedParty, setSelectedParty]);
+
 
   const handleOpenModal = (party = null) => {
     if (party) {
@@ -289,7 +287,7 @@ function Parties() {
                     outline: "none",
                   }}
                   value={searchText}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchText(e.target.value)}
                 />
               </div>
 
@@ -312,7 +310,22 @@ function Parties() {
                       }}
                     >
                       <td>{p.name}</td>
-                      <td>{p.amount?.toFixed(2) || "0.00"}</td>
+                      {/* MODIFICATION: Removed the balance type label */}
+                      <td
+                        style={{
+                          color:
+                            p.balance_type === "To Pay"
+                              ? "red"
+                              : p.balance_type === "To Receive"
+                              ? "green"
+                              : "inherit",
+                        }}
+                      >
+                        {p.balance_type !== "Nil"
+                          ? `₹${p.display_amount?.toFixed(2) || "0.00"}` // Changed this line
+                          : "Nil"}
+                      </td>
+                      {/* END MODIFICATION */}
                     </tr>
                   ))}
                 </tbody>
@@ -383,7 +396,31 @@ function Parties() {
                           <td className="text-secondary">Balance</td>
                         </tr>
                       </thead>
-                      <tbody></tbody>
+  <tbody>
+  {/* Show all matched transactions */}
+  {selectedParty?.transactions && selectedParty.transactions.length > 0 ? (
+    selectedParty.transactions.map((t, i) => (
+      <tr key={`trans-${i}`}>
+        {/* Shows balance_label (Payable/Receivable) in Type column */}
+        <td>{t.balance_label || t.type}</td> 
+        <td>{t.number}</td>
+        <td>{t.date}</td>
+        {/* Total is correctly displaying the amount from the transaction table */}
+        <td>₹{t.total.toFixed(2)}</td>
+        {/* Balance is correctly displaying the amount from the transaction table, color-coded */}
+        <td style={{ color: t.color }}>
+            ₹{t.balance.toFixed(2)}
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="5" className="text-center text-muted py-4">
+        No transactions yet
+      </td>
+    </tr>
+  )}
+</tbody>
                     </Table>
                   </div>
                 </>
