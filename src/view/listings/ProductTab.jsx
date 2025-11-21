@@ -60,8 +60,11 @@ export default function ProductTab() {
               <div className="text-end">
                 <Button
                   variant="primary"
-                  className="mb-2 fw-semibold text-white px-4 py-2"
-                  style={{ borderRadius: "6px" }}
+                  className="mb-2 fw-semibold text-black px-4 py-2"
+                  style={{ 
+    borderRadius: "6px",
+    
+  }}
                   onClick={() => setShowAdjustItem(true)}
                 >
                   ADJUST ITEM
