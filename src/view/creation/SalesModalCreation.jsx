@@ -504,11 +504,11 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                       <th>Discount</th>
                       <th>Tax</th>
                       {/* <th>Amount</th> */}
-                      <th style={{ position: 'relative' }}>
+                      {/* <th style={{ position: 'relative' }}>
   <DropdownButton
     id="amount-column-dropdown"
-    title="Amount"
-    variant="link"
+    title="Amount +"
+    // variant="link"
     size="sm"
     align="end"
     className="p-0 border-0 text-dark fw-bold"
@@ -519,6 +519,45 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
     }}
   >
     <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
+      Item Category
+    </Dropdown.Item>
+    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
+      Item Code
+    </Dropdown.Item>
+    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
+      HSN/SAC Code
+    </Dropdown.Item>
+    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
+      Description
+    </Dropdown.Item>
+    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
+      Discount
+    </Dropdown.Item>
+    <Dropdown.Divider />
+    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()} className="text-primary">
+      More Settings
+    </Dropdown.Item>
+  </DropdownButton>
+</th> */}
+<th>
+  <DropdownButton
+    id="amount-column-dropdown"
+    title={
+      <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+       Amount <FaPlus />
+      </span>
+    }
+    
+    size="sm"
+    align="end"
+    className="p-0 border-0 text-success shadow-none"
+    style={{
+      background: 'transparent',
+      boxShadow: 'none',
+    }}
+    menuVariant="light" // optional: makes menu look modern
+  >
+    <Dropdown.Item href="#/ " onClick={(e) => e.preventDefault()}>
       Item Category
     </Dropdown.Item>
     <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
@@ -767,6 +806,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                 <strong>Total</strong>
               <TextInputform readOnly value={formData.total} />
               {/* Received Amount Row */}
+              
     <div className="d-flex align-items-center gap-3 mb-2">
       <strong style={{ width: "140px" }}>Received Amount</strong>
       <TextInputform
@@ -793,6 +833,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
         }}
       />
     </div>
+    
               
         </Col>
         </Row>
