@@ -62,6 +62,7 @@ const dispatch = useDispatch();
 const navigate = useNavigate();
 const { id } = useParams();
 const location = useLocation();
+const [selectedPartyOption, setSelectedPartyOption] = useState(null);
 const { parties, partiesStatus, sales } = useSelector((state) => state.sale);
 const isEditMode = location.pathname.startsWith("/sale/edit");
 const isViewMode = location.pathname.startsWith("/sale/view");
@@ -186,6 +187,15 @@ useEffect(() => {
         amount: String(item.amount || "0.00"),
       }))
     : [INITIAL_ROW];
+    if (saleToEdit.parties_id) {
+    const partyFromList = parties.find(p => p.id == saleToEdit.parties_id || p.parties_id == saleToEdit.parties_id);
+    if (partyFromList) {
+      setSelectedPartyOption({
+        value: partyFromList.id,
+        label: partyFromList.name
+      });
+    }
+  }
 
   const totalAmountRaw = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
   const rount_off = Number(saleToEdit.rount_off || 0);
@@ -239,7 +249,7 @@ useEffect(() => {
       // discount: false, // etc.
     },
   });
-}, [saleToEdit]); // ← Only depend on saleToEdit
+}, [saleToEdit,parties]); // ← Only depend on saleToEdit
 
   const handleDocumentUpload = (e) => {
   const files = Array.from(e.target.files);
@@ -280,22 +290,58 @@ const totalTax = formData.rows.reduce( (a, r) => a + (Number(r.taxAmount) || 0),
 const totalAmountRaw = formData.rows.reduce((a, r) => a + (Number(r.amount) || 0),0 );
 const calculateAutoRoundOff = (amount) =>(Math.round(amount) - amount).toFixed(2);
 // Handlers
+// const handlePartySelect = (selectedOption) => {
+//     if (!selectedOption) {
+//       setFormData((prev) => ({...prev,parties_id: "",name: "",phone: "",billing_address: "",shipping_address: "",state_of_supply: "",}));
+//     return;   
+//     }     
+//     if (selectedOption.value === "add_party") return;
+// const selectedParty = parties.find((p) => p.id === selectedOption.value);
+
+//     setFormData((prev) => ({
+//       ...prev,
+//       parties_id:  selectedParty?.parties_id || "",
+//       name: selectedParty?.name || "",
+//       phone: selectedParty?.phone || "",
+//       billing_address: selectedParty?.billing_address || "",
+//       shipping_address: selectedParty?.shipping_address || "",
+//       state_of_supply: selectedParty?.state_of_supply || "", })); 
+//     };
 const handlePartySelect = (selectedOption) => {
-    if (!selectedOption) {
-      setFormData((prev) => ({...prev,parties_id: "",name: "",phone: "",billing_address: "",shipping_address: "",state_of_supply: "",}));
-    return;   
-    }     
-    if (selectedOption.value === "add_party") return;
-const selectedParty = parties.find((p) => p.id === selectedOption.value);
-    setFormData((prev) => ({
+  if (!selectedOption) {
+    setSelectedPartyOption(null);
+    setFormData(prev => ({
       ...prev,
-      parties_id:  selectedParty?.parties_id || "",
-      name: selectedParty?.name || "",
-      phone: selectedParty?.phone || "",
-      billing_address: selectedParty?.billing_address || "",
-      shipping_address: selectedParty?.shipping_address || "",
-      state_of_supply: selectedParty?.state_of_supply || "", })); 
-    };
+      parties_id: "",
+      name: "",
+      phone: "",
+      billing_address: "",
+      shipping_address: "",
+      state_of_supply: "",
+    }));
+    return;
+  }
+
+  if (selectedOption.value === "add_party") {
+    // handle add party logic
+    return;
+  }
+
+  const selectedParty = parties.find(p => p.id === selectedOption.value);
+  if (selectedParty) {
+    setSelectedPartyOption(selectedOption); // ← Important!
+
+    setFormData(prev => ({
+      ...prev,
+      parties_id: selectedParty.parties_id || selectedParty.id || "",
+      name: selectedParty.name || "",
+      phone: selectedParty.phone || "",
+      billing_address: selectedParty.billing_address || "",
+      shipping_address: selectedParty.shipping_address || "",
+      state_of_supply: selectedParty.state_of_supply || "",
+    }));
+  }
+};
 const toggleCredit = () => setCredit(!credit);
 const deleteRow = (id) => {
 const newRows = formData.rows.filter((r) => r.id !== id);
@@ -480,30 +526,35 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                   <input type="checkbox" checked={credit} onChange={toggleCredit}/>
                   <label className="me-2">Cash</label>
                   </div>)}
-                  <Col md={6}>
+                  <Col md={3}>
                   <label>Customer Name</label>
                   <div className="d-flex gap-2">
-                  <Select options={customers} value={ customers.find((o) => o.value === formData.parties_id  ) || null}
-                      onChange={isDisabled ? undefined : handlePartySelect}
-                      placeholder="Select Customer" isClearable isDisabled={isDisabled}/>
+                    <Select
+                        value={selectedPartyOption}  // ← This is the fix!
+                        options={customers}
+                        onChange={handlePartySelect}
+                        placeholder="Select Customer"
+                        isClearable
+                        isDisabled={isDisabled}/>
+
                   </div>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <TextInputform  formLabel="Phone Number" formtype="tel"value={formData.phone}  onChange={(e) =>handleInputChange("phone", e.target.value) }readOnly={isDisabled}/>
                   </Col>
                 </Row>
                 {credit && (
                   <Row className="mb-3">
-                    <Col md={6}>
+                    <Col md={3}>
                       <TextArea textlabel="Billing Address" value={formData.billing_address} onChange={(e) => handleInputChange("billing_address", e.target.value)}readOnly={isDisabled}/>
                     </Col>
-                    <Col md={6}>
+                    <Col md={3}>
                       <TextArea textlabel="Shipping Address"  value={formData.shipping_address}  onChange={(e) => handleInputChange("shipping_address", e.target.value)} readOnly={isDisabled}/>
                     </Col>
                   </Row>
                 )}
                 </Col>
-                <Col md={3} style={{ zIndex: 100 }}>
+                <Col md={2} style={{ zIndex: 100 }}>
                 <TextInputform formLabel="Invoice Number" value={formData.invoice_no}  onChange={(e) =>  handleInputChange("invoice_no", e.target.value)} readOnly={isDisabled}/>
                 <Calender calenderlabel="Invoice Date" initialDate={formData.invoice_date}/>
                 <DropDown textlabel="State of supply" value={formData.state_of_supply} onChange={(e) =>  handleInputChange("state_of_supply", e.target.value)} options={STATE_OF_SUPPLY_OPTIONS} disabled={isDisabled}/>
@@ -512,18 +563,18 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
               <Row className="item-table-row mt-4">
               <Col>
                 <Table bordered responsive>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Item</th>
-       {formData.visibleColumns.category && <th>Category</th>}
-      <th>Qty</th>
-      <th>Unit</th>
-      <th>Price</th>
-      <th>Price/unit</th>
-      {formData.visibleColumns.discount && <th>Discount</th>}
-      <th>Tax</th>
-      <th>
+                 <thead>
+                 <tr>
+                 <th>#</th>
+                 <th>Item</th>
+                 {formData.visibleColumns.category && <th>Category</th>}
+                 <th>Qty</th>
+                 <th>Unit</th>
+                 <th>Price</th>
+                 <th>Price/unit</th>
+                 {formData.visibleColumns.discount && <th>Discount</th>}
+                 <th>Tax</th>
+                <th>
         <DropdownButton
           id="amount-column-dropdown"
           title={<span style={{ fontSize: "1rem", fontWeight: "bold" }}>Amount <FaPlus /></span>}
