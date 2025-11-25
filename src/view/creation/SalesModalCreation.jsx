@@ -289,24 +289,6 @@ const totalDiscount = formData.rows.reduce( (a, r) => a + (Number(r.discountAmou
 const totalTax = formData.rows.reduce( (a, r) => a + (Number(r.taxAmount) || 0),0);
 const totalAmountRaw = formData.rows.reduce((a, r) => a + (Number(r.amount) || 0),0 );
 const calculateAutoRoundOff = (amount) =>(Math.round(amount) - amount).toFixed(2);
-// Handlers
-// const handlePartySelect = (selectedOption) => {
-//     if (!selectedOption) {
-//       setFormData((prev) => ({...prev,parties_id: "",name: "",phone: "",billing_address: "",shipping_address: "",state_of_supply: "",}));
-//     return;   
-//     }     
-//     if (selectedOption.value === "add_party") return;
-// const selectedParty = parties.find((p) => p.id === selectedOption.value);
-
-//     setFormData((prev) => ({
-//       ...prev,
-//       parties_id:  selectedParty?.parties_id || "",
-//       name: selectedParty?.name || "",
-//       phone: selectedParty?.phone || "",
-//       billing_address: selectedParty?.billing_address || "",
-//       shipping_address: selectedParty?.shipping_address || "",
-//       state_of_supply: selectedParty?.state_of_supply || "", })); 
-//     };
 const handlePartySelect = (selectedOption) => {
   if (!selectedOption) {
     setSelectedPartyOption(null);
