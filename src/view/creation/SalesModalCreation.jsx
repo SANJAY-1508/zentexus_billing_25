@@ -11,6 +11,7 @@ import Modal from "react-bootstrap/Modal";
 import { Color } from "antd/es/color-picker";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import { fetchCategories } from "../../slice/CategorySlice"; // correct path
 // Static options
 const UNITS = ["NONE", "KG", "Litre", "Piece"];
 const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
@@ -45,6 +46,7 @@ const INITIAL_ROW = {
   id: 1,
   item: "",
   category: "",
+  item_code: "",
   qty: "",
   unit: "NONE",
   priceUnitType: "Without Tax",
@@ -71,7 +73,8 @@ const isDisabled = isViewMode;
 const [imagePreview, setImagePreview] = useState("");        // To show preview
 const [imageFileName, setImageFileName] = useState("");      // To show filename
 const [attachedDocs, setAttachedDocs] = useState([]); // [{name, data, previewUrl}]
-
+const { categories = [], status: categoryStatus = "idle" } = useSelector((state) => state.category);
+console.log("categories",categories)
 // const fileInputRef = useRef(null);
 const [hasUserUploadedImage, setHasUserUploadedImage] = useState(false);//for edit image
 const [showImageModal, setShowImageModal] = useState(false);
@@ -94,6 +97,7 @@ const [formData, setFormData] = useState({
     received_amount: " ",
     visibleColumns: {
     category: false,
+    item_code: false,
     
   },
   });
@@ -145,6 +149,14 @@ const [formData, setFormData] = useState({
     }
   }, [isEditMode, isViewMode, sales.length, dispatch]);
 
+   const loadCategories = () => {
+      dispatch(fetchCategories());
+    };
+  
+    useEffect(() => {
+      loadCategories();
+    }, [dispatch]);
+
 // Update customers options
   useEffect(() => {
     const customerOptions = parties.map((p) => ({
@@ -166,7 +178,14 @@ useEffect(() => {
   }
 }, [isCreateMode]);
 
-
+///fetch items
+const categoryOptions = [
+  { value: "", label: "Select Category" },
+  ...categories.map(cat => ({
+    value: cat.category_name || cat.name,  // adjust based on your API response
+    label: cat.category_name || cat.name
+  }))
+];
 useEffect(() => {
   if (!saleToEdit) return;
 
@@ -176,6 +195,7 @@ useEffect(() => {
         id: index + 1,
         item: String(item.item || ""),
         category: String(item.category || ""),
+        item_code: String(item.item_code || ""),
         qty: String(item.qty || ""),
         unit: String(item.unit || "NONE"),
         priceUnitType: String(item.priceUnitType || "Without Tax"),
@@ -246,6 +266,7 @@ useEffect(() => {
     received_amount: saleToEdit.received_amount || " ",
     visibleColumns: {
       category: false,
+      item_code:false,
       // discount: false, // etc.
     },
   });
@@ -544,12 +565,13 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
               </Row>
               <Row className="item-table-row mt-4">
               <Col>
-                <Table bordered responsive>
+                <Table bordered >
                  <thead>
                  <tr>
                  <th>#</th>
                  <th>Item</th>
                  {formData.visibleColumns.category && <th>Category</th>}
+                 {formData.visibleColumns.item_code && <th>item_code</th>}
                  <th>Qty</th>
                  <th>Unit</th>
                  <th>Price</th>
@@ -567,6 +589,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
         >
           {[
             { key: "category", label: "Category" },
+            { key: "item_code", label: "Item-Code" },
             
           ].map(col => (
             <Dropdown.Item key={col.key} as="div" className="d-flex align-items-center px-3 py-2">
@@ -610,10 +633,21 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 
 {formData.visibleColumns.category && (
   <td>
-    <TextInputform 
-      value={row.category} 
-      onChange={e => onRowChange(row.id, "category", e.target.value)}
-      placeholder="e.g., Fruit, Electronics"
+    <DropDown
+      value={row.category}
+      onChange={(e) => onRowChange(row.id, "category", e.target.value)}
+      options={categoryOptions}
+      disabled={isDisabled}
+    />
+  </td>
+)}
+{formData.visibleColumns.item_code && (
+  <td>
+    <DropDown
+      value={row.item_code}
+      onChange={(e) => onRowChange(row.id, "item_code", e.target.value)}
+      options={categoryOptions}
+      disabled={isDisabled}
     />
   </td>
 )}
