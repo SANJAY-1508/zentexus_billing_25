@@ -11,6 +11,7 @@ import Modal from "react-bootstrap/Modal";
 import { Color } from "antd/es/color-picker";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import { fetchCategories } from "../../slice/CategorySlice"; // correct path
 // Static options
 const UNITS = ["NONE", "KG", "Litre", "Piece"];
 const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
@@ -40,9 +41,12 @@ const PAYMENT_OPTIONS = [
   
 ];
 
+
 const INITIAL_ROW = {
   id: 1,
   item: "",
+  category: "",
+  item_code: "",
   qty: "",
   unit: "NONE",
   priceUnitType: "Without Tax",
@@ -51,7 +55,8 @@ const INITIAL_ROW = {
   discountAmount: "0.00",
   taxPercent: 0,
   taxAmount: "0.00",
-  amount: "0.00",
+  amount: "0.00"
+  
 };
 
 const SaleCreation = () => {
@@ -59,6 +64,7 @@ const dispatch = useDispatch();
 const navigate = useNavigate();
 const { id } = useParams();
 const location = useLocation();
+const [selectedPartyOption, setSelectedPartyOption] = useState(null);
 const { parties, partiesStatus, sales } = useSelector((state) => state.sale);
 const isEditMode = location.pathname.startsWith("/sale/edit");
 const isViewMode = location.pathname.startsWith("/sale/view");
@@ -67,7 +73,8 @@ const isDisabled = isViewMode;
 const [imagePreview, setImagePreview] = useState("");        // To show preview
 const [imageFileName, setImageFileName] = useState("");      // To show filename
 const [attachedDocs, setAttachedDocs] = useState([]); // [{name, data, previewUrl}]
-
+const { categories = [], status: categoryStatus = "idle" } = useSelector((state) => state.category);
+console.log("categories",categories)
 // const fileInputRef = useRef(null);
 const [hasUserUploadedImage, setHasUserUploadedImage] = useState(false);//for edit image
 const [showImageModal, setShowImageModal] = useState(false);
@@ -88,6 +95,11 @@ const [formData, setFormData] = useState({
     round_off_amount: "0",
     total: "0.00",
     received_amount: " ",
+    visibleColumns: {
+    category: false,
+    item_code: false,
+    
+  },
   });
   const handleReceivedAmountChange = (e) => {
   const value = e.target.value;
@@ -137,6 +149,14 @@ const [formData, setFormData] = useState({
     }
   }, [isEditMode, isViewMode, sales.length, dispatch]);
 
+   const loadCategories = () => {
+      dispatch(fetchCategories());
+    };
+  
+    useEffect(() => {
+      loadCategories();
+    }, [dispatch]);
+
 // Update customers options
   useEffect(() => {
     const customerOptions = parties.map((p) => ({
@@ -149,79 +169,108 @@ const [formData, setFormData] = useState({
       ...customerOptions,
     ]);
   }, [parties]);
-  useEffect(() => {
-  setHasUserUploadedImage(false);
-  setImagePreview("");
-  setImageFileName("");
-}, [id, isCreateMode]); // Reset when sale ID or mode changes
+useEffect(() => {
+  if (isCreateMode) {
+    setImagePreview("");
+    setImageFileName("");
+    setAttachedDocs([]);
+    setHasUserUploadedImage(false);
+  }
+}, [isCreateMode]);
 
-// Prefill form for edit/view
-  useEffect(() => {
-    if (!saleToEdit) return;
-    const itemsArray = JSON.parse(saleToEdit.products || "[]");
-    const rows =
-      Array.isArray(itemsArray) && itemsArray.length > 0
-        ? itemsArray.map((item, index) => ({
-            id: index + 1,
-            item: String(item.item || ""),
-            qty: String(item.qty || ""),
-            unit: String(item.unit || "NONE"),
-            priceUnitType: String(item.priceUnitType || "Without Tax"),
-            price: String(item.price || ""),
-            discountPercent: String(item.discountPercent || ""),
-            discountAmount: String(item.discountAmount || "0.00"),
-            taxPercent: Number(item.taxPercent || 0),
-            taxAmount: String(item.taxAmount || "0.00"),
-            amount: String(item.amount || "0.00"),
-          }))
-        : [INITIAL_ROW];
+///fetch items
+const categoryOptions = [
+  { value: "", label: "Select Category" },
+  ...categories.map(cat => ({
+    value: cat.category_name || cat.name,  // adjust based on your API response
+    label: cat.category_name || cat.name
+  }))
+];
+useEffect(() => {
+  if (!saleToEdit) return;
+
+  const itemsArray = JSON.parse(saleToEdit.products || "[]");
+  const rows = Array.isArray(itemsArray) && itemsArray.length > 0
+    ? itemsArray.map((item, index) => ({
+        id: index + 1,
+        item: String(item.item || ""),
+        category: String(item.category || ""),
+        item_code: String(item.item_code || ""),
+        qty: String(item.qty || ""),
+        unit: String(item.unit || "NONE"),
+        priceUnitType: String(item.priceUnitType || "Without Tax"),
+        price: String(item.price || ""),
+        discountPercent: String(item.discountPercent || ""),
+        discountAmount: String(item.discountAmount || "0.00"),
+        taxPercent: Number(item.taxPercent || 0),
+        taxAmount: String(item.taxAmount || "0.00"),
+        amount: String(item.amount || "0.00"),
+      }))
+    : [INITIAL_ROW];
+    if (saleToEdit.parties_id) {
+    const partyFromList = parties.find(p => p.id == saleToEdit.parties_id || p.parties_id == saleToEdit.parties_id);
+    if (partyFromList) {
+      setSelectedPartyOption({
+        value: partyFromList.id,
+        label: partyFromList.name
+      });
+    }
+  }
 
   const totalAmountRaw = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
-  const rount_off = Number(saleToEdit.rount_off || 0) === 1 ? 1 : 0;
+  const rount_off = Number(saleToEdit.rount_off || 0);
   const round_off_amount = String(saleToEdit.round_off_amount || "0");
-  const finalRound = rount_off ? Number(round_off_amount) : 0;
+  const finalRound = rount_off === 1 ? Number(round_off_amount) : 0;
   const total = (totalAmountRaw + finalRound).toFixed(2);
-// Determine if manual round off
-    let manual = false;
-    if (rount_off === 1) {
-      const autoRound = calculateAutoRoundOff(totalAmountRaw);
-      manual = Math.abs(Number(round_off_amount) - Number(autoRound)) > 0.01;
-    }
-    setIsManualRoundOff(manual);
-  setFormData({
-      parties_id: saleToEdit.parties_id || "",
-      name: saleToEdit.name || "",
-      phone: saleToEdit.phone || "",
-      billing_address: saleToEdit.billing_address || "",
-      shipping_address: saleToEdit.shipping_address || "",
-      invoice_no: saleToEdit.invoice_no || "",
-      invoice_date:
-      saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
-      state_of_supply: saleToEdit.state_of_supply || "",
-      payment_type: saleToEdit.payment_type || "",
-      description: saleToEdit.description|| "",
-      // add_image: saleToEdit.add_image ||"",
-      add_image: hasUserUploadedImage ? formData.add_image : (saleToEdit.add_image || ""),
-      rows,
-      rount_off,
-      round_off_amount,
-      total,
-      received_amount: saleToEdit.received_amount || " ",
-    });
-    if (saleToEdit.add_image && saleToEdit.add_image.trim() !== "") {
-    setImagePreview(saleToEdit.add_image);
-    // setImageFileName("Previously uploaded image");
+
+  // Auto vs Manual round-off detection
+  let manual = false;
+  if (rount_off === 1) {
+    const autoRound = calculateAutoRoundOff(totalAmountRaw);
+    manual = Math.abs(Number(round_off_amount) - Number(autoRound)) > 0.01;
+  }
+  setIsManualRoundOff(manual);
+
+  // Reset image state properly
+  setImagePreview(saleToEdit.add_image || "");
+  setImageFileName(""); // or set to something like "Previously uploaded"
+  setHasUserUploadedImage(false); // Important: user hasn't uploaded new one yet
+
+  // Parse documents
+  let docs = [];
+  if (saleToEdit.documents) {
     try {
-    const docs = saleToEdit.documents ? JSON.parse(saleToEdit.documents) : [];
-    setAttachedDocs(docs.map(d => ({
-      name: d.name,
-      data: d.data
-    })));
-  } catch (e) {
-    console.error("Failed to parse documents", e);
+      docs = JSON.parse(saleToEdit.documents);
+    } catch (e) {
+      console.error("Failed to parse documents", e);
+    }
   }
-  }
-  },[saleToEdit, hasUserUploadedImage]);
+  setAttachedDocs(docs.map(d => ({ name: d.name, data: d.data })));
+
+  setFormData({
+    parties_id: saleToEdit.parties_id || "",
+    name: saleToEdit.name || "",
+    phone: saleToEdit.phone || "",
+    billing_address: saleToEdit.billing_address || "",
+    shipping_address: saleToEdit.shipping_address || "",
+    invoice_no: saleToEdit.invoice_no || "",
+    invoice_date: saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
+    state_of_supply: saleToEdit.state_of_supply || "",
+    payment_type: saleToEdit.payment_type || "",
+    description: saleToEdit.description || "",
+    add_image: saleToEdit.add_image || "", // ← Always use directly from DB
+    rows,
+    rount_off,
+    round_off_amount,
+    total,
+    received_amount: saleToEdit.received_amount || " ",
+    visibleColumns: {
+      category: false,
+      item_code:false,
+      // discount: false, // etc.
+    },
+  });
+}, [saleToEdit,parties]); // ← Only depend on saleToEdit
 
   const handleDocumentUpload = (e) => {
   const files = Array.from(e.target.files);
@@ -261,23 +310,41 @@ const totalDiscount = formData.rows.reduce( (a, r) => a + (Number(r.discountAmou
 const totalTax = formData.rows.reduce( (a, r) => a + (Number(r.taxAmount) || 0),0);
 const totalAmountRaw = formData.rows.reduce((a, r) => a + (Number(r.amount) || 0),0 );
 const calculateAutoRoundOff = (amount) =>(Math.round(amount) - amount).toFixed(2);
-// Handlers
 const handlePartySelect = (selectedOption) => {
-    if (!selectedOption) {
-      setFormData((prev) => ({...prev,parties_id: "",name: "",phone: "",billing_address: "",shipping_address: "",state_of_supply: "",}));
-    return;   
-    }     
-    if (selectedOption.value === "add_party") return;
-const selectedParty = parties.find((p) => p.id === selectedOption.value);
-    setFormData((prev) => ({
+  if (!selectedOption) {
+    setSelectedPartyOption(null);
+    setFormData(prev => ({
       ...prev,
-      parties_id:  selectedParty?.parties_id || "",
-      name: selectedParty?.name || "",
-      phone: selectedParty?.phone || "",
-      billing_address: selectedParty?.billing_address || "",
-      shipping_address: selectedParty?.shipping_address || "",
-      state_of_supply: selectedParty?.state_of_supply || "", })); 
-    };
+      parties_id: "",
+      name: "",
+      phone: "",
+      billing_address: "",
+      shipping_address: "",
+      state_of_supply: "",
+    }));
+    return;
+  }
+
+  if (selectedOption.value === "add_party") {
+    // handle add party logic
+    return;
+  }
+
+  const selectedParty = parties.find(p => p.id === selectedOption.value);
+  if (selectedParty) {
+    setSelectedPartyOption(selectedOption); // ← Important!
+
+    setFormData(prev => ({
+      ...prev,
+      parties_id: selectedParty.parties_id || selectedParty.id || "",
+      name: selectedParty.name || "",
+      phone: selectedParty.phone || "",
+      billing_address: selectedParty.billing_address || "",
+      shipping_address: selectedParty.shipping_address || "",
+      state_of_supply: selectedParty.state_of_supply || "",
+    }));
+  }
+};
 const toggleCredit = () => setCredit(!credit);
 const deleteRow = (id) => {
 const newRows = formData.rows.filter((r) => r.id !== id);
@@ -462,30 +529,35 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                   <input type="checkbox" checked={credit} onChange={toggleCredit}/>
                   <label className="me-2">Cash</label>
                   </div>)}
-                  <Col md={6}>
+                  <Col md={3}>
                   <label>Customer Name</label>
                   <div className="d-flex gap-2">
-                  <Select options={customers} value={ customers.find((o) => o.value === formData.parties_id  ) || null}
-                      onChange={isDisabled ? undefined : handlePartySelect}
-                      placeholder="Select Customer" isClearable isDisabled={isDisabled}/>
+                    <Select
+                        value={selectedPartyOption}  // ← This is the fix!
+                        options={customers}
+                        onChange={handlePartySelect}
+                        placeholder="Select Customer"
+                        isClearable
+                        isDisabled={isDisabled}/>
+
                   </div>
                   </Col>
-                  <Col md={6}>
+                  <Col md={3}>
                     <TextInputform  formLabel="Phone Number" formtype="tel"value={formData.phone}  onChange={(e) =>handleInputChange("phone", e.target.value) }readOnly={isDisabled}/>
                   </Col>
                 </Row>
                 {credit && (
                   <Row className="mb-3">
-                    <Col md={6}>
+                    <Col md={3}>
                       <TextArea textlabel="Billing Address" value={formData.billing_address} onChange={(e) => handleInputChange("billing_address", e.target.value)}readOnly={isDisabled}/>
                     </Col>
-                    <Col md={6}>
+                    <Col md={3}>
                       <TextArea textlabel="Shipping Address"  value={formData.shipping_address}  onChange={(e) => handleInputChange("shipping_address", e.target.value)} readOnly={isDisabled}/>
                     </Col>
                   </Row>
                 )}
                 </Col>
-                <Col md={3} style={{ zIndex: 100 }}>
+                <Col md={2} style={{ zIndex: 100 }}>
                 <TextInputform formLabel="Invoice Number" value={formData.invoice_no}  onChange={(e) =>  handleInputChange("invoice_no", e.target.value)} readOnly={isDisabled}/>
                 <Calender calenderlabel="Invoice Date" initialDate={formData.invoice_date}/>
                 <DropDown textlabel="State of supply" value={formData.state_of_supply} onChange={(e) =>  handleInputChange("state_of_supply", e.target.value)} options={STATE_OF_SUPPLY_OPTIONS} disabled={isDisabled}/>
@@ -493,152 +565,138 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
               </Row>
               <Row className="item-table-row mt-4">
               <Col>
-                <Table bordered>
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th>Qty</th>
-                      <th>Unit</th>
-                      <th>Price</th>
-                      <th>Price/unit</th>
-                      <th>Discount</th>
-                      <th>Tax</th>
-                      {/* <th>Amount</th> */}
-                      {/* <th style={{ position: 'relative' }}>
-  <DropdownButton
-    id="amount-column-dropdown"
-    title="Amount +"
-    // variant="link"
-    size="sm"
-    align="end"
-    className="p-0 border-0 text-dark fw-bold"
-    style={{ 
-      background: 'transparent', 
-      boxShadow: 'none',
-      fontWeight: 'bold'
-    }}
-  >
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Item Category
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Item Code
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      HSN/SAC Code
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Description
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Discount
-    </Dropdown.Item>
-    <Dropdown.Divider />
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()} className="text-primary">
-      More Settings
-    </Dropdown.Item>
-  </DropdownButton>
-</th> */}
-<th>
-  <DropdownButton
-    id="amount-column-dropdown"
-    title={
-      <span style={{ fontSize: '1rem', fontWeight: 'bold' }}>
-       Amount <FaPlus />
-      </span>
-    }
-    
-    size="sm"
-    align="end"
-    className="p-0 border-0 text-success shadow-none"
-    style={{
-      background: 'transparent',
-      boxShadow: 'none',
-    }}
-    menuVariant="light" // optional: makes menu look modern
-  >
-    <Dropdown.Item href="#/ " onClick={(e) => e.preventDefault()}>
-      Item Category
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Item Code
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      HSN/SAC Code
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Description
-    </Dropdown.Item>
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()}>
-      Discount
-    </Dropdown.Item>
-    <Dropdown.Divider />
-    <Dropdown.Item href="#/" onClick={(e) => e.preventDefault()} className="text-primary">
-      More Settings
-    </Dropdown.Item>
-  </DropdownButton>
-</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formData.rows.map((row) => (
-                      <tr key={row.id}>
-                        <td>
-                          <TextInputform value={row.item}  onChange={(e) =>onRowChange(row.id, "item", e.target.value)} readOnly={isDisabled}/>
-                        </td>
-                        <td>
-                          <TextInputform formtype="number"  value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)}readOnly={isDisabled}/>
-                          
-                        </td>
-                        <td>
-                          <DropDown value={row.unit}  onChange={(v) => onRowChange(row.id, "unit", v)} options={unitOptions} disabled={isDisabled}/>
-                        </td>
-                        <td>
-                          <TextInputform formtype="number" value={row.price} onChange={(e) => onRowChange(row.id, "price", e.target.value)}readOnly={isDisabled}/>
-                        </td>
-                        <td>
-                          <DropDown value={row.priceUnitType} onChange={(v) => onRowChange(row.id, "priceUnitType", v)}options={priceUnitTypeOptions}disabled={isDisabled}/>
-                        </td>
-                        <td>
-                          <InputGroup size="sm">
-                            <FormControl type="number"  placeholder="%"  value={row.discountPercent} onChange={(e) => onRowChange(row.id, "discountPercent",e.target.value)}readOnly={isDisabled}/>
-                            <FormControl value={row.discountAmount} readOnly />
-                          </InputGroup>
-                        </td>
-                        <td>
-                          <Select  value={TAX_OPTIONS.find((opt) => String(opt.value) === String(row.taxPercent)) || TAX_OPTIONS[0]}
-                           onChange={(v) => onRowChange(row.id, "taxPercent", v)}options={TAX_OPTIONS} isDisabled={isDisabled} menuPortalTarget={document.body}/>
-                          <TextInputform readOnly value={row.taxAmount || "0.00"}/>
-                        </td>
-                        <td>
-                          <TextInputform readOnly value={row.amount} />
-                        </td>
-                        <td>
-                          {!isViewMode && (
-                            <Button variant="danger"  size="sm"  onClick={() => deleteRow(row.id)}> <FaTimes /> </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {!isViewMode && (
-                      <tr>
-                        <td colSpan="9">
-                          <Button size="sm" onClick={addRow}> <FaPlus/>ADD ROW </Button>
-                        </td>
-                      </tr>
-                    )}
-                    <tr>
-                      <td colSpan="2">TOTAL</td>
-                      <td>{totalQty}</td>
-                      <td colSpan="2"></td>
-                      <td>{totalDiscount.toFixed(2)}</td>
-                      <td>{totalTax.toFixed(2)}</td>
-                      <td>{totalAmountRaw.toFixed(2)}</td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </Table>
+                <Table bordered >
+                 <thead>
+                 <tr>
+                 <th>#</th>
+                 <th>Item</th>
+                 {formData.visibleColumns.category && <th>Category</th>}
+                 {formData.visibleColumns.item_code && <th>item_code</th>}
+                 <th>Qty</th>
+                 <th>Unit</th>
+                 <th>Price</th>
+                 <th>Price/unit</th>
+                 {formData.visibleColumns.discount && <th>Discount</th>}
+                 <th>Tax</th>
+                <th>
+        <DropdownButton
+          id="amount-column-dropdown"
+          title={<span style={{ fontSize: "1rem", fontWeight: "bold" }}>Amount <FaPlus /></span>}
+          size="sm"
+          align="end"
+          className="p-0 border-0 text-success shadow-none"
+          style={{ background: "transparent", boxShadow: "none" }}
+        >
+          {[
+            { key: "category", label: "Category" },
+            { key: "item_code", label: "Item-Code" },
+            
+          ].map(col => (
+            <Dropdown.Item key={col.key} as="div" className="d-flex align-items-center px-3 py-2">
+              <Form.Check
+                type="checkbox"
+                label={col.label}
+                checked={formData.visibleColumns[col.key] || false}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  visibleColumns: { ...prev.visibleColumns, [col.key]: e.target.checked }
+                }))}
+                disabled={isDisabled}
+              />
+            </Dropdown.Item>
+          ))}
+          <Dropdown.Divider />
+          <Dropdown.Item className="text-primary fw-bold">More Settings</Dropdown.Item>
+        </DropdownButton>
+      </th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  {/* <tbody>
+    {formData.rows.map(row => (
+      <tr key={row.id}>
+      <td>{index + 1}</td> */}
+      <tbody>
+  {formData.rows.map((row, index) => (
+    <tr key={row.id}>
+      <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
+      {/* <td>
+        <TextInputform value={row.item} onChange={(e) => onRowChange(row.id, "item", e.target.value)} readOnly={isDisabled} />
+      </td> */}
+        <td>
+  <TextInputform 
+    value={row.item} 
+    onChange={e => onRowChange(row.id, "item", e.target.value)}
+    placeholder="e.g., Apple, iPhone 15"
+  />
+</td>
+
+{formData.visibleColumns.category && (
+  <td>
+    <DropDown
+      value={row.category}
+      onChange={(e) => onRowChange(row.id, "category", e.target.value)}
+      options={categoryOptions}
+      disabled={isDisabled}
+    />
+  </td>
+)}
+{formData.visibleColumns.item_code && (
+  <td>
+    <DropDown
+      value={row.item_code}
+      onChange={(e) => onRowChange(row.id, "item_code", e.target.value)}
+      options={categoryOptions}
+      disabled={isDisabled}
+    />
+  </td>
+)}
+
+        <td><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
+        <td><DropDown value={row.unit} onChange={(v) => onRowChange(row.id, "unit", v)} options={unitOptions} disabled={isDisabled} /></td>
+        <td><TextInputform formtype="number" value={row.price} onChange={(e) => onRowChange(row.id, "price", e.target.value)} readOnly={isDisabled} /></td>
+        <td><DropDown value={row.priceUnitType} onChange={(v) => onRowChange(row.id, "priceUnitType", v)} options={priceUnitTypeOptions} disabled={isDisabled} /></td>
+
+        {formData.visibleColumns.discount && (
+          <td>
+            <InputGroup size="sm">
+              <FormControl type="number" placeholder="%" value={row.discountPercent} onChange={(e) => onRowChange(row.id, "discountPercent", e.target.value)} readOnly={isDisabled} />
+              <FormControl value={row.discountAmount} readOnly />
+            </InputGroup>
+          </td>
+        )}
+
+        <td>
+          <Select value={TAX_OPTIONS.find(opt => String(opt.value) === String(row.taxPercent)) || TAX_OPTIONS[0]}
+            onChange={(v) => onRowChange(row.id, "taxPercent", v)} options={TAX_OPTIONS} isDisabled={isDisabled} menuPortalTarget={document.body} />
+          <TextInputform readOnly value={row.taxAmount || "0.00"} />
+        </td>
+        <td><TextInputform readOnly value={row.amount} /></td>
+        <td>{!isViewMode && <Button variant="danger" size="sm" onClick={() => deleteRow(row.id)}><FaTimes /></Button>}</td>
+      </tr>
+    ))}
+
+    {!isViewMode && (
+      <tr>
+        <td colSpan="20">
+          <Button size="sm" onClick={addRow}><FaPlus /> ADD ROW</Button>
+        </td>
+      </tr>
+    )}
+
+    <tr>
+      <td colSpan={2 + Object.values(formData.visibleColumns).filter(Boolean).length}>
+        <strong>TOTAL</strong>
+      </td>
+      <td>{totalQty}</td>
+      <td colSpan="5"></td>
+      {formData.visibleColumns.discount && <td>{totalDiscount.toFixed(2)}</td>}
+      <td>{totalTax.toFixed(2)}</td>
+      <td>{totalAmountRaw.toFixed(2)}</td>
+      <td colSpan="2"></td>
+    </tr>
+  </tbody>
+</Table>
                 
               </Col>
             </Row>
@@ -850,9 +908,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
           </Col>
           
         </Row>
-        {/* Full-Screen Image Popup Modal */}
-{/* Beautiful Transparent Popup - Closes ONLY on X button */}
-{/* PERFECT Image Popup - Closes ONLY when tapping X */}
+        
 <Modal 
   show={showImageModal} 
   onHide={() => {}}  // ← EMPTY: disables automatic close
@@ -925,5 +981,3 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 };
 
 export default SaleCreation;
-
-
