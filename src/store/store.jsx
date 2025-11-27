@@ -5,6 +5,7 @@ import saleReducer from "../slice/saleSlice";
 import unitReducer from "../slice/UnitSlice";  
 import categoryReducer from "../slice/CategorySlice";
 import productReducer from "../slice/ProductSlice";
+import serviceReducer from "../slice/serviceSlice";
 
 
 export const store = configureStore({
@@ -13,7 +14,8 @@ export const store = configureStore({
     sale: saleReducer,
     unit: unitReducer,
     category: categoryReducer,
-    product : productReducer,  
+    product : productReducer,
+    service:serviceReducer,  
   },
 });
 
