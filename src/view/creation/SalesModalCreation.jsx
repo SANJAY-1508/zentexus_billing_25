@@ -41,10 +41,10 @@ const PAYMENT_OPTIONS = [
   { value: "Cash", label: "Cash" }
   
 ];
-
+const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 const INITIAL_ROW = {
-  id: 1,
+   id: generateUniqueId(),
   item: "",
   category: "",
   Description: "",
@@ -237,7 +237,7 @@ useEffect(() => {
 
   const rows = Array.isArray(itemsArray) && itemsArray.length > 0
     ? itemsArray.map((product, index) => ({  // ← renamed to 'product' to avoid confusion
-        id: index + 1,
+        id: generateUniqueId(),
         item: String(product.item || ""),
         category: String(product.category || ""),
         hsn_code: String(product.category ||" "),
@@ -407,19 +407,30 @@ let finalRound = formData.rount_off === 1 ? Number(formData.round_off_amount) : 
 const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
     setFormData((prev) => ({ ...prev, rows: newRows, total: newTotal }));
   };
-const addRow = () => {const newId = formData.rows.length ? Math.max(...formData.rows.map((r) => r.id)) + 1: 1;
-const newRows = [...formData.rows, { ...INITIAL_ROW, id: newId }];
-const newTotalAmountRaw = newRows.reduce((a, r) => a + Number(r.amount || 0),0 );
-let finalRound = formData.rount_off === 1 ? Number(formData.round_off_amount) : 0;
+// const addRow = () => {const newId = formData.rows.length ? Math.max(...formData.rows.map((r) => r.id)) + 1: 1;
+// const newRows = [...formData.rows, { ...INITIAL_ROW, id: newId }];
+// const newTotalAmountRaw = newRows.reduce((a, r) => a + Number(r.amount || 0),0 );
+// let finalRound = formData.rount_off === 1 ? Number(formData.round_off_amount) : 0;
+//     if (formData.rount_off === 1 && !isManualRoundOff) {
+//       const autoRound = calculateAutoRoundOff(newTotalAmountRaw);
+//       finalRound = Number(autoRound);
+//       setFormData((prev) => ({ ...prev, round_off_amount: autoRound }));
+//     }
+// const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
+//     setFormData((prev) => ({ ...prev, rows: newRows, total: newTotal }));
+//   };
+const addRow = () => {
+    const newRows = [...formData.rows, { ...INITIAL_ROW, id: generateUniqueId() }];  // Use unique ID for new row
+    const newTotalAmountRaw = newRows.reduce((a, r) => a + Number(r.amount || 0), 0);
+    let finalRound = formData.rount_off === 1 ? Number(formData.round_off_amount) : 0;
     if (formData.rount_off === 1 && !isManualRoundOff) {
       const autoRound = calculateAutoRoundOff(newTotalAmountRaw);
       finalRound = Number(autoRound);
       setFormData((prev) => ({ ...prev, round_off_amount: autoRound }));
     }
-const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
+    const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
     setFormData((prev) => ({ ...prev, rows: newRows, total: newTotal }));
   };
-
 const onRowChange = (id, field, value) => {
     let actualValue = value;
     if (value?.value !== undefined) {
