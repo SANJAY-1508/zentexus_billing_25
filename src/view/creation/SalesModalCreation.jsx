@@ -48,6 +48,7 @@ const INITIAL_ROW = {
   item: "",
   category: "",
   Description: "",
+  hsn_code:" ",
   qty: "",
   unit: "NONE",
   priceUnitType: "Without Tax",
@@ -59,6 +60,7 @@ const INITIAL_ROW = {
   amount: "0.00"
   
 };
+console.log("INITIAL_ROW",INITIAL_ROW)
 
 const SaleCreation = () => {
 const dispatch = useDispatch();
@@ -101,6 +103,7 @@ const [formData, setFormData] = useState({
     visibleColumns: {
     category: false,
     description: false,
+    hsn_code: false,
     
   },
   });
@@ -195,34 +198,31 @@ useEffect(() => {
     dispatch(fetchProducts(""));
   }
 }, [productStatus, dispatch]);
-const productOptions = products.map(p => ({
-  value: p.item_name,
-  label: `${p.item_name} (${p.sale_price} ₹)`,
-  price: p.sale_price,
-  unit: p.unit_value || "Piece",
-  tax: p.tax || 18, // if you have tax, else set default
-}));
-// useEffect(() => {
-//   if (!saleToEdit) return;
 
-//   const itemsArray = JSON.parse(saleToEdit.products || "[]");
-//   const rows = Array.isArray(itemsArray) && itemsArray.length > 0
-//     ? itemsArray.map((item, index) => ({
-//         id: index + 1,
-//         item: String(item.item || ""),
-//         category: String(item.category || ""),
-//         Description: String(item.Description || ""),
-//         qty: String(item.qty || ""),
-//         unit: String(item.unit || "NONE"),
-//         priceUnitType: String(item.priceUnitType || "Without Tax"),
-//         price: String(item.price || ""),
-//         discountPercent: String(item.discountPercent || ""),
-//         discountAmount: String(item.discountAmount || "0.00"),
-//         taxPercent: Number(item.taxPercent || 0),
-//         taxAmount: String(item.taxAmount || "0.00"),
-//         amount: String(item.amount || "0.00"),
-//       }))
-//     : [INITIAL_ROW];
+const productOptions = React.useMemo(() => {
+  return products.map(p => ({
+    value: p.item_name,
+    label: p.item_name,
+    hsn_code: p.hsn_code.toString()  ,// important: convert to string
+    item:p.item_name,
+  }));
+}, [products]);
+console.log("productOptions",productOptions)
+
+// Auto-show HSN column when any row has HSN filled
+useEffect(() => {
+  const hasHsn = formData.rows.some(row => row.hsn_code);
+  if (hasHsn) {
+    setFormData(prev => ({
+      ...prev,
+      visibleColumns: {
+        ...prev.visibleColumns,
+        hsn_code: true
+      }
+    }));
+  }
+}, [formData.rows]);
+
 useEffect(() => {
   if (!saleToEdit) return;
 
@@ -234,11 +234,13 @@ useEffect(() => {
     itemsArray = [];
   }
 
+
   const rows = Array.isArray(itemsArray) && itemsArray.length > 0
     ? itemsArray.map((product, index) => ({  // ← renamed to 'product' to avoid confusion
         id: index + 1,
         item: String(product.item || ""),
         category: String(product.category || ""),
+        hsn_code: String(product.category ||" "),
         Description: String(product.Description || ""),  // ← capital D!
         qty: String(product.qty || ""),
         unit: String(product.unit || "NONE"),
@@ -313,6 +315,7 @@ useEffect(() => {
     visibleColumns: {
       category: false,
       description:false,
+      hsn_code:false,
       
     },
   });
@@ -620,7 +623,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                  <th>Item</th>
                  {formData.visibleColumns.category && <th>Category</th>}
                  {formData.visibleColumns.description && <th>Description</th>}
-                 
+                 {formData.visibleColumns.hsn_code && <th>HSN_code</th>}
                  <th>Qty</th>
                  <th>Unit</th>
                  <th>Price</th>
@@ -664,65 +667,57 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       <th>Actions</th>
     </tr>
   </thead>
-  {/* <tbody>
-    {formData.rows.map(row => (
-      <tr key={row.id}>
-      <td>{index + 1}</td> */}
+ 
       <tbody>
   {formData.rows.map((row, index) => (
     <tr key={row.id}>
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
-      {/* <td>
-        <TextInputform value={row.item} onChange={(e) => onRowChange(row.id, "item", e.target.value)} readOnly={isDisabled} />
-      </td> */}
-       {/* <td>
+      
+{/* <td>
   <Select
-    options={products.map(p => ({
-      value: p.item_name,
-      label: `${p.item_name} - ₹${p.sale_price} (${p.unit_value})`,
-      price: p.sale_price,
-      unit: p.unit_value || "Piece"
-    }))}
-    value={row.item ? { label: row.item, value: row.item } : null}
-    onChange={(option) => {
-      if (option) {
-        onRowChange(row.id, "item", option.value);
-        onRowChange(row.id, "price", option.price);
-        onRowChange(row.id, "unit", option.unit);
+    options={productOptions}
+    // value={productOptions.find(opt => opt.value === row.item) || null}
+    value={productOptions.find(option => option.value === row.item) || null}
+    onChange={(selectedOption) => {
+      if (selectedOption) {
+        // Only set item name
+        onRowChange(row.id, "item", selectedOption.value);
+        // AUTO-FILL HSN CODE ONLY
+        onRowChange(row.id, "hsn_code", selectedOption.hsn_code || "");
+      } else {
+        onRowChange(row.id, "item", "");
+        onRowChange(row.id, "hsn_code", "");
       }
     }}
-    placeholder="Search item..."
-    isSearchable={true}
-    isClearable={true}
+    isClearable
+    placeholder="Select item..."
     isDisabled={isDisabled}
     menuPortalTarget={document.body}
-    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
   />
 </td> */}
-<td style={{ minWidth: "280px" }}>
+<td style={{ minWidth: "320px" }}>
   <Select
-    options={products.map(p => ({
-      value: p.item_name,
-      label: p.item_name,               // ← Only shows Banana - Robusta, etc.
-      
-    }))}
-    value={row.item ? { label: row.item, value: row.item } : null}
+    options={productOptions}
+
+    value={productOptions.find(opt => opt.value === row.item_name) || null}
     onChange={(selected) => {
       if (selected) {
-        onRowChange(row.id, "item", selected.value);     // Save item name
-        
+        onRowChange(row.id, "item", selected.value);           // THIS WAS MISSING!
+        onRowChange(row.id, "hsn_code", selected.hsn_code || "");
+      } else {
+        onRowChange(row.id, "item", "");
+        onRowChange(row.id, "hsn_code", "");
       }
     }}
-    placeholder="Search item..."
-    isSearchable={true}
-    isClearable={true}
-    isDisabled={isDisabled}
-    noOptionsMessage={() => "No items found"}
-    styles={{
-      menuPortal: base => ({ ...base, zIndex: 9999 }),
-      control: base => ({ ...base, minHeight: 38 })
-    }}
+    placeholder="Select item..."
+    isClearable
+    isSearchable
     menuPortalTarget={document.body}
+    key={`item-${row.id}`}
+    isDisabled={isDisabled}
+    styles={{
+      control: (base) => ({ ...base, minHeight: 38 })
+    }}
   />
 </td>
 
@@ -747,16 +742,17 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
     />
   </td>
 )}
-{/* {formData.visibleColumns.hsn_code && (
+{formData.visibleColumns.hsn_code && (
   <td>
-    <DropDown
-      value={row.hsn_code_code}
-      onChange={(e) => onRowChange(row.id, "hsn_code", e.target.value)}
-      options={categoryOptions}
-      disabled={isDisabled}
+    <TextArea
+      value={row.hsn_code || ""}
+      onChange={(e) => onRowChange(row.id, "HSN_code", e.target.value)}
+      readOnly={isDisabled}
+      
+      
     />
   </td>
-)} */}
+)}
 
         <td><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
         <td><DropDown value={row.unit} onChange={(v) => onRowChange(row.id, "unit", v)} options={unitOptions} disabled={isDisabled} /></td>
