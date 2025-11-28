@@ -44,11 +44,12 @@ const PAYMENT_OPTIONS = [
 const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 const INITIAL_ROW = {
-   id: generateUniqueId(),
-  item: "",
+  id: generateUniqueId(),
+  product_id: "",        
+  item_name: "",
   category: "",
   Description: "",
-  hsn_code:" ",
+  hsn_code:"",
   qty: "",
   unit: "NONE",
   priceUnitType: "Without Tax",
@@ -201,26 +202,24 @@ useEffect(() => {
 
 const productOptions = React.useMemo(() => {
   return products.map(p => ({
-    value: p.item_name,
+    value: p.item_name,           
     label: p.item_name,
-    hsn_code: p.hsn_code.toString()  ,// important: convert to string
-    item:p.item_name,
+    hsn_code: p.hsn_code || ""    
   }));
 }, [products]);
 console.log("productOptions",productOptions)
 
 // Auto-show HSN column when any row has HSN filled
+
 useEffect(() => {
-  const hasHsn = formData.rows.some(row => row.hsn_code);
-  if (hasHsn) {
-    setFormData(prev => ({
-      ...prev,
-      visibleColumns: {
-        ...prev.visibleColumns,
-        hsn_code: true
-      }
-    }));
-  }
+  const hasAnyHsn = formData.rows.some(row => row.hsn_code && row.hsn_code.trim() !== "");
+  setFormData(prev => ({
+    ...prev,
+    visibleColumns: {
+      ...prev.visibleColumns,
+      hsn_code: hasAnyHsn
+    }
+  }));
 }, [formData.rows]);
 
 useEffect(() => {
@@ -238,9 +237,11 @@ useEffect(() => {
   const rows = Array.isArray(itemsArray) && itemsArray.length > 0
     ? itemsArray.map((product, index) => ({  // ← renamed to 'product' to avoid confusion
         id: generateUniqueId(),
-        item: String(product.item || ""),
+        product_id: product.product_id || "",           
+        item_name: product.item_name || product.item || "", 
+        hsn_code: product.hsn_code || "",
         category: String(product.category || ""),
-        hsn_code: String(product.category ||" "),
+        
         Description: String(product.Description || ""),  // ← capital D!
         qty: String(product.qty || ""),
         unit: String(product.unit || "NONE"),
@@ -438,6 +439,16 @@ const onRowChange = (id, field, value) => {
     } else if (value?.target?.value !== undefined) {
       actualValue = value.target.value;
     }
+
+// Add this function inside your component (after all useState)
+const onRowChange = (rowId, field, value) => {
+  setFormData(prev => ({
+    ...prev,
+    rows: prev.rows.map(row =>
+      row.id === rowId ? { ...row, [field]: value } : row
+    )
+  }));
+};
 const newRows = formData.rows.map((row) => {
       if (row.id !== id) return row;
       const updatedRow = { ...row, [field]: actualValue };
@@ -684,51 +695,28 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
     <tr key={row.id}>
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
       
-{/* <td>
-  <Select
-    options={productOptions}
-    // value={productOptions.find(opt => opt.value === row.item) || null}
-    value={productOptions.find(option => option.value === row.item) || null}
-    onChange={(selectedOption) => {
-      if (selectedOption) {
-        // Only set item name
-        onRowChange(row.id, "item", selectedOption.value);
-        // AUTO-FILL HSN CODE ONLY
-        onRowChange(row.id, "hsn_code", selectedOption.hsn_code || "");
-      } else {
-        onRowChange(row.id, "item", "");
-        onRowChange(row.id, "hsn_code", "");
-      }
-    }}
-    isClearable
-    placeholder="Select item..."
-    isDisabled={isDisabled}
-    menuPortalTarget={document.body}
-  />
-</td> */}
-<td style={{ minWidth: "320px" }}>
-  <Select
-    options={productOptions}
 
+<td style={{ minWidth: "380px" }}>
+  <Select
+    options={productOptions}
     value={productOptions.find(opt => opt.value === row.item_name) || null}
     onChange={(selected) => {
       if (selected) {
-        onRowChange(row.id, "item", selected.value);           // THIS WAS MISSING!
-        onRowChange(row.id, "hsn_code", selected.hsn_code || "");
+      
+        onRowChange(row.id, "item_name", selected.value);
+        onRowChange(row.id, "hsn_code", selected.hsn_code);
       } else {
-        onRowChange(row.id, "item", "");
+        
+        onRowChange(row.id, "item_name", "");
         onRowChange(row.id, "hsn_code", "");
       }
     }}
-    placeholder="Select item..."
+    placeholder="Search item by name..."
     isClearable
     isSearchable
     menuPortalTarget={document.body}
-    key={`item-${row.id}`}
+    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
     isDisabled={isDisabled}
-    styles={{
-      control: (base) => ({ ...base, minHeight: 38 })
-    }}
   />
 </td>
 
