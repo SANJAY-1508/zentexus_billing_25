@@ -12,7 +12,7 @@ import { TbCircleLetterI } from "react-icons/tb";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import NotifyData from "../../components/NotifyData";
 import { FiPrinter, FiShare2 } from "react-icons/fi";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp,FaChevronDown } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import { MdSms } from "react-icons/md";
 
@@ -25,11 +25,29 @@ const Sale = () => {
   const [businessName, setBusinessName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [openShareId, setOpenShareId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   // Fetch sales on search change
   useEffect(() => {
     dispatch(searchSales(searchTerm));
   }, [dispatch, searchTerm]);
+
+  // Perfect filter logic
+    const filteredSales = useMemo(() => {
+      return sales.filter((item) => {
+        const balance = Number(item.balance_due || 0);
+        const received = Number(item.received_amount || 0);
+        const isCancelled = !!item.is_cancelled;
+  
+        if (statusFilter === "All") return true;
+        if (statusFilter === "Paid") return balance === 0 && !isCancelled;
+        if (statusFilter === "Unpaid") return balance > 0 && received === 0;
+        if (statusFilter === "Partially Paid") return balance > 0 && received > 0;
+        if (statusFilter === "Cancelled") return isCancelled;
+        return true;
+      });
+    }, [sales, statusFilter]);
 
   // Calculate totals using real DB values
   const totals = useMemo(() => {
@@ -58,6 +76,18 @@ const Sale = () => {
       NotifyData("Sale Deletion Failed", "error");
     }
   };
+   // Status color
+  const statusDisplay= (item) => {
+    const balance = Number(item.balance_due || 0);
+    const received = Number(item.received_amount || 0);
+    const isCancelled = !!item.is_cancelled;
+
+    if (isCancelled) return <span style={{ color: "#95a5a6", fontWeight: "600" }}>Cancelled</span>;
+    if (balance === 0) return <span style={{ color: "#27ae60", fontWeight: "600" }}>Paid</span>;
+    if (received === 0 && balance > 0) return <span style={{ color: "#e74c3c", fontWeight: "600" }}>Unpaid</span>;
+    if (received > 0 && balance > 0) return <span style={{ color: "#f39c12", fontWeight: "600" }}>Partially Paid</span>;
+    return null;
+  };
 
   // Table headers
   const SaleHead = [
@@ -68,22 +98,75 @@ const Sale = () => {
     "Payment Type",
     "Amount",
     "Balance",
-    // "Actions",
-  ];
   
+    // Status Dropdown
+        <div key="status" style={{ position: "relative", display: "inline-block" }} onClick={(e) => e.stopPropagation()}>
+          <span
+            style={{ cursor: "pointer", fontWeight: "bold", color: "#212529" }}
+            onClick={(e) => {
+              const dropdown = e.currentTarget.nextElementSibling;
+              dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            }}
+          >
+            Status<FaChevronDown style={{ marginLeft: "8px", fontSize: "16px", color: "#212529" }} />
+          </span>
+    
+          <div style={{
+            display: "none",
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "white",
+            border: "1px solid #ddd",
+            borderRadius: "10px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: "160px",
+            marginTop: "8px",
+            overflow: "hidden"
+          }}>
+            {["All", "Paid", "Unpaid", "Partially Paid", "Cancelled"].map((status) => (
+              <div
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                style={{
+                  padding: "12px 18px",
+                  cursor: "pointer",
+                  backgroundColor: statusFilter === status ? "#3498db" : "white",
+                  color: statusFilter === status ? "white" : "#2c3e50",
+                  fontWeight: statusFilter === status ? "bold" : "500",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => statusFilter !== status && (e.currentTarget.style.backgroundColor = "#f8f9fa")}
+                onMouseLeave={(e) => statusFilter !== status && (e.currentTarget.style.backgroundColor = "white")}
+              >
+                {status}
+              </div>
+            ))}
+          </div>
+        </div>,
+  ];
+  // Close dropdown on outside click
+    useEffect(() => {
+      const close = () => {
+        document.querySelectorAll('div[style*="z-index: 9999"]').forEach(d => d.style.display = "none");
+      };
+      document.addEventListener("click", close);
+      return () => document.removeEventListener("click", close);
+    }, []);
 
-  // THIS IS THE FIXED SaleData – NO ERRORS!
-  const SaleData = sales.length > 0
-    ? sales.map((item) => {
-        const total = Number(item.total || 0).toFixed(2);
-        const balance = Number(item.balance_due || 0).toFixed(2); // From DB!
+  
+const SaleData = filteredSales.length > 0
+  ? filteredSales.map((item) => {
+      const total = Number(item.total || 0).toFixed(2);
+      const balance = Number(item.balance_due || 0).toFixed(2);
 
-        const balanceDisplay = balance > 0 ? (
-          <span style={{ color: "#d63031", fontWeight: "bold" }}>₹ {balance}</span>
-        ) : (
-          <span style={{ color: "#27ae60" }}>₹ 0.00</span>
-        );
-
+      const balanceDisplay = balance > 0 ? (
+        <span style={{ color: "#d63031", fontWeight: "bold" }}>₹ {balance}</span>
+      ) : (
+        <span style={{ color: "#27ae60" }}>₹ 0.00</span>
+      );
         return {
           icon: <TbCircleLetterI />,
           values: [
@@ -94,6 +177,7 @@ const Sale = () => {
             item.payment_type || "Cash",
             `₹ ${total}`,
             balanceDisplay,
+            statusDisplay(item),
 
             // Actions Column
             <div
@@ -225,22 +309,18 @@ const Sale = () => {
             </Row>
 
             {/* Totals Card */}
-            <Row className="mb-4">
-              <Col>
-                <div className="p-4 rounded-4 text-gray shadow-sm">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 className="mb-2 opacity-80">Total Sales Amount</h6>
-                      <h2 className="mb-1 fw-bold">₹ {totals.totalSales}</h2>
-                      <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
-                      <div className="mt-3 opacity-90">
-                        Received: <strong>₹ {totals.totalReceived}</strong> | Balance: <strong>₹ {totals.totalBalance}</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Col>
-            </Row>
+             <Row className="mb-4">
+                          <Col>
+                            <div className="p-4 bg-white rounded shadow-sm border">
+                              <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
+                              <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
+                              <div className="text-muted mt-2">
+                                Received: <strong>₹ {totals.totalReceived}</strong> | 
+                                Balance Due: <strong style={{ color: "#e74c3c" }}>₹ {totals.totalBalance}</strong>
+                              </div>
+                            </div>
+                          </Col>
+                        </Row>
 
             {/* Table */}
             <Col lg={12} xs={12}>
@@ -254,3 +334,4 @@ const Sale = () => {
 };
 
 export default Sale;
+
