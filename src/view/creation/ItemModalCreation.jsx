@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUnits } from "../../slice/UnitSlice";
 import { fetchCategories } from "../../slice/CategorySlice";
 import { createProduct } from "../../slice/ProductSlice";
+
 import { createService } from "../../slice/serviceSlice";  // Your service slice
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
@@ -25,7 +26,7 @@ const ImageModal = ({ show, onHide, imageSrc }) => (
   </Modal>
 );
 
-function AddItem({ show, onHide, activeTab = "PRODUCT" }) {
+function AddItem({ show, onHide, activeTab = "PRODUCT" , editProduct = null}) {
   const dispatch = useDispatch();
   const { units = [], status: unitStatus } = useSelector(state => state.unit);
   const { categories = [], status: categoryStatus } = useSelector(state => state.category);
@@ -83,6 +84,32 @@ const [wholesaleDetails, setWholesaleDetails] = useState({
   }, [activeTab, show]);
 
   
+
+
+
+  useEffect(() => {
+  if (editProduct && show) {
+    setItemName(editProduct.product_name || "");
+    setHsn(editProduct.hsn_code || "");
+    setItemCode(editProduct.product_code || "");
+    setSelectedUnit(editProduct.unit_value || "");
+    setSelectedCategory(editProduct.category_id || "");
+
+    try {
+      const sale = JSON.parse(editProduct.sale_price || "{}");
+      const purchase = JSON.parse(editProduct.purchase_price || "{}");
+      const stock = JSON.parse(editProduct.stock || "{}");
+
+      setSalePriceDetails({ price: sale.price || "", tax_type: sale.tax_type || "Without Tax", discount: sale.discount || "", discount_type: sale.discount_type || "Percentage" });
+      setPurchasePriceDetails({ price: purchase.price || "", tax_type: purchase.tax_type || "Without Tax", tax_rate: purchase.tax_rate || "None" });
+      setStockDetails({ opening_qty: stock.opening_qty || "", at_price: stock.at_price || "", stock_date: stock.stock_date || "", min_stock: stock.min_stock || "", location: stock.location || "" });
+
+      if (editProduct.add_image) setImagePreview(editProduct.add_image);
+    } catch (e) {}
+  }
+}, [editProduct, show]);
+
+
 
   // Fetch units & categories
   useEffect(() => {

@@ -39,8 +39,8 @@ export const updateProductApi = async (productData) => {
 };
 
 // DELETE PRODUCT
-export const deleteProductApi = async (item_code) => {
-  const payload = { delete_item_code: item_code };
+export const deleteProductApi = async (product_id) => {
+  const payload = { delete_product_id: product_id };  // ← THIS MATCHES PHP
   const response = await axiosInstance.post(API_ENDPOINT, payload);
   const { data } = response;
 

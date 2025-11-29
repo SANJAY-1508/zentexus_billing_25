@@ -1,16 +1,19 @@
 // src/pages/tabs/ProductTab.jsx
 import React, { useState, useEffect } from "react";
-import { Button, Table, Col, Card, Row } from "react-bootstrap";
-import { FaSearch, FaFileExcel } from "react-icons/fa";
+import { Button, Table, Col, Card, Row ,DropdownButton, Dropdown} from "react-bootstrap";
+import { FaSearch, FaFileExcel,FaEllipsisV } from "react-icons/fa";
 import AdjustItem from "../creation/AdjustItemCreation";
 import AddItem from "../creation/ItemModalCreation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "../../slice/ProductSlice";
+import { fetchProducts, deleteProduct } from "../../slice/ProductSlice";
+
 
 export default function ProductTab() {
   const [showAdjustItem, setShowAdjustItem] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+ 
+const [editProduct, setEditProduct] = useState(null);
 
   const dispatch = useDispatch();
   const { products = [], status } = useSelector((state) => state.product);
@@ -61,6 +64,7 @@ export default function ProductTab() {
                   <tr>
                     <th>ITEM</th>
                     <th>QTY</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -85,6 +89,33 @@ export default function ProductTab() {
                         >
                           <td className="fw-semibold">{product.product_name}</td>
                           <td className="text-center">{qty}</td>
+                          <td className="text-center">
+<DropdownButton
+  title={<FaEllipsisV />}
+  variant="link"
+  size="sm"
+  onClick={(e) => e.stopPropagation()}
+>
+  <Dropdown.Item onClick={(e) => {
+    e.stopPropagation();
+    setEditProduct(product);
+    setShowAddItem(true);
+  }}>
+    View/Edit
+  </Dropdown.Item>
+  <Dropdown.Item 
+    className="text-danger" 
+    onClick={(e) => {
+      e.stopPropagation();
+      if (window.confirm("Delete this item permanently?")) {
+        dispatch(deleteProduct(product.product_id));  // ← THIS WAS WRONG BEFORE (was product.id)
+      }
+    }}
+  >
+    Delete
+  </Dropdown.Item>
+</DropdownButton>
+        </td>
                         </tr>
                       );
                     })
@@ -218,11 +249,18 @@ export default function ProductTab() {
       </Col>
 
       {/* Modals */}
-      <AddItem
+      {/* <AddItem
         show={showAddItem}
         onHide={handleCloseAddItem}
         activeTab="PRODUCT"
-      />
+      /> */}
+
+      <AddItem
+  show={showAddItem}
+  onHide={() => { setShowAddItem(false); setEditProduct(null); dispatch(fetchProducts()); }}
+  editProduct={editProduct}
+/>
+
       <AdjustItem
         show={showAdjustItem}
         onHide={() => setShowAdjustItem(false)}
