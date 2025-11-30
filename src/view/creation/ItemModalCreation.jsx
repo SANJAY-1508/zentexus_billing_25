@@ -202,7 +202,8 @@ const handleSaveNew = async () => {
 
 
   // MAIN SAVE FUNCTION
- const handleSave = async (closeModal = true) => {
+ // MAIN SAVE FUNCTION – ONLY THIS PART IS CHANGED
+const handleSave = async (closeModal = true) => {
   const selectedCatObj = categories.find(c => c.category_id == selectedCategory) || {};
   const selectedUnitObj = units.find(u => u.unit_name === selectedUnit) || {};
 
@@ -235,17 +236,41 @@ const handleSaveNew = async () => {
 
   try {
     if (isProduct) {
-      await dispatch(createProduct({
+      const openingQty = parseFloat(stockDetails.opening_qty) || 0;
+      const atPrice = parseFloat(stockDetails.at_price) || 0;
+
+      // Enhanced stock object that includes opening transaction
+      const enhancedStock = {
+        ...stockDetails,
+        opening_qty: openingQty,
+        at_price: atPrice,
+        current_qty: openingQty,
+        current_value: openingQty * atPrice,
+        opening_transaction: openingQty > 0 ? {
+          type: "Opening Stock",
+          reference: "Opening Stock",
+          name: "Opening Stock",
+          date: stockDetails.stock_date || new Date().toISOString().split("T")[0],
+          quantity: openingQty,
+          price_per_unit: atPrice,
+          status: "Completed"
+        } : null
+      };
+
+      const payload = {
         ...commonData,
         purchase_price: JSON.stringify({
           price: purchasePriceDetails.price || "0",
           tax_type: purchasePriceDetails.tax_type,
           tax_rate: purchasePriceDetails.tax_rate
         }),
-        stock: JSON.stringify(stockDetails),
+        stock: JSON.stringify(enhancedStock),
         type: "product"
-      })).unwrap();
+      };
+
+      await dispatch(createProduct(payload)).unwrap();
     } else {
+      // Service (unchanged)
       await dispatch(createService({
         service_name: itemName.trim(),
         service_hsn: hsn || 0,
@@ -263,9 +288,8 @@ const handleSaveNew = async () => {
 
     if (closeModal) {
       alert("Saved Successfully!");
-      onHide(); // CLOSE modal
+      onHide();
     }
-
   } catch (err) {
     console.error("Save failed:", err);
     alert(err.message || "Failed to save");
