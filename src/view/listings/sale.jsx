@@ -263,7 +263,7 @@ const SaleData = filteredSales.length > 0
     : [];
 
   return (
-    <div id="main">
+    <div id="main"  style={{backgroundColor:"#DEE2E6",minHeight: "100vh"}}>
       <Container fluid className="py-5">
         <Row>
         
@@ -338,8 +338,8 @@ const SaleData = filteredSales.length > 0
   </Col>
 </Row>
 
-<Row className="mb-4">
-  <Col lg={10} className="d-flex align-items-center flex-wrap gap-3">
+<Row className="mb-2">
+  <Col lg={12} className=" p-3 d-flex align-items-center flex-wrap gap-3 bg-white ">
     <span className="text-muted fw-medium">Filter by :</span>
 
     {/* This Year - Working Dropdown */}
@@ -438,7 +438,7 @@ const SaleData = filteredSales.length > 0
             </Row> */}
 
             {/* Totals Card */}
-             <Row className="mb-4">
+             <Row className="mb-2">
                           <Col>
                             <div className="p-4 bg-white rounded shadow-sm border" style={{ width: "500px" }} >
                               <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
