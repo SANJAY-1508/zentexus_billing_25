@@ -79,6 +79,8 @@ const [imageFileName, setImageFileName] = useState("");      // To show filename
 const [attachedDocs, setAttachedDocs] = useState([]); // [{name, data, previewUrl}]
 const { categories = [], status: categoryStatus = "idle" } = useSelector((state) => state.category);
 const { products, status: productStatus } = useSelector(state => state.product);
+const [selectedCategory, setSelectedCategory] = useState("");
+const [showProductTable, setShowProductTable] = useState(false);
 console.log("products value",products);
 console.log("categories",categories)
 // const fileInputRef = useRef(null);
@@ -641,6 +643,12 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                  <thead>
                  <tr>
                  <th>#</th>
+                 
+
+
+
+
+
                  {formData.visibleColumns.category && <th>Category</th>}
                  <th>Item</th>
                  {formData.visibleColumns.description && <th>Description</th>}
@@ -694,17 +702,32 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
     <tr key={row.id}>
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
       
+
 {formData.visibleColumns.category && (
-  <td style={{minWidth:"180px"}}>
-    <DropDown
-      value={row.category}
-      onChange={(e) => onRowChange(row.id, "category", e.target.value)}
-      options={categoryOptions}
-      disabled={isDisabled}
+  <td style={{ minWidth: "180px" }}>
+    <Select
+      options={[
+        { value: "", label: "ALL" },
+        ...categories.map(cat => ({
+          value: cat.category_name,
+          label: cat.category_name
+        }))
+      ]}
+      value={selectedCategory ? { value: selectedCategory, label: selectedCategory } : { value: "", label: "ALL" }}
+      onChange={(option) => {
+        const selectedCat = option.value;
+        setSelectedCategory(selectedCat);  // This controls the product table filter
+        onRowChange(row.id, "category", selectedCat); // Keep your original functionality
+      }}
+      placeholder="Select Category"
+      isDisabled={isDisabled}
+      menuPortalTarget={document.body}
+      styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
     />
   </td>
 )}
-<td style={{ minWidth: "300px" }}>
+
+<td style={{ minWidth: "300px", position: "relative" }}>
   <Select
     options={productOptions}
     value={productOptions.find(opt => opt.value === row.product_name) || null}
@@ -719,13 +742,226 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       onRowChange(row.id, "product_id", selected.product_id);
       onRowChange(row.id, "hsn_code", selected.hsn_code || "");
     }}
-    placeholder="Select product"
+    onMenuOpen={() => setShowProductTable(true)}
+    onMenuClose={() => setShowProductTable(false)}
+    placeholder="Click to select item"
     isClearable
     isSearchable
     menuPortalTarget={document.body}
     styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
     isDisabled={isDisabled}
   />
+
+  {/* VYAPAR STYLE PRODUCT TABLE - Shows when Item dropdown is opened */}
+  {/* {showProductTable && selectedCategory && (
+    <div 
+      style={{
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        right: 0,
+        background: "white",
+        border: "2px solid #007bff",
+        borderRadius: "8px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+        zIndex: 10000,
+        maxHeight: "400px",
+        overflow: "auto"
+      }}
+    >
+      <div className="bg-primary text-white p-3 d-flex justify-content-between align-items-center rounded-top">
+        <h6 className="mb-0 fw-bold">
+          {selectedCategory.toUpperCase()} ITEMS
+          <span className="ms-2 small opacity-75">
+            ({products.filter(p => p.category_name === selectedCategory).length} items)
+          </span>
+        </h6>
+        <Button size="sm" variant="light" onClick={() => setShowProductTable(false)}>
+          Close
+        </Button>
+      </div>
+
+      <Table hover bordered size="sm" className="mb-0">
+        <thead className="table-light">
+          <tr className="text-center">
+            <th className="text-start">Item Name</th>
+            <th>SALE PRICE</th>
+            <th>PURCHASE PRICE</th>
+            <th>STOCK</th>
+            <th>LOCATION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products
+            .filter(p => p.category_name === selectedCategory)
+            .map((product, idx) => {
+              let salePrice = "N/A";
+              let purchasePrice = "0";
+              let stock = "0";
+              let location = "STORE 1";
+
+              try { const sp = JSON.parse(product.sale_price || "{}"); salePrice = sp.price || "N/A"; } catch (e) {}
+              try { const pp = JSON.parse(product.purchase_price || "{}"); purchasePrice = pp.price || "0"; } catch (e) {}
+              try { const st = JSON.parse(product.stock || "{}"); stock = st.opening_qty || "0"; location = st.location || "STORE 1"; } catch (e) {}
+
+              return (
+                <tr
+                  key={product.product_id || idx}
+                  style={{ cursor: "pointer" }}
+                  className="hover-row"
+                  onClick={() => {
+                    const newRow = {
+                      ...INITIAL_ROW,
+                      id: generateUniqueId(),
+                      product_id: product.product_id,
+                      product_name: product.product_name,
+                      category: product.category_name,
+                      hsn_code: product.hsn_code || "",
+                      qty: "1",
+                      unit: product.unit_value || "NONE",
+                      price: salePrice !== "N/A" ? salePrice : "",
+                      amount: salePrice !== "N/A" ? salePrice : "0"
+                    };
+
+                    setFormData(prev => ({
+                      ...prev,
+                      rows: [...prev.rows, newRow]
+                    }));
+
+                    setShowProductTable(false); // Auto-close after selection
+                  }}
+                >
+                  <td className="text-start">
+                    <strong>{product.product_name}</strong>
+                    <br />
+                    <small className="text-muted">
+                      Code: {product.product_code || "-"} | HSN: {product.hsn_code || "-"}
+                    </small>
+                  </td>
+                  <td className="text-center fw-bold text-success">₹{salePrice}</td>
+                  <td className="text-center">₹{purchasePrice}</td>
+                  <td className="text-center">
+                    <span style={{ color: parseFloat(stock) <= 10 ? "#dc3545" : "#28a745", fontWeight: "bold" }}>
+                      {stock}
+                    </span>
+                  </td>
+                  <td className="text-center text-muted">{location}</td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </Table>
+    </div>
+  )} */}
+  {showProductTable && selectedCategory && (
+  <div 
+    // style={{
+    //   position: "absolute",
+    //   top: "100%",
+    //   left: 0,
+    //   right: 0,
+    //   background: "white",
+    //   border: "1px solid #ddd",
+    //   borderRadius: "6px",
+    //   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    //   zIndex: 10000,
+    //   maxHeight: "380px",
+    //   overflow: "auto"
+    // }}
+    style={{
+    position: "fixed",              // Use fixed instead of absolute
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "90vw",
+    maxWidth: "1200px",
+    height: "80vh",
+    maxHeight: "700px",
+    background: "white",
+    borderRadius: "12px",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+    zIndex: 20000,
+    overflow: "hidden"
+  }}
+  >
+    <Table bordered hover size="sm" className="mb-0">
+      <thead style={{ backgroundColor: "#f8f9fa" }}>
+        <tr>
+          <th style={{ width: "40%", fontWeight: "600" }}>Add Item</th>
+          <th style={{ textAlign: "right", fontWeight: "600" }}>SALE PRICE</th>
+          <th style={{ textAlign: "right", fontWeight: "600" }}>PURCHASE PRICE</th>
+          <th style={{ textAlign: "center", fontWeight: "600" }}>STOCK</th>
+          <th style={{ textAlign: "center", fontWeight: "600" }}>LOCATION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {products
+          .filter(p => p.category_name === selectedCategory)
+          .map((product, idx) => {
+            let salePrice = "0";
+            let purchasePrice = "0";
+            let stock = "0";
+            let location = "-";
+
+            try {
+              const sp = JSON.parse(product.sale_price || "{}");
+              salePrice = sp.price || "0";
+            } catch (e) {}
+            try {
+              const pp = JSON.parse(product.purchase_price || "{}");
+              purchasePrice = pp.price || "0";
+            } catch (e) {}
+            try {
+              const st = JSON.parse(product.stock || "{}");
+              stock = st.opening_qty || "0";
+              location = st.location || "-";
+            } catch (e) {}
+
+            return (
+              <tr
+                key={product.product_id || idx}
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  const newRow = {
+                    ...INITIAL_ROW,
+                    id: generateUniqueId(),
+                    product_id: product.product_id,
+                    product_name: product.product_name,
+                    category: product.category_name,
+                    hsn_code: product.hsn_code || "",
+                    qty: "1",
+                    unit: product.unit_value || "NONE",
+                    price: salePrice,
+                    amount: salePrice
+                  };
+
+                  setFormData(prev => ({
+                    ...prev,
+                    rows: [...prev.rows, newRow]
+                  }));
+
+                  setShowProductTable(false);
+                }}
+              >
+                <td>
+                  <strong>{product.product_name}</strong>
+                  {product.product_code && (
+                    <small className="text-muted d-block">
+                      Code: {product.product_code}
+                    </small>
+                  )}
+                </td>
+                <td style={{ textAlign: "right" }}>{salePrice}</td>
+                <td style={{ textAlign: "right" }}>{purchasePrice}</td>
+                <td style={{ textAlign: "center" }}>{stock}</td>
+                <td style={{ textAlign: "center" }}>{location}</td>
+              </tr>
+            );
+          })}
+      </tbody>
+    </Table>
+  </div>
+)}
 </td>
 
 
