@@ -25,60 +25,73 @@ function AdjustItem({ show, onHide, product }) {
 
 const handleSave = async () => {
   if (!qty || parseFloat(qty) <= 0) {
-    alert("Please enter a valid quantity");
+    alert("Please enter valid quantity");
     return;
   }
-  if (!product) return;
 
-  const stockJson = product.stock ? JSON.parse(product.stock) : {};
+  let stockJson = {};
+  try {
+    stockJson = product.stock ? JSON.parse(product.stock) : {};
+  } catch (e) {
+    stockJson = {};
+  }
 
-  const currentQty = parseFloat(stockJson.current_qty ?? stockJson.opening_qty ?? 0);
-  const currentValue = parseFloat(stockJson.current_value ?? 0);
+  const currentQty   = parseFloat(stockJson.current_qty || stockJson.opening_qty || 0);
+  const currentValue = parseFloat(stockJson.current_value || 0);
+  const adjQty       = parseFloat(qty);
+  const isAdd        = stock === "add";
 
-  const adjQty = parseFloat(qty);
-  const adjPrice = parseFloat(price) || 0;
-  const isAdd = stock === "add";
+  // Original cost price from Add Item → used ONLY for stock value calculation
+  const originalCostPrice = parseFloat(stockJson.at_price) || 
+                           (currentQty > 0 ? currentValue / currentQty : 0) || 0;
 
-  const newQty = isAdd ? currentQty + adjQty : currentQty - adjQty;
-  const newValue = isAdd
-    ? currentValue + adjQty * adjPrice
-    : currentValue - adjQty * adjPrice;
+  // What user typed → this will appear in the "PRICE/UNIT" column in table
+  const displayedPrice = parseFloat(price) || 0;
+
+  // CALCULATION LOGIC:
+  // → Reduce stock  → use originalCostPrice (correct stock value)
+  // → Add stock     → use displayedPrice (what user entered)
+  const priceForCalculation = isAdd ? displayedPrice : originalCostPrice;
+
+  const valueChange = adjQty * priceForCalculation;
+  const newQty   = isAdd ? currentQty + adjQty : currentQty - adjQty;
+  const newValue = isAdd ? currentValue + valueChange : currentValue - valueChange;
 
   const newTransaction = {
     type: isAdd ? "Add Adjustment" : "Reduce Adjustment",
     reference: details || (isAdd ? "Add Stock" : "Reduce Stock"),
-    name: isAdd ? "Add Adjustment" : "Reduce Adjustment",
+    name: isAdd ? "Add Stock" : "Reduce Stock",
     date: date.toISOString().split("T")[0],
     quantity: isAdd ? adjQty : -adjQty,
-    price_per_unit: adjPrice,
+    price_per_unit: displayedPrice,   // ← This shows ₹100 (or whatever you type)
+    status: "Completed"
   };
 
   const updatedStock = {
     ...stockJson,
-    current_qty: newQty,
-    current_value: newValue,
-    ...(stockJson.opening_transaction && { opening_transaction: stockJson.opening_transaction }),
-    transactions: [...(stockJson.transactions || []), newTransaction],
+    current_qty:   Math.max(0, newQty),
+    current_value: parseFloat(newValue.toFixed(2)),
+    transactions:  [...(stockJson.transactions || []), newTransaction]
   };
 
-  try {
-    await dispatch(updateProduct({
-      edit_product_id: product.product_id,   // ← CRITICAL FIX
-      stock: JSON.stringify(updatedStock),
-    })).unwrap();
+  await dispatch(updateProduct({
+    edit_product_id: product.product_id,
+    product_name: product.product_name,
+    product_code: product.product_code || "",
+    hsn_code: product.hsn_code || 0,
+    category_id: product.category_id,
+    category_name: product.category_name || "",
+    unit_value: product.unit_value,
+    unit_id: product.unit_id || "",
+    add_image: product.add_image || "",
+    sale_price: product.sale_price,
+    purchase_price: product.purchase_price,
+    type: "product",
+    stock: JSON.stringify(updatedStock)
+  })).unwrap();
 
-    dispatch(fetchProducts());
-
-    setQty("");
-    setPrice("");
-    setDetails("");
-    onHide();
-
-    alert("Stock adjusted successfully!"); // Optional success
-  } catch (err) {
-    console.error("Update failed:", err);
-    alert("Failed to save adjustment: " + (err.message || "Server error"));
-  }
+  dispatch(fetchProducts());
+  onHide();
 };
 
   if (!product) return null;
