@@ -79,7 +79,7 @@ const [imageFileName, setImageFileName] = useState("");      // To show filename
 const [attachedDocs, setAttachedDocs] = useState([]); // [{name, data, previewUrl}]
 const { categories = [], status: categoryStatus = "idle" } = useSelector((state) => state.category);
 const { products, status: productStatus } = useSelector(state => state.product);
-const [selectedCategory, setSelectedCategory] = useState("");
+
 const [showProductTable, setShowProductTable] = useState(false);
 
 console.log("products value",products);
@@ -715,6 +715,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
       
 
+
 {formData.visibleColumns.category && (
   <td style={{ minWidth: "180px" }}>
     <Select
@@ -725,11 +726,13 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
           label: cat.category_name
         }))
       ]}
-      value={selectedCategory ? { value: selectedCategory, label: selectedCategory } : { value: "", label: "ALL" }}
+      value={{ 
+        value: row.category || "", 
+        label: row.category ? row.category : "ALL" 
+      }}
       onChange={(option) => {
         const selectedCat = option.value;
-        setSelectedCategory(selectedCat);  // This controls the product table filter
-        onRowChange(row.id, "category", selectedCat); // Keep your original functionality
+        onRowChange(row.id, "category", selectedCat);
       }}
       placeholder="Select Category"
       isDisabled={isDisabled}
@@ -823,67 +826,70 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
             </thead>
             <tbody>
   {products
-    .filter(product => {
-      if (!selectedCategory || selectedCategory === "" || selectedCategory === "ALL") return true;
+  .filter(product => {
+    // Use current row's category instead of global selectedCategory
+    if (!row.category || row.category === "" || row.category === "ALL") return true;
 
-      const productCat = product.category_name || "";
-      return productCat === selectedCategory;
-    })
-    .map((product) => {
-      let salePrice = "0";
-      let stock = "0";
-      let location = "-";
+    const productCat = product.category_name || "";
+    return productCat === row.category;
+  })
+  .map((product) => {
+    let salePrice = "0";
+    let stock = "0";
+    let location = "-";
 
-      try {
-        const sp = JSON.parse(product.sale_price || "{}");
-        salePrice = sp.price || "0";
-      } catch (e) {}
-      try {
-        const st = JSON.parse(product.stock || "{}");
-        stock = st.opening_qty || "0";
-        location = st.location || "-";
-      } catch (e) {}
+    try {
+      const sp = JSON.parse(product.sale_price || "{}");
+      salePrice = sp.price || "0";
+    } catch (e) {}
+    try {
+      const st = JSON.parse(product.stock || "{}");
+      stock = st.opening_qty || "0";
+      location = st.location || "-";
+    } catch (e) {}
 
-      return (
-        <tr
-          key={product.product_id}
-          style={{ cursor: "pointer" }}
-          className="hover-row"
-          onClick={() => {
-            onRowChange(row.id, "product_name", product.product_name);
-            onRowChange(row.id, "product_id", product.product_id);
-            onRowChange(row.id, "hsn_code", product.hsn_code || "");
-            onRowChange(row.id, "price", salePrice);
-            onRowChange(row.id, "qty", "1");
+    return (
+      <tr
+        key={product.product_id}
+        style={{ cursor: "pointer" }}
+        className="hover-row"
+        onClick={() => {
+          onRowChange(row.id, "product_name", product.product_name);
+          onRowChange(row.id, "product_id", product.product_id);
+          onRowChange(row.id, "hsn_code", product.hsn_code || "");
+          onRowChange(row.id, "price", salePrice);
+          onRowChange(row.id, "qty", " ");
 
-            // Auto-fill category when product is selected
-            const cat = product.category_name || "";
-            onRowChange(row.id, "category", cat);
+          // Auto-fill category when product is selected
+          const cat = product.category_name || "";
+          onRowChange(row.id, "category", cat);
 
-            setShowProductTable(false);
-          }}
-        >
-          <td><strong>{product.product_name}</strong></td>
-          <td className="text-end text-success fw-bold">₹{salePrice}</td>
-          <td className="text-center">{stock}</td>
-          <td className="text-center">{location}</td>
-        </tr>
-      );
-    })}
+          
 
-  {/* Show message if no products */}
-  {products.filter(p => {
-    if (!selectedCategory || selectedCategory === "") return true;
-    const cat = p.category_name || "";
-    return cat === selectedCategory;
-  }).length === 0 && (
-    <tr>
-      <td colSpan="4" className="text-center py-5 text-muted">
-        <h5>No products found in "{selectedCategory}" category</h5>
-        <small>Available categories: stationary, groceries</small>
-      </td>
-    </tr>
-  )}
+          setShowProductTable(false);
+        }}
+      >
+        <td><strong>{product.product_name}</strong></td>
+        <td className="text-end text-success fw-bold">₹{salePrice}</td>
+        <td className="text-center">{stock}</td>
+        <td className="text-center">{location}</td>
+      </tr>
+    );
+  })}
+
+{/* Show message if no products - also update this part */}
+{products.filter(p => {
+  if (!row.category || row.category === "" || row.category === "ALL") return true;
+  const cat = p.category_name || "";
+  return cat === row.category;
+}).length === 0 && (
+  <tr>
+    <td colSpan="4" className="text-center py-5 text-muted">
+      <h5>No products found in "{row.category}" category</h5>
+      <small>Available categories: stationary, groceries</small>
+    </td>
+  </tr>
+)}
 </tbody>
           </Table>
         </div>
@@ -915,7 +921,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 </td>
 )}
 
-        <td><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
+        <td style={{minWidth:"100px"}}><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
         <td style={{minWidth:"150px"}}><DropDown value={row.unit} onChange={(v) => onRowChange(row.id, "unit", v)} options={unitOptions} disabled={isDisabled} /></td>
         <td style={{minWidth:"100px"}}><TextInputform formtype="number" value={row.price} onChange={(e) => onRowChange(row.id, "price", e.target.value)} readOnly={isDisabled} /></td>
         <td style={{minWidth:"100px"}}><DropDown value={row.priceUnitType} onChange={(v) => onRowChange(row.id, "priceUnitType", v)} options={priceUnitTypeOptions} disabled={isDisabled} /></td>
