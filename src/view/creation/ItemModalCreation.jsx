@@ -1,5 +1,6 @@
 // src/components/AddItem.jsx
 import React, { useState, useEffect, useRef } from "react";
+import SelectUnitModal from "./SelectUnitModal"
 import {
   Button,
   Row,
@@ -53,6 +54,10 @@ function AddItem({ show, onHide, activeTab = "PRODUCT", editProduct = null }) {
     (state) => state.category
   );
 
+const [showSelectUnitModal, setShowSelectUnitModal] = useState(false);
+const [baseUnit, setBaseUnit] = useState("");        // new
+const [secondaryUnit, setSecondaryUnit] = useState(""); // new
+const [unitMapping, setUnitMapping] = useState(null);
   const [type, setType] = useState("add"); // add = Product, reduce = Service
   const [imagePreview, setImagePreview] = useState("");
   const [imageFileName, setImageFileName] = useState("");
@@ -511,48 +516,51 @@ const enhancedStock = {
             </Col>
 
             {/* Unit Dropdown */}
-            <Col md={2} ref={unitRef}>
-              <div className="position-relative">
-                <div
-                  className="form-control white-input d-flex align-items-center justify-content-between pe-2"
-                  style={{
-                    backgroundColor: "#cce7f3",
-                    cursor: "pointer",
-                    height: "38px",
-                  }}
-                  onClick={() => setShowUnitMenu(!showUnitMenu)}
-                >
-                  <span className={!selectedUnit ? "text-muted" : ""}>
-                    {selectedUnit || "Select Unit"}
-                  </span>
-                  <FaChevronDown className="text-primary" />
-                </div>
-                {showUnitMenu && (
-                  <div
-                    className="position-absolute start-0 end-0 bg-white border shadow-sm rounded mt-1"
-                    style={{
-                      zIndex: 9999,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {units.map((u) => (
-                      <div
-                        key={u.unit_id}
-                        className="px-3 py-2 hover-bg-light"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => {
-                          setSelectedUnit(u.unit_name);
-                          setShowUnitMenu(false);
-                        }}
-                      >
-                        {u.unit_name} ({u.short_name})
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Col>
+
+
+<Col md={2}>
+  <div className="position-relative">
+    {/* Main Unit Input – shows full base unit name */}
+    <div
+      className="form-control white-input d-flex align-items-center justify-content-between pe-2"
+      style={{
+        backgroundColor: "#cce7f3",
+        cursor: "pointer",
+        height: "38px",
+      }}
+      onClick={() => setShowSelectUnitModal(true)}
+    >
+      <span className={!unitMapping?.baseUnit ? "text-muted" : "fw-bold"}>
+        {unitMapping?.baseUnit || selectedUnit || "Select Unit"}
+      </span>
+      <FaChevronDown className="text-primary" />
+    </div>
+
+    {/* Edit Unit Button + Short Conversion Text (exactly like Vyapar) */}
+    {unitMapping && (
+      <div
+        className="position-absolute start-50 translate-middle-x text-center"
+        style={{ top: "100%", marginTop: "4px", width: "100%" }}
+      >
+        <Button
+          variant="link"
+          size="sm"
+          className="text-primary p-0 fw-medium"
+          onClick={() => setShowSelectUnitModal(true)}
+          style={{ fontSize: "12.5px", textDecoration: "none" }}
+        >
+          Edit Unit
+        </Button>
+        <div
+          className="text-primary fw-bold"
+          style={{ fontSize: "11.5px", lineHeight: "1.2" }}
+        >
+          {unitMapping.shortText}
+        </div>
+      </div>
+    )}
+  </div>
+</Col>
 
             {/* Image Upload */}
             <Col md={3}>
@@ -994,6 +1002,19 @@ const enhancedStock = {
           )}
         </Modal.Footer>
       </Modal>
+
+
+<SelectUnitModal
+  show={showSelectUnitModal}
+  onHide={() => setShowSelectUnitModal(false)}
+  units={units}
+  unitMapping={unitMapping}          // ← added
+  onSaveMapping={(mapping) => {
+    setUnitMapping(mapping);
+    setSelectedUnit(mapping.baseUnit || "");
+    setShowSelectUnitModal(false);
+  }}
+/>
     </>
   );
 }
