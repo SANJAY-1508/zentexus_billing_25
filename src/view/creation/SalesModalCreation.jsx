@@ -81,7 +81,6 @@ const { categories = [], status: categoryStatus = "idle" } = useSelector((state)
 const { products, status: productStatus } = useSelector(state => state.product);
 const [selectedCategory, setSelectedCategory] = useState("");
 const [showProductTable, setShowProductTable] = useState(false);
-const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(""); // For filtering products in popup
 
 console.log("products value",products);
 console.log("categories",categories)
@@ -716,7 +715,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
       
 
-{/* {formData.visibleColumns.category && (
+{formData.visibleColumns.category && (
   <td style={{ minWidth: "180px" }}>
     <Select
       options={[
@@ -731,30 +730,6 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
         const selectedCat = option.value;
         setSelectedCategory(selectedCat);  // This controls the product table filter
         onRowChange(row.id, "category", selectedCat); // Keep your original functionality
-      }}
-      placeholder="Select Category"
-      isDisabled={isDisabled}
-      menuPortalTarget={document.body}
-      styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-    />
-  </td>
-)} */}
-{formData.visibleColumns.category && (
-  <td style={{ minWidth: "180px" }}>
-    <Select
-      options={[
-        { value: "", label: "ALL" },
-        ...categories.map(cat => ({
-          value: cat.category_name,
-          label: cat.category_name
-        }))
-      ]}
-      value={selectedCategory ? { value: selectedCategory, label: selectedCategory } : { value: "", label: "ALL" }}
-      onChange={(option) => {
-        const selectedCat = option.value;
-        setSelectedCategory(selectedCat);
-        onRowRowChange(row.id, "category", selectedCat);
-        setSelectedCategoryFilter(selectedCat); // ← ADD THIS LINE
       }}
       placeholder="Select Category"
       isDisabled={isDisabled}
@@ -788,98 +763,69 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 
   {/* BIG PRODUCT TABLE POPUP - ONLY THIS WILL SHOW */}
   {showProductTable && (
-  <div style={{
-    position: "fixed",
-    top: 0, left: 0,
-    width: "100vw", height: "100vh",
-    backgroundColor: "rgba(0,0,0,0.6)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    zIndex: 9999
-  }} onClick={() => setShowProductTable(false)}>
-    
     <div style={{
-      width: "90%",
-      maxWidth: "1200px",
-      height: "90vh",
-      background: "white",
-      borderRadius: "16px",
-      overflow: "hidden",
-      boxShadow: "0 25px 80px rgba(0,0,0,0.5)"
-    }} onClick={(e) => e.stopPropagation()}>
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999
+    }} onClick={() => setShowProductTable(false)}>
+      
+      <div
+        style={{
+          width: "90%",
+          maxWidth: "1100px",
+          height: "85vh",
+          background: "white",
+          borderRadius: "12px",
+          overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.4)"
+        }}
+        onClick={(e) => e.stopPropagation()} // Don't close when clicking inside
+      >
+        {/* Header */}
+        <div className="p-3 bg-primary text-white d-flex justify-content-between align-items-center">
+          <h4 className="mb-0">Select Product</h4>
+          <Button variant="light" size="sm" onClick={() => setShowProductTable(false)}>
+            X Close
+          </Button>
+        </div>
 
-      {/* Header */}
-      <div className="p-4 bg-primary text-white d-flex justify-content-between align-items-center">
-        <h3 className="mb-0">Select Product</h3>
-        <Button variant="light" onClick={() => {
-          setShowProductTable(false);
-          setSelectedCategoryFilter(""); // Reset filter on close
-        }}>× Close</Button>
-      </div>
+        {/* Search Box */}
+        <div className="p-3 border-bottom">
+          <input
+            type="text"
+            placeholder="Search product..."
+            className="form-control"
+            onChange={(e) => {
+              const term = e.target.value.toLowerCase();
+              // You can filter products here if you want
+            }}
+            autoFocus
+          />
+        </div>
 
-      {/* Filters Bar */}
-      <div className="p-3 border-bottom bg-light">
-        <Row>
-          <Col md={4}>
-            <Select
-              options={[
-                { value: "", label: "All Categories" },
-                ...categories.map(cat => ({
-                  value: cat.category_name,
-                  label: cat.category_name
-                }))
-              ]}
-              value={selectedCategoryFilter ? { value: selectedCategoryFilter, label: selectedCategoryFilter } : { value: "", label: "All Categories" }}
-              onChange={(opt) => setSelectedCategoryFilter(opt.value)}
-              placeholder="Filter by Category"
-              menuPortalTarget={document.body}
-            />
-          </Col>
-          <Col md={8}>
-            <input
-              type="text"
-              placeholder="Search product name..."
-              className="form-control"
-              onChange={(e) => {
-                // Optional: add search state later
-              }}
-              autoFocus
-            />
-          </Col>
-        </Row>
-      </div>
-
-      {/* Product Table */}
-      <div style={{ height: "calc(90vh - 180px)", overflowY: "auto" }}>
-        <Table bordered hover className="mb-0">
-          <thead className="table-light sticky-top">
-            <tr>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th className="text-end">Sale Price</th>
-              <th className="text-end">Stock</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products
-              .filter(product => {
-                // Filter by selected category
-                if (!selectedCategoryFilter) return true;
-                try {
-                  const prodCat = JSON.parse(product.category || "{}");
-                  return prodCat.name === selectedCategoryFilter ||
-                         prodCat.category_name === selectedCategoryFilter ||
-                         product.category_name === selectedCategoryFilter;
-                } catch {
-                  return product.category_name === selectedCategoryFilter ||
-                         String(product.category || "").includes(selectedCategoryFilter);
-                }
-              })
-              .map((product) => {
+        {/* Table */}
+        <div style={{ height: "calc(85vh - 140px)", overflowY: "auto" }}>
+          <Table bordered hover className="mb-0">
+            <thead className="table-light sticky-top">
+              <tr>
+                <th>Product Name</th>
+                <th className="text-end">Sale Price</th>
+                <th className="text-end">Stock</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            {/* <tbody>
+              {products.map((product) => {
                 let salePrice = "0";
                 let stock = "0";
                 let location = "-";
-                let categoryName = "Uncategorized";
 
                 try {
                   const sp = JSON.parse(product.sale_price || "{}");
@@ -890,12 +836,6 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                   stock = st.opening_qty || "0";
                   location = st.location || "-";
                 } catch (e) {}
-                try {
-                  const cat = JSON.parse(product.category || "{}");
-                  categoryName = cat.name || cat.category_name || "Uncategorized";
-                } catch (e) {
-                  categoryName = product.category_name || "Uncategorized";
-                }
 
                 return (
                   <tr
@@ -908,32 +848,92 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                       onRowChange(row.id, "hsn_code", product.hsn_code || "");
                       onRowChange(row.id, "price", salePrice);
                       onRowChange(row.id, "qty", "1");
-                      onRowChange(row.id, "category", categoryName); // Auto-fill category
                       setShowProductTable(false);
-                      setSelectedCategoryFilter(""); // Reset after selection
                     }}
                   >
                     <td><strong>{product.product_name}</strong></td>
-                    <td><span className="text-muted">{categoryName}</span></td>
                     <td className="text-end text-success fw-bold">₹{salePrice}</td>
                     <td className="text-center">{stock}</td>
                     <td className="text-center">{location}</td>
                   </tr>
                 );
               })}
-          </tbody>
-        </Table>
+            </tbody> */}
+            <tbody>
+  {products
+    .filter(product => {
+      if (!selectedCategory || selectedCategory === "" || selectedCategory === "ALL") return true;
 
-        {/* No products message */}
-        {products.filter(/* same filter logic */).length === 0 && (
-          <div className="text-center py-5 text-muted">
-            <h5>No products found in this category</h5>
-          </div>
-        )}
+      const productCat = product.category || 
+                         product.category_name || 
+                         product.cat_name || 
+                         product.product_category || 
+                         product.Category || 
+                         "";
+
+      return String(productCat).trim().toLowerCase() === 
+             String(selectedCategory).trim().toLowerCase();
+    })
+    .map((product) => {
+      let salePrice = "0";
+      let stock = "0";
+      let location = "-";
+
+      try {
+        const sp = JSON.parse(product.sale_price || "{}");
+        salePrice = sp.price || "0";
+      } catch (e) {}
+      try {
+        const st = JSON.parse(product.stock || "{}");
+        stock = st.opening_qty || "0";
+        location = st.location || "-";
+      } catch (e) {}
+
+      return (
+        <tr
+          key={product.product_id}
+          style={{ cursor: "pointer" }}
+          className="hover-row"
+          onClick={() => {
+            onRowChange(row.id, "product_name", product.product_name);
+            onRowChange(row.id, "product_id", product.product_id);
+            onRowChange(row.id, "hsn_code", product.hsn_code || "");
+            onRowChange(row.id, "price", salePrice);
+            onRowChange(row.id, "qty", "1");
+
+            // Auto-fill category when product is selected
+            const cat = product.category || product.category_name || product.cat_name || "";
+            onRowChange(row.id, "category", cat);
+
+            setShowProductTable(false);
+          }}
+        >
+          <td><strong>{product.product_name}</strong></td>
+          <td className="text-end text-success fw-bold">₹{salePrice}</td>
+          <td className="text-center">{stock}</td>
+          <td className="text-center">{location}</td>
+        </tr>
+      );
+    })}
+
+  {/* Show message if no products */}
+  {products.filter(p => {
+    if (!selectedCategory || selectedCategory === "") return true;
+    const cat = p.category || p.category_name || p.cat_name || p.product_category || p.Category || "";
+    return String(cat).trim().toLowerCase() === String(selectedCategory).trim().toLowerCase();
+  }).length === 0 && (
+    <tr>
+      <td colSpan="4" className="text-center py-5 text-muted">
+        <h5>No products found in this category</h5>
+      </td>
+    </tr>
+  )}
+</tbody>
+          </Table>
+        </div>
       </div>
     </div>
-  </div>
-)}
+  )}
 </td>
 
 
@@ -1287,4 +1287,4 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
   );
 };
 
-export default SaleCreation;
+export default SaleCreation;          
