@@ -14,7 +14,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import { fetchCategories } from "../../slice/CategorySlice"; // correct path
 import { fetchProducts } from "../../slice/ProductSlice";
 // Static options
-const UNITS = ["NONE", "KG", "Litre", "Piece"];
+const UNITS = ["NONE", "KG", "Litre", "Piece","meters"];
 const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
 const TAX_OPTIONS = [
   { value: "", label: "Select" },
@@ -863,7 +863,9 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
           // Auto-fill category when product is selected
           const cat = product.category_name || "";
           onRowChange(row.id, "category", cat);
-
+          // AUTO-FILL UNIT from product.unit_value
+          const unitValue = product.unit_value || "";
+          onRowChange(row.id, "unit", unitValue);
           
 
           setShowProductTable(false);
