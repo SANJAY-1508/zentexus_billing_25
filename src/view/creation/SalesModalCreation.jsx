@@ -14,7 +14,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import { fetchCategories } from "../../slice/CategorySlice"; // correct path
 import { fetchProducts } from "../../slice/ProductSlice";
 // Static options
-const UNITS = ["NONE", "KG", "Litre", "Piece"];
+const UNITS = ["NONE", "KG", "Litre", "Piece","meters"];
 const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
 const TAX_OPTIONS = [
   { value: "", label: "Select" },
@@ -79,8 +79,9 @@ const [imageFileName, setImageFileName] = useState("");      // To show filename
 const [attachedDocs, setAttachedDocs] = useState([]); // [{name, data, previewUrl}]
 const { categories = [], status: categoryStatus = "idle" } = useSelector((state) => state.category);
 const { products, status: productStatus } = useSelector(state => state.product);
-const [selectedCategory, setSelectedCategory] = useState("");
+
 const [showProductTable, setShowProductTable] = useState(false);
+
 console.log("products value",products);
 console.log("categories",categories)
 // const fileInputRef = useRef(null);
@@ -203,13 +204,21 @@ useEffect(() => {
 }, [productStatus, dispatch]);
 
 const productOptions = React.useMemo(() => {
-  return products.map(p => ({
-    value: p.product_name, 
-    label: p.product_name, // Added label
-    product_id: p.product_id, // <<< CRITICAL FIX: Include product_id
-    hsn_code: p.hsn_code || "" 
-       
-  }));
+  return products.map(p => {
+    let salePrice = "0";
+    try {
+      const sp = JSON.parse(p.sale_price || "{}");
+      salePrice = sp.price || "0";
+    } catch (e) {}
+
+    return {
+      value: p.product_name,
+      label: `${p.product_name} - ₹${salePrice}`,
+      product_id: p.product_id,
+      hsn_code: p.hsn_code || "",
+      salePrice: salePrice
+    };
+  });
 }, [products]);
 console.log("productOptions",productOptions)
 
@@ -697,6 +706,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       <td>{index + 1}</td>        {/* ← ADD THIS LINE */}
       
 
+
 {formData.visibleColumns.category && (
   <td style={{ minWidth: "180px" }}>
     <Select
@@ -707,11 +717,13 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
           label: cat.category_name
         }))
       ]}
-      value={selectedCategory ? { value: selectedCategory, label: selectedCategory } : { value: "", label: "ALL" }}
+      value={{ 
+        value: row.category || "", 
+        label: row.category ? row.category : "ALL" 
+      }}
       onChange={(option) => {
         const selectedCat = option.value;
-        setSelectedCategory(selectedCat);  // This controls the product table filter
-        onRowChange(row.id, "category", selectedCat); // Keep your original functionality
+        onRowChange(row.id, "category", selectedCat);
       }}
       placeholder="Select Category"
       isDisabled={isDisabled}
@@ -722,126 +734,161 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 )}
 
 <td style={{ minWidth: "300px", position: "relative" }}>
-  <Select
-    options={productOptions}
-    value={productOptions.find(opt => opt.value === row.product_name) || null}
-    onChange={(selected) => {
-      if (!selected) {
-        onRowChange(row.id, "product_name", "");
-        onRowChange(row.id, "product_id", "");
-        onRowChange(row.id, "hsn_code", "");
-        return;
-      }
-      onRowChange(row.id, "product_name", selected.value);
-      onRowChange(row.id, "product_id", selected.product_id);
-      onRowChange(row.id, "hsn_code", selected.hsn_code || "");
-    }}
-    onMenuOpen={() => setShowProductTable(true)}
-    onMenuClose={() => setShowProductTable(false)}
-    placeholder="Click to select item"
-    isClearable
-    isSearchable
-    menuPortalTarget={document.body}
-    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-    isDisabled={isDisabled}
-  />
-
-  {showProductTable && selectedCategory && (
-  <div 
+  {/* Clickable Input Field - Looks like dropdown but opens table */}
+  <div
+    onClick={() => !isDisabled && setShowProductTable(true)}
     style={{
-    position: "fixed",              // Use fixed instead of absolute
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "90vw",
-    maxWidth: "1200px",
-    height: "80vh",
-    maxHeight: "700px",
-    background: "white",
-    borderRadius: "12px",
-    boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
-    zIndex: 20000,
-    overflow: "hidden"
-  }}
+      padding: "8px 12px",
+      border: "1px solid #ced4da",
+      borderRadius: "6px",
+      backgroundColor: isDisabled ? "#e9ecef" : "white",
+      cursor: isDisabled ? "not-allowed" : "pointer",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      minHeight: "38px"
+    }}
   >
-    <Table bordered hover size="sm" className="mb-0">
-      <thead style={{ backgroundColor: "#f8f9fa" }}>
-        <tr>
-          <th style={{ width: "40%", fontWeight: "600" }}>Add Item</th>
-          <th style={{ textAlign: "right", fontWeight: "600" }}>SALE PRICE</th>
-          <th style={{ textAlign: "right", fontWeight: "600" }}>PURCHASE PRICE</th>
-          <th style={{ textAlign: "center", fontWeight: "600" }}>STOCK</th>
-          <th style={{ textAlign: "center", fontWeight: "600" }}>LOCATION</th>
-        </tr>
-      </thead>
-      <tbody>
-        {products
-          .filter(p => p.category_name === selectedCategory)
-          .map((product, idx) => {
-            let salePrice = "0";
-            let purchasePrice = "0";
-            let stock = "0";
-            let location = "-";
-
-            try {
-              const sp = JSON.parse(product.sale_price || "{}");
-              salePrice = sp.price || "0";
-            } catch (e) {}
-            try {
-              const pp = JSON.parse(product.purchase_price || "{}");
-              purchasePrice = pp.price || "0";
-            } catch (e) {}
-            try {
-              const st = JSON.parse(product.stock || "{}");
-              stock = st.opening_qty || "0";
-              location = st.location || "-";
-            } catch (e) {}
-
-            return (
-              <tr
-                key={product.product_id || idx}
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  const newRow = {
-                    ...INITIAL_ROW,
-                    id: generateUniqueId(),
-                    product_id: product.product_id,
-                    product_name: product.product_name,
-                    category: product.category_name,
-                    hsn_code: product.hsn_code || "",
-                    qty: "1",
-                    unit: product.unit_value || "NONE",
-                    price: salePrice,
-                    amount: salePrice
-                  };
-
-                  setFormData(prev => ({
-                    ...prev,
-                    rows: [...prev.rows, newRow]
-                  }));
-
-                  setShowProductTable(false);
-                }}
-              >
-                <td>
-                  <strong>{product.product_name}</strong>
-                  {product.product_code && (
-                    <small className="text-muted d-block">
-                      Code: {product.product_code}
-                    </small>
-                  )}
-                </td>
-                <td style={{ textAlign: "right" }}>{salePrice}</td>
-                <td style={{ textAlign: "right" }}>{purchasePrice}</td>
-                <td style={{ textAlign: "center" }}>{stock}</td>
-                <td style={{ textAlign: "center" }}>{location}</td>
-              </tr>
-            );
-          })}
-      </tbody>
-    </Table>
+    <span style={{ color: row.product_name ? "#000" : "#999" }}>
+      {row.product_name || "Click to select item..."}
+    </span>
+    
   </div>
+
+  {/* BIG PRODUCT TABLE POPUP - ONLY THIS WILL SHOW */}
+  {showProductTable && (
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999
+    }} onClick={() => setShowProductTable(false)}>
+      
+      <div
+        style={{
+          width: "90%",
+          maxWidth: "1100px",
+          height: "85vh",
+          background: "white",
+          borderRadius: "12px",
+          overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.4)"
+        }}
+        onClick={(e) => e.stopPropagation()} // Don't close when clicking inside
+      >
+        {/* Header */}
+        <div className="p-3 bg-primary text-white d-flex justify-content-between align-items-center">
+          <h4 className="mb-0">Select Product</h4>
+          <Button variant="light" size="sm" onClick={() => setShowProductTable(false)}>
+            X Close
+          </Button>
+        </div>
+
+        {/* Search Box */}
+        <div className="p-3 border-bottom">
+          <input
+            type="text"
+            placeholder="Search product..."
+            className="form-control"
+            onChange={(e) => {
+              const term = e.target.value.toLowerCase();
+              // You can filter products here if you want
+            }}
+            autoFocus
+          />
+        </div>
+
+        {/* Table */}
+        <div style={{ height: "calc(85vh - 140px)", overflowY: "auto" }}>
+          <Table bordered hover className="mb-0">
+            <thead className="table-light sticky-top">
+              <tr>
+                <th>Product Name</th>
+                <th className="text-end">Sale Price</th>
+                <th className="text-end">Stock</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+  {products
+  .filter(product => {
+    // Use current row's category instead of global selectedCategory
+    if (!row.category || row.category === "" || row.category === "ALL") return true;
+
+    const productCat = product.category_name || "";
+    return productCat === row.category;
+  })
+  .map((product) => {
+    let salePrice = "0";
+    let stock = "0";
+    let location = "-";
+
+    try {
+      const sp = JSON.parse(product.sale_price || "{}");
+      salePrice = sp.price || "0";
+    } catch (e) {}
+    try {
+      const st = JSON.parse(product.stock || "{}");
+      stock = st.opening_qty || "0";
+      location = st.location || "-";
+    } catch (e) {}
+
+    return (
+      <tr
+        key={product.product_id}
+        style={{ cursor: "pointer" }}
+        className="hover-row"
+        onClick={() => {
+          onRowChange(row.id, "product_name", product.product_name);
+          onRowChange(row.id, "product_id", product.product_id);
+          onRowChange(row.id, "hsn_code", product.hsn_code || "");
+          onRowChange(row.id, "price", salePrice);
+          onRowChange(row.id, "qty", " ");
+
+          // Auto-fill category when product is selected
+          const cat = product.category_name || "";
+          onRowChange(row.id, "category", cat);
+          // AUTO-FILL UNIT from product.unit_value
+          const unitValue = product.unit_value || "";
+          onRowChange(row.id, "unit", unitValue);
+          
+
+          setShowProductTable(false);
+        }}
+      >
+        <td><strong>{product.product_name}</strong></td>
+        <td className="text-end text-success fw-bold">₹{salePrice}</td>
+        <td className="text-center">{stock}</td>
+        <td className="text-center">{location}</td>
+      </tr>
+    );
+  })}
+
+{/* Show message if no products - also update this part */}
+{products.filter(p => {
+  if (!row.category || row.category === "" || row.category === "ALL") return true;
+  const cat = p.category_name || "";
+  return cat === row.category;
+}).length === 0 && (
+  <tr>
+    <td colSpan="4" className="text-center py-5 text-muted">
+      <h5>No products found in "{row.category}" category</h5>
+      <small>Available categories: stationary, groceries</small>
+    </td>
+  </tr>
 )}
+</tbody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  )}
 </td>
 
 
@@ -867,7 +914,7 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 </td>
 )}
 
-        <td><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
+        <td style={{minWidth:"100px"}}><TextInputform expanse="number" value={row.qty} onChange={(e) => onRowChange(row.id, "qty", e.target.value)} readOnly={isDisabled} /></td>
         <td style={{minWidth:"150px"}}><DropDown value={row.unit} onChange={(v) => onRowChange(row.id, "unit", v)} options={unitOptions} disabled={isDisabled} /></td>
         <td style={{minWidth:"100px"}}><TextInputform formtype="number" value={row.price} onChange={(e) => onRowChange(row.id, "price", e.target.value)} readOnly={isDisabled} /></td>
         <td style={{minWidth:"100px"}}><DropDown value={row.priceUnitType} onChange={(v) => onRowChange(row.id, "priceUnitType", v)} options={priceUnitTypeOptions} disabled={isDisabled} /></td>
