@@ -4,6 +4,7 @@ import { Button, Table, Col, Card, Spinner, DropdownButton, Dropdown } from "rea
 import { FaSearch, FaEllipsisV, FaFileExcel } from "react-icons/fa";
 import AddUnit from "../creation/UnitModalCreation";
 import AddConvo from "../listings/UnitConversion";
+
 import "../../App.css";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -11,9 +12,9 @@ import { fetchUnits, deleteUnit } from "../../slice/UnitSlice";
 
 export default function UnitsTab() {
   const dispatch = useDispatch();
-
+const [conversions, setConversions] = React.useState([]);
   const { units, status } = useSelector((state) => state.unit);
-
+const [selectedBaseUnit, setSelectedBaseUnit] = React.useState(null);
   const [showUnitModal, setShowUnitModal] = React.useState(false);
   const [showConvoModal, setShowConvoModal] = React.useState(false);
   const [selectedUnit, setSelectedUnit] = React.useState(null);
@@ -31,7 +32,7 @@ export default function UnitsTab() {
   : [];
 
   const unitRows = unitsList.map((unit) => (
-    <tr key={unit.unit_id || unit.id}>
+    <tr key={unit.unit_id || unit.id}  onClick={() => setSelectedBaseUnit(unit.unit_name)}>
       <td>{unit.unit_name}</td>
       <td>{unit.short_name || "-"}</td>
       <td className="text-center">
@@ -125,21 +126,25 @@ export default function UnitsTab() {
         </div>
 
         {/* Optional header card (you can remove if not needed) */}
-        {unitsList.length > 0 && (
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start mb-3 mt-0">
-                <h6 className="fw-bold">{unitsList[0].unit_name.toUpperCase()}</h6>
-                {/* Intentionally empty - button moved to top-right */}
-              </div>
-            </Card.Body>
-          </Card>
-        )}
+       {/* Header showing selected unit */}
+{selectedBaseUnit ? (
+  <Card className="mb-3">
+    <Card.Body>
+      <h6 className="fw-bold text-primary">{selectedBaseUnit.toUpperCase()}</h6>
+    </Card.Body>
+  </Card>
+) : unitsList.length > 0 ? (
+  <Card className="mb-3">
+    <Card.Body>
+      <h6 className="fw-bold text-muted">Select a unit to view conversions</h6>
+    </Card.Body>
+  </Card>
+) : null}
 
         <Card className="flex-grow-1 d-flex flex-column">
           <Card.Body className="d-flex flex-column h-100 p-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <h5 className="mb-0">TRANSACTIONS</h5>
+              <h5 className="mb-0">UNITS</h5>
               <div className="d-flex align-items-center" style={{ gap: "8px" }}>
                 <div style={{ position: "relative", width: "200px" }}>
                   <FaSearch style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "gray" }} />
@@ -148,9 +153,38 @@ export default function UnitsTab() {
                 <Button variant="light"><FaFileExcel size={20} color="#217346" /></Button>
               </div>
             </div>
-            <div className="flex-grow-1 d-flex justify-content-center align-items-center text-muted">
-              <span>No Rows to Show</span>
-            </div>
+                {/* Filtered Conversions - Only show for selected unit */}
+            {selectedBaseUnit ? (
+              conversions
+                .filter(c => c.baseUnit === selectedBaseUnit)
+                .map((c, i) => (
+                  <div key={i} className="border-bottom py-3 px-1">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div className="text-muted small">CONVERSION</div>
+                    </div>
+                    <div className="mt-2 fw-medium">
+                      {c.displayText}
+                    </div>
+                  </div>
+                )).length > 0 ? (
+                conversions
+                  .filter(c => c.baseUnit === selectedBaseUnit)
+                  .map((c, i) => (
+                    <div key={i} className="border-bottom py-3 px-1">
+                      <div className="text-muted small">CONVERSION</div>
+                      <div className="mt-2 fw-medium">{c.displayText}</div>
+                    </div>
+                  ))
+              ) : (
+                <div className="flex-grow-1 d-flex justify-content-center align-items-center text-muted">
+                  No conversion added yet
+                </div>
+              )
+            ) : (
+              <div className="flex-grow-1 d-flex justify-content-center align-items-center text-muted">
+                Select a unit to view conversions
+              </div>
+            )}
           </Card.Body>
         </Card>
       </Col>
@@ -165,9 +199,14 @@ export default function UnitsTab() {
         onSaveSuccess={fetchAllUnits}
         unitToEdit={selectedUnit}
       />
-
-      {/* Add Conversion Modal - Opens from top-right button */}
-      <AddConvo show={showConvoModal} onHide={() => setShowConvoModal(false)} />
+<AddConvo
+  show={showConvoModal}
+  onHide={() => setShowConvoModal(false)}
+  units={unitsList}
+  onSave={(data) => {
+    setConversions(prev => [...prev, data]);
+  }}
+/>
     </>
   );
 }
