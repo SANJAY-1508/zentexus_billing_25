@@ -58,7 +58,7 @@ const moveProductsToCategory = async () => {
     toast.success(`${selectedItems.length} product(s) moved successfully!`);
 
    if (onMoveSuccess) {
-  onMoveSuccess(selectedItems); // only send the IDs
+  onMoveSuccess(); // <--- CORRECTED: Call without arguments
 }
 
     onHide();

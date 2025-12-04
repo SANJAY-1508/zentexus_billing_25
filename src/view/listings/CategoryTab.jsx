@@ -275,18 +275,24 @@ const [showMoveModal, setShowMoveModal] = useState(false);
   onHide={() => setShowMoveModal(false)}
   allProducts={products}
   targetCategoryId={selectedCategory?.category_id}
-  onMoveSuccess={(movedProductIds) => {
+  onMoveSuccess={() => {
     // This is the magic — instantly update products in Redux without new action
-    dispatch(fetchProducts.fulfilled(
-      products.map(p => 
-        movedProductIds.includes(p.id) 
-          ? { ...p, category_id: selectedCategory?.category_id }
-          : p
-      )
-    ));
+    dispatch(fetchProducts())
 
 
   }}
+  // onMoveSuccess={(movedProductIds) => {
+  //   // This is the magic — instantly update products in Redux without new action
+  //   dispatch(fetchProducts.fulfilled(
+  //     products.map(p => 
+  //       movedProductIds.includes(p.id) 
+  //         ? { ...p, category_id: selectedCategory?.category_id }
+  //         : p
+  //     )
+  //   ));
+
+
+  // }}
 />
     </>
     
