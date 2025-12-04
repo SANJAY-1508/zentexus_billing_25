@@ -71,6 +71,10 @@ const [unitMapping, setUnitMapping] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [activePricingTab, setActivePricingTab] = useState("pricing");
+const handleSaveUnitMapping = (mapping) => {
+  setUnitMapping(mapping);
+  setSelectedUnit(mapping.baseUnit);   // Set base unit as the selected unit
+};
 
   const [showWholesale, setShowWholesale] = useState(false);
   const [wholesaleDetails, setWholesaleDetails] = useState({
@@ -1008,13 +1012,11 @@ const enhancedStock = {
   show={showSelectUnitModal}
   onHide={() => setShowSelectUnitModal(false)}
   units={units}
-  unitMapping={unitMapping}          // ← added
-  onSaveMapping={(mapping) => {
-    setUnitMapping(mapping);
-    setSelectedUnit(mapping.baseUnit || "");
-    setShowSelectUnitModal(false);
-  }}
+  unitMapping={unitMapping}
+  onSaveMapping={handleSaveUnitMapping}
 />
+
+
     </>
   );
 }

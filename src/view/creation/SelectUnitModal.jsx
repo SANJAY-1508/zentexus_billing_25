@@ -91,7 +91,8 @@ const save = () => {
                   <div className="px-3 py-2" style={{ cursor: "pointer" }} onClick={() => { setBaseUnit("None"); setShowBase(false); }}>None</div>
                   {units.map(u => (
                     <div key={u.unit_id} className="px-3 py-2" style={{ cursor: "pointer" }} onClick={() => { setBaseUnit(u.unit_name); setShowBase(false); }}>
-                      {u.unit_name}
+                     {u.unit_name} {u.short_name ? `(${u.short_name})` : ""}
+
                     </div>
                   ))}
                 </div>
@@ -118,7 +119,7 @@ const save = () => {
                   <div className="px-3 py-2" style={{ cursor: "pointer" }} onClick={() => { setSecondaryUnit("None"); setShowSec(false); }}>None</div>
                   {units.map(u => (
                     <div key={u.unit_id} className="px-3 py-2" style={{ cursor: "pointer" }} onClick={() => { setSecondaryUnit(u.unit_name); setShowSec(false); }}>
-                      {u.unit_name}
+                         {u.unit_name} {u.short_name ? `(${u.short_name})` : ""}
                     </div>
                   ))}
                 </div>
