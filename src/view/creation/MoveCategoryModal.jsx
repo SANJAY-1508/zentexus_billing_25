@@ -56,11 +56,9 @@ const moveProductsToCategory = async () => {
     await Promise.all(requests);
 
     toast.success(`${selectedItems.length} product(s) moved successfully!`);
-
-   if (onMoveSuccess) {
-  onMoveSuccess(); // <--- CORRECTED: Call without arguments
+    if (onMoveSuccess) {
+  onMoveSuccess(selectedItems); // <-- No longer needed
 }
-
     onHide();
   } catch (error) {
     console.error("Move failed:", error);
