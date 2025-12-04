@@ -15,6 +15,7 @@ import { fetchCategories } from "../../slice/CategorySlice"; // correct path
 import { fetchProducts } from "../../slice/ProductSlice";
 import PartyModal from "../creation/PartyModalCreation";   // adjust path if needed
 import AddItem from "../creation/ItemModalCreation"; // Adjust path if needed
+
 // Static options
 const UNITS = ["NONE", "KG", "Litre", "Piece","meters"];
 const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
@@ -119,6 +120,45 @@ const [formData, setFormData] = useState({
     
   },
   });
+  // Add this useEffect — idhu dhaan magic
+useEffect(() => {
+  if (isCreateMode) {
+    // Just call the existing search API with empty text → it returns all sales
+    dispatch(searchSales("")).then((action) => {
+      if (action.payload && action.payload.length > 0) {
+        const allInvoices = action.payload.map(sale => sale.invoice_no);
+        const currentYearMonth = "INV" + new Date().toISOString().slice(0,7).replace(/-/g,""); // INV202512
+        
+        // Filter only current month invoices
+        const currentMonthInvoices = allInvoices.filter(inv => inv?.startsWith(currentYearMonth));
+        
+        let nextNum = 1;
+        if (currentMonthInvoices.length > 0) {
+          const numbers = currentMonthInvoices.map(inv => {
+            const numPart = inv.split('-')[1];
+            return parseInt(numPart || "0");
+          });
+          const maxNum = Math.max(...numbers);
+          nextNum = maxNum + 1;
+        }
+
+        const nextInvoiceNo = `${currentYearMonth}-${String(nextNum).padStart(4, '0')}`;
+
+        setFormData(prev => ({
+          ...prev,
+          invoice_no: nextInvoiceNo
+        }));
+      } else {
+        // First invoice of the month
+        const currentYearMonth = "INV" + new Date().toISOString().slice(0,7).replace(/-/g,"");
+        setFormData(prev => ({
+          ...prev,
+          invoice_no: currentYearMonth + "-0001"
+        }));
+      }
+    });
+  }
+}, [isCreateMode, dispatch]);
   const handleReceivedAmountChange = (e) => {
   const value = e.target.value;
   setFormData(prev => ({
@@ -657,7 +697,17 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
                 )}
                 </Col>
                 <Col md={2} style={{ zIndex: 100 }}>
-                <TextInputform formLabel="Invoice Number" value={formData.invoice_no}  onChange={(e) =>  handleInputChange("invoice_no", e.target.value)} readOnly={isDisabled}/>
+                <TextInputform 
+  formLabel="Invoice No" 
+  value={formData.invoice_no || "Generating..."}
+  readOnly={true}
+  style={{ 
+    backgroundColor: "#f0fff0", 
+    fontWeight: "bold", 
+    color: "#006400",
+    fontSize: "1.1em"
+  }}
+/>
                 <Calender calenderlabel="Invoice Date" initialDate={formData.invoice_date}/>
                 <DropDown textlabel="State of supply" value={formData.state_of_supply} onChange={(e) =>  handleInputChange("state_of_supply", e.target.value)} options={STATE_OF_SUPPLY_OPTIONS} disabled={isDisabled}/>
                 </Col>
