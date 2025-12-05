@@ -787,8 +787,18 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
               </Row>
               <Row className="item-table-row mt-4">
               <Col>
-                <Table bordered >
-                 <thead>
+              {/* THIS DIV MAKES ONLY TABLE SCROLLABLE */}
+    <div 
+      style={{
+        maxHeight: "500px",           // Nee vendha height adjust panniko (or 60vh)
+        overflow: "auto",
+        border: "1px solid #dee2e6",
+        borderRadius: "8px",
+        position: "relative"
+      }}
+    ></div>
+                <Table bordered hover className="mb-0" style={{ minWidth: "1400px" }}>
+                 <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 10, background: "#f8f9fa" }}>
                  <tr>
                  <th>#</th>
                  {formData.visibleColumns.category && <th>Category</th>}
