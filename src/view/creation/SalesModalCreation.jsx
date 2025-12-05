@@ -1087,17 +1087,29 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
         {formData.visibleColumns.discount && (
           <td style={{minWidth:"100px"}}>
             <InputGroup size="sm">
-              <FormControl type="number" placeholder="%" value={row.discountPercent} onChange={(e) => onRowChange(row.id, "discountPercent", e.target.value)} readOnly={isDisabled} />
+              <FormControl expanse="number" placeholder="%" value={row.discountPercent} onChange={(e) => onRowChange(row.id, "discountPercent", e.target.value)} readOnly={isDisabled} />
               <FormControl value={row.discountAmount} readOnly />
             </InputGroup>
           </td>
         )}
 
-        <td style={{minWidth:"100px"}}>
-          <Select value={TAX_OPTIONS.find(opt => String(opt.value) === String(row.taxPercent)) || TAX_OPTIONS[0]}
-            onChange={(v) => onRowChange(row.id, "taxPercent", v)} options={TAX_OPTIONS} isDisabled={isDisabled} menuPortalTarget={document.body} />
-          <TextInputform readOnly value={row.taxAmount || "0.00"} />
-        </td>
+       
+        <td style={{ minWidth: "120px" }}>
+  <Select
+    value={TAX_OPTIONS.find(opt => String(opt.value) === String(row.taxPercent)) || TAX_OPTIONS[0]}
+    onChange={(v) => onRowChange(row.id, "taxPercent", v.value)}
+    options={TAX_OPTIONS}
+    isDisabled={isDisabled}
+    menuPortalTarget={document.body}
+    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+  />
+  <TextInputform
+    readOnly
+    value={row.taxAmount || "0.00"}
+    style={{ marginTop: "5px" }}
+    className="text-center"
+  />
+</td>
         <td><TextInputform readOnly value={row.amount} /></td>
         <td>{!isViewMode && <Button variant="danger" size="sm" onClick={() => deleteRow(row.id)}><FaTimes /></Button>}</td>
       </tr>
@@ -1111,17 +1123,26 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
       </tr>
     )}
 
+    
     <tr>
-      <td colSpan={2 + Object.values(formData.visibleColumns).filter(Boolean).length}>
-        <strong>TOTAL</strong>
-      </td>
-      <td>{totalQty}</td>
-      <td colSpan="5"></td>
-      {formData.visibleColumns.discount && <td>{totalDiscount.toFixed(2)}</td>}
-      <td>{totalTax.toFixed(2)}</td>
-      <td>{totalAmountRaw.toFixed(2)}</td>
-      <td colSpan="2"></td>
-    </tr>
+  <td colSpan={2 + Object.values(formData.visibleColumns).filter(Boolean).length} >
+    <strong>TOTAL</strong>
+  </td>
+  
+  <td className="fw-bold text-center">{totalQty}</td>
+  
+  {/* Skip Unit, Price, Price/Unit, Discount columns */}
+  <td colSpan={3 + (formData.visibleColumns.discount ? 1 : 0)}></td>
+  
+  {/* Total Tax - exactly under Tax column */}
+  <td className="fw-bold text-center">{totalTax.toFixed(2)}</td>
+  
+  {/* Total Amount - exactly under Amount column */}
+  <td className="fw-bold text-end">{totalAmountRaw.toFixed(2)}</td>
+  
+  {/* Actions column - just empty (no extra space) */}
+  <td></td>
+</tr>
   </tbody>
 </Table>
                 
@@ -1463,3 +1484,5 @@ const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({value: pt, label: pt
 };
 
 export default SaleCreation;
+
+
