@@ -30,12 +30,19 @@ const BulkProductModal = ({
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Only show active items (status_code != 1)
-  const filteredProducts = products
-    .filter(p => p.status_code == 0) 
-    .filter((item) =>
-      item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Determine the status code of the products we *want* to display for bulk action
+  // If mode is "inactive", we show active products (status_code == 0) to change them to inactive.
+  // If mode is "active", we show inactive products (status_code == 1) to change them to active.
+  const targetStatusCode = mode === "active" ? 1 : 0; 
+  const targetStatusName = targetStatusCode === 1 ? "inactive" : "active";
+
+  // Filter products based on the target status code AND search term
+  // Filter products based on the target status code AND search term
+const filteredProducts = products
+  .filter(p => p.status_code == targetStatusCode) // Filter based on target status
+  .filter((item) =>
+    item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleToggleItem = (productId) => {
     setSelectedItems((prev) =>
@@ -113,7 +120,7 @@ const handleConfirm = async () => {
             />
           </InputGroup>
           <div className="mt-2 text-muted small">
-            Showing <strong>{filteredProducts.length}</strong> active items
+            Showing <strong>{filteredProducts.length}</strong> {targetStatusName} items
             {selectedItems.length > 0 && (
               <span className="ms-3">
                 • <Badge bg="primary">{selectedItems.length} selected</Badge>

@@ -20,8 +20,8 @@ const [editProduct, setEditProduct] = useState(null);
   const { products = [], status } = useSelector((state) => state.product);
 const [bulkModal, setBulkModal] = useState({ show: false, type: "" });
 
-
-
+  // Filter products to only show ACTIVE items (status_code == 0)
+  const activeProducts = products.filter(p => p.status_code == 0);
 
   // Fetch products on mount
   useEffect(() => {
@@ -32,22 +32,25 @@ const [bulkModal, setBulkModal] = useState({ show: false, type: "" });
 
   // Auto-select first product when list updates (e.g. after adding new item)
   useEffect(() => {
-    if (products.length > 0 && !selectedProduct) {
-      setSelectedProduct(products[0]);
+    if (activeProducts.length > 0 && !selectedProduct) {
+      setSelectedProduct(activeProducts[0]);
     }
-  }, [products, selectedProduct]);
+  }, [activeProducts, selectedProduct]);
 
 
-// Keep selectedProduct in sync with latest products list
+// Keep selectedProduct in sync with latest products list (using activeProducts for a fresh check)
 // Keep selected product always fresh when the products array changes
 useEffect(() => {
-  if (selectedProduct && products.length > 0) {
-    const freshProduct = products.find(p => p.product_id === selectedProduct.product_id);
+  if (selectedProduct && activeProducts.length > 0) {
+    const freshProduct = activeProducts.find(p => p.product_id === selectedProduct.product_id);
     if (freshProduct && freshProduct !== selectedProduct) {
       setSelectedProduct(freshProduct);
     }
+  } else if (selectedProduct && !activeProducts.some(p => p.product_id === selectedProduct.product_id)) {
+    // If the currently selected product is no longer active, deselect it
+    setSelectedProduct(null);
   }
-}, [products, selectedProduct]);
+}, [activeProducts, selectedProduct]);
 
   // Re-fetch products when modal closes (in case new item was added)
   const handleCloseAddItem = () => {
@@ -111,14 +114,14 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.length === 0 ? (
+                  {activeProducts.length === 0 ? (
                     <tr>
                       <td colSpan={2} className="text-center text-muted py-4">
-                        No items yet
+                        No active items yet
                       </td>
                     </tr>
                   ) : (
-                    products.map((product) => {
+                    activeProducts.map((product) => { // <-- Use activeProducts here
                       const salePrice = product.sale_price ? JSON.parse(product.sale_price) : {};
                       const purchasePrice = product.purchase_price ? JSON.parse(product.purchase_price) : {};
                       const stock = product.stock ? JSON.parse(product.stock) : {};
@@ -347,8 +350,9 @@ className={`cursor-pointer ${selectedProduct?.product_id === product.product_id 
     setShowAddItem(false);
     setEditProduct(null);
     dispatch(fetchProducts()).then(() => {
+      // Logic to re-select the edited product, if it's still active
       if (editProduct) {
-        const fresh = products.find(p => p.product_id === editProduct.product_id);
+        const fresh = activeProducts.find(p => p.product_id === editProduct.product_id); // <-- Use activeProducts for check
         if (fresh) setSelectedProduct(fresh);
       }
     });
@@ -363,8 +367,9 @@ className={`cursor-pointer ${selectedProduct?.product_id === product.product_id 
     setShowAdjustItem(false);
     dispatch(fetchProducts()).then(() => {
       if (selectedProduct) {
-        const updated = products.find(p => p.product_id === selectedProduct.product_id);
+        const updated = activeProducts.find(p => p.product_id === selectedProduct.product_id); // <-- Use activeProducts for check
         if (updated) setSelectedProduct(updated);
+        // If it was made inactive, it will be deselected by the main useEffect
       }
     });
   }}
