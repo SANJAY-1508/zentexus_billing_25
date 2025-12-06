@@ -2135,7 +2135,7 @@ const SaleCreation = () => {
                           marginLeft: "5px",
                         }}
                       >
-                        Auto-fill with Total
+                       
                       </label>
                     </div>
                   )}
