@@ -91,9 +91,10 @@ useEffect(() => {
   <Dropdown.Item onClick={() => setBulkModal({ show: true, type: "active" })}>
     Bulk Active
   </Dropdown.Item>
-  <Dropdown.Item onClick={() => setBulkModal({ show: true, type: "assignCode" })}>
-    Bulk Assign Code
-  </Dropdown.Item>
+
+<Dropdown.Item onClick={() => setBulkModal({ show: true, type: "assignCode" })}>
+  Bulk Assign Code
+</Dropdown.Item>
   <Dropdown.Item onClick={() => setBulkModal({ show: true, type: "assignUnits" })}>
     Assign Units
   </Dropdown.Item>

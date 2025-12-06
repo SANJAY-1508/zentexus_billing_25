@@ -142,9 +142,33 @@ useEffect(() => {
   setType(isService ? "reduce" : "add");
 
   setItemName(isService ? editProduct.service_name || "" : editProduct.product_name || "");
+  // Load saved unit when editing product
+if (editProduct?.unit_value) {
+  let mapping = { baseUnit: editProduct.unit_value, secondaryUnit: null, conversion: null, shortText: editProduct.unit_value };
+
+  try {
+    const parsed = JSON.parse(editProduct.unit_value);
+    if (parsed.baseUnit) mapping = { ...parsed, shortText: parsed.shortText || parsed.baseUnit };
+  } catch { /* it's plain string → already handled above */ }
+
+  setUnitMapping(mapping);
+}
   setHsn(isService ? editProduct.service_hsn || editProduct.hsn_code || "" : editProduct.hsn_code || "");
-  setItemCode(isService ? editProduct.service_code || "" : editProduct.product_code || "");
-  setSelectedUnit(editProduct.unit_value || "");
+setItemCode(isService 
+  ? String(editProduct.service_code ?? "") 
+  : String(editProduct.product_code ?? ""));
+  // If unit_value is just a string (like "GRAMMES"), show it
+// If it's JSON (old format), extract baseUnit
+let displayUnit = "";
+if (editProduct.unit_value) {
+  try {
+    const parsed = JSON.parse(editProduct.unit_value);
+    displayUnit = parsed.baseUnit || editProduct.unit_value;
+  } catch {
+    displayUnit = editProduct.unit_value; // already a string
+  }
+}
+setSelectedUnit(displayUnit);
   setSelectedCategory(editProduct.category_id || "");
   if (editProduct.add_image) {
     setImagePreview(editProduct.add_image);
@@ -212,11 +236,7 @@ try {
   }, [show, unitStatus, categoryStatus, dispatch]);
 
   // Auto-select first unit & category
-  useEffect(() => {
-    if (units.length > 0 && !selectedUnit) setSelectedUnit(units[0].unit_name);
-    if (categories.length > 0 && !selectedCategory)
-      setSelectedCategory(categories[0].category_id);
-  }, [units, categories]);
+
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -264,6 +284,8 @@ try {
     setImagePreview("");
     setImageFileName("");
     setShowWholesale(false);
+    setUnitMapping(null);
+setSelectedUnit("");
 setWholesaleDetails({
   price: "",
   tax_type: "Without Tax",
@@ -305,10 +327,10 @@ const handleAssignCode = () => {
   const handleSave = async (closeModal = true, isNew = false) => {
     const selectedCatObj =
       categories.find((c) => c.category_id == selectedCategory) || {};
-    const selectedUnitObj =
-      units.find((u) => u.unit_name === selectedUnit) || {};
+   const unit_value = unitMapping?.baseUnit || "";
+const unit_id = units.find(u => u.unit_name === unit_value)?.unit_id || "";
     const category_name = selectedCatObj.category_name || "";
-    const unit_id = selectedUnitObj.unit_id || "";
+    
    const sale_price_obj = {
   price: salePriceDetails.price || "0",
   tax_type: salePriceDetails.tax_type,
@@ -338,14 +360,7 @@ const sale_price = JSON.stringify(sale_price_obj);
       sale_price,
     };
 
-    if (
-      !commonData.product_name ||
-      !commonData.category_id ||
-      !commonData.unit_value
-    ) {
-      alert("Please fill Item Name, Category & Unit");
-      return;
-    }
+  
 
     try {
       if (isProduct) {
@@ -553,9 +568,9 @@ const enhancedStock = {
       }}
       onClick={() => setShowSelectUnitModal(true)}
     >
-      <span className={!unitMapping?.baseUnit ? "text-muted" : "fw-bold"}>
-        {unitMapping?.baseUnit || selectedUnit || "Select Unit"}
-      </span>
+     <span className={!unitMapping?.baseUnit ? "text-muted" : "fw-bold"}>
+  {unitMapping?.baseUnit || "Select Unit *"}
+</span>
       <FaChevronDown className="text-primary" />
     </div>
  {unitMapping && (

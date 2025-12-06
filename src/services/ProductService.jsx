@@ -68,3 +68,39 @@ export const bulkUpdateProductStatusApi = async ({ product_ids, status_code, sta
   }
   return data;
 };
+
+
+// src/services/ProductService.js
+
+export const bulkAssignProductCodeApi = async ({ product_ids }) => {
+  const payload = {
+    bulk_assign_code: true,
+    product_ids,
+  };
+
+  const response = await axiosInstance.post("/products.php", payload);
+  const { data } = response;
+
+  if (data.head?.code !== 200) {
+    throw new Error(data.head?.msg || "Failed to assign codes");
+  }
+  return data;
+};
+
+
+export const bulkAssignUnitsApi = async ({ product_ids, unit_value,unit_id }) => {
+  const payload = {
+    bulk_assign_units: true,
+    product_ids,
+    unit_value,
+    unit_id // this is JSON string
+  };
+
+  const response = await axiosInstance.post("/products.php", payload);
+  const { data } = response;
+
+  if (data.head?.code !== 200) {
+    throw new Error(data.head?.msg || "Failed to assign units");
+  }
+  return data;
+};

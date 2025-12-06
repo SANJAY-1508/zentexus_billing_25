@@ -7,6 +7,8 @@ import {
   updateProductApi,
   deleteProductApi,
   bulkUpdateProductStatusApi,
+  bulkAssignProductCodeApi,
+  bulkAssignUnitsApi
 } from "../services/ProductService";
 
 
@@ -25,6 +27,35 @@ export const bulkUpdateProductStatus = createAsyncThunk(
     }
   }
 );
+
+
+// Add this thunk (anywhere with other thunks)
+export const bulkAssignUnits = createAsyncThunk(
+  "product/bulkAssignUnits",
+ async ({ product_ids, unit_value, unit_id }, { rejectWithValue }) => {
+  try {
+    const response = await bulkAssignUnitsApi({ product_ids, unit_value, unit_id });
+    return { product_ids, unit_value, unit_id };
+  } catch (error) {
+    return rejectWithValue(error.message);
+  }
+}
+);
+
+
+export const bulkAssignProductCode = createAsyncThunk(
+  "product/bulkAssignProductCode",
+  async ({ product_ids }, { rejectWithValue }) => {
+    try {
+      const response = await bulkAssignProductCodeApi({ product_ids });
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to assign codes");
+    }
+  }
+);
+
+
 
 export const fetchProducts = createAsyncThunk(
   "product/fetchProducts",
@@ -143,7 +174,21 @@ const productSlice = createSlice({
       .addCase(bulkUpdateProductStatus.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
-      });
+      })
+
+      .addCase(bulkAssignProductCode.fulfilled, (state, action) => {
+  // Refetch will happen automatically via modal close → ProductTab re-fetch
+  state.status = "succeeded";
+})
+
+.addCase(bulkAssignUnits.fulfilled, (state, action) => {
+  const { product_ids, unit_value, unit_id } = action.payload;
+  state.products = state.products.map(p =>
+    product_ids.includes(p.product_id)
+      ? { ...p, unit_value, unit_id }  // ← Save both!
+      : p
+  );
+})
   },
 });
 
