@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Spinner } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { createUnit, updateUnit } from "../../slice/UnitSlice";
+import { toast } from "react-toastify";
 
-function AddUnit({ show, onHide, onSaveSuccess, unitToEdit }) {
+function AddUnit({ show, onHide, onSaveSuccess, unitToEdit , units = []}) {
   const dispatch = useDispatch();
 
   const [unitName, setUnitName] = useState("");
@@ -27,7 +28,15 @@ function AddUnit({ show, onHide, onSaveSuccess, unitToEdit }) {
       alert("Unit Name is required");
       return;
     }
-
+if (!unitToEdit) {
+    const exists = units.some(u => 
+      u.unit_name.toLowerCase() === unitName.trim().toLowerCase()
+    );
+    if (exists) {
+      toast.error("Unit name already exists!");
+      return;
+    }
+  }
     setLoading(true);
 
     const unitData = {

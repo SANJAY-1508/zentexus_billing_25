@@ -76,6 +76,18 @@ const handleDelete = async (category) => {
     toast.error(error || "Failed to delete category");
   }
 };
+
+const handleMoveClick = () => {
+  if (selectedCategory === null) {
+    toast.error("Cannot move items from 'Items not in any Category'", {
+      // position: "top-center",
+      autoClose: 3000,
+    });
+    return;
+  }
+
+  setShowMoveModal(true);
+};
   return (
     <>
       {/* LEFT PANEL - CATEGORIES */}
@@ -203,25 +215,13 @@ const handleDelete = async (category) => {
               </Col>
               <Col className="text-end">
                 <Button
-                  variant="primary"
-                  className="fw-semibold"
-                  onClick={() => {
-                    if (!selectedCategory) {
-                      toast.error(
-                        "You cannot perform this operation for 'Items not in any Category'",
-                        {
-                          position: "top-right",
-                          autoClose: 4000,
-                        }
-                      );
-                      return;
-                    }
-                    setShowMoveModal(true);
-                  }}
-                  disabled={!selectedCategory}
-                >
-                  Move To This Category
-                </Button>
+              variant="primary"
+              className="fw-semibold"
+              onClick={handleMoveClick}
+              // disabled={!selectedCategory}
+            >
+              Move To This Category
+            </Button>
               </Col>
             </Row>
           </Card.Body>

@@ -708,6 +708,16 @@ const enhancedStock = {
                       overflowY: "auto",
                     }}
                   >
+                    <div
+      className="px-3 py-2 hover-bg-light"
+      style={{ cursor: "pointer", color: "#6c757d", fontStyle: "italic" }}
+      onClick={() => {
+        setSelectedCategory(""); // or null / "none" string
+        setShowCategoryMenu(false);
+      }}
+    >
+      None
+    </div>
                     {categories.map((c) => (
                       <div
                         key={c.category_id}
