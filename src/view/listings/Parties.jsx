@@ -11,7 +11,7 @@ import { Button, Table, Card, Dropdown,Modal } from "react-bootstrap";
 import PartyModal from "../creation/PartyModalCreation";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom"; // Added
-              
+import {toast} from "react-toastify"         
 
 import { FaFilter } from 'react-icons/fa';
 
@@ -166,6 +166,7 @@ function Parties() {
       }
       success = true;
     } catch (error) {
+      toast.error(error?.message || "Party name already exists");
       console.error("Submission failed:", error);
     }
 
@@ -184,6 +185,7 @@ function Parties() {
       await dispatch(addNewParty(dataToSend)).unwrap();
       success = true;
     } catch (error) {
+      toast.error(error?.message || "Party name already exists");
       console.error("Save & New failed:", error);
     }
 

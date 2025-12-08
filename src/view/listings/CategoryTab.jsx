@@ -17,7 +17,7 @@ import MoveCategoryModal from "../creation/MoveCategoryModal";
 import { FaSearch, FaEllipsisV } from "react-icons/fa";
 import AddCate from "../creation/CategoryModalCreation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories } from "../../slice/CategorySlice";
+import { fetchCategories,deleteCategory } from "../../slice/CategorySlice";
 import { fetchProducts } from "../../slice/ProductSlice";
 
 export default function CategoryTab() {
@@ -55,7 +55,39 @@ export default function CategoryTab() {
   );
 
   const loading = catStatus === "loading" || prodStatus === "loading";
+const handleDelete = async (category) => {
+  if (!window.confirm(`Delete "${category.category_name}" category?`)) {
+    return;
+  }
 
+  try {
+    await dispatch(deleteCategory(category.category_id)).unwrap(); // .unwrap() throws if rejected
+
+    toast.success("Category deleted successfully");
+
+    // If the deleted category was selected, go back to "uncategorized"
+    if (selectedCategory?.category_id === category.category_id) {
+      setSelectedCategory(null);
+    }
+
+    // Optional: refresh products to update item counts instantly
+    dispatch(fetchProducts());
+  } catch (error) {
+    toast.error(error || "Failed to delete category");
+  }
+};
+
+const handleMoveClick = () => {
+  if (selectedCategory === null) {
+    toast.error("Cannot move items from 'Items not in any Category'", {
+      // position: "top-center",
+      autoClose: 3000,
+    });
+    return;
+  }
+
+  setShowMoveModal(true);
+};
   return (
     <>
       {/* LEFT PANEL - CATEGORIES */}
@@ -147,9 +179,8 @@ export default function CategoryTab() {
                               className="text-danger"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm("Delete this category?")) {
-                                  // delete logic if you have
-                                }
+                              handleDelete(cat);
+                               
                               }}
                             >
                               Delete
@@ -184,25 +215,13 @@ export default function CategoryTab() {
               </Col>
               <Col className="text-end">
                 <Button
-                  variant="primary"
-                  className="fw-semibold"
-                  onClick={() => {
-                    if (!selectedCategory) {
-                      toast.error(
-                        "You cannot perform this operation for 'Items not in any Category'",
-                        {
-                          position: "top-right",
-                          autoClose: 4000,
-                        }
-                      );
-                      return;
-                    }
-                    setShowMoveModal(true);
-                  }}
-                  disabled={!selectedCategory}
-                >
-                  Move To This Category
-                </Button>
+              variant="primary"
+              className="fw-semibold"
+              onClick={handleMoveClick}
+              // disabled={!selectedCategory}
+            >
+              Move To This Category
+            </Button>
               </Col>
             </Row>
           </Card.Body>

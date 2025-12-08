@@ -4,7 +4,7 @@ import { Button, Table, Col, Card, Spinner, DropdownButton, Dropdown } from "rea
 import { FaSearch, FaEllipsisV, FaFileExcel } from "react-icons/fa";
 import AddUnit from "../creation/UnitModalCreation";
 import AddConvo from "../listings/UnitConversion";
-
+import {toast} from "react-toastify";
 import "../../App.css";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -44,40 +44,52 @@ useEffect(() => {
   ? [...units].sort((a, b) => a.unit_name.localeCompare(b.unit_name))
   : [];
 
-  const unitRows = unitsList.map((unit) => (
-    <tr key={unit.unit_id || unit.id}  onClick={() => setSelectedBaseUnit(unit.unit_name)}>
-      <td>{unit.unit_name}</td>
-      <td>{unit.short_name || "-"}</td>
-      <td className="text-center">
-        <DropdownButton
-          title={<FaEllipsisV />}
-          variant="light"
-          size="sm"
-          align="end"
-          className="p-0 border-0 bg-transparent"
+ const unitRows = unitsList.map((unit) => (
+  <tr key={unit.unit_id || unit.id} onClick={() => setSelectedBaseUnit(unit.unit_name)}>
+    <td>{unit.unit_name}</td>
+    <td>{unit.short_name || "-"}</td>
+    <td className="text-center">
+      <DropdownButton
+        title={<FaEllipsisV />}
+        variant="light"
+        size="sm"
+        align="end"
+        className="p-0 border-0 bg-transparent"
+      >
+        <Dropdown.Item
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedUnit(unit);
+            setShowUnitModal(true);
+          }}
         >
-          <Dropdown.Item
-            onClick={() => {
-              setSelectedUnit(unit);
-              setShowUnitModal(true);
-            }}
-          >
-            View / Edit
-          </Dropdown.Item>
-          <Dropdown.Item
-            className="text-danger"
-            onClick={() => {
-              if (window.confirm("Are you sure you want to delete this unit?")) {
-                dispatch(deleteUnit(unit.unit_id || unit.id));
-              }
-            }}
-          >
-            Delete
-          </Dropdown.Item>
-        </DropdownButton>
-      </td>
-    </tr>
-  ));
+          View / Edit
+        </Dropdown.Item>
+        <Dropdown.Item
+          className="text-danger"
+          onClick={(e) => {
+            e.stopPropagation();
+
+            const isMapped = conversions.some(
+              c => c.baseUnit === unit.unit_name || c.secondaryUnit === unit.unit_name
+            );
+
+            if (isMapped) {
+              toast.error("Mapped unit cannot be deleted");
+              return;
+            }
+
+            if (window.confirm("Are you sure you want to delete this unit?")) {
+              dispatch(deleteUnit(unit.unit_id || unit.id));
+            }
+          }}
+        >
+          Delete
+        </Dropdown.Item>
+      </DropdownButton>
+    </td>
+  </tr>
+));
 
   return (
     <>
@@ -213,6 +225,7 @@ useEffect(() => {
         }}
         onSaveSuccess={fetchAllUnits}
         unitToEdit={selectedUnit}
+        units={unitsList}
       />
 <AddConvo
   show={showConvoModal}

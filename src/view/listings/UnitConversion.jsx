@@ -1,5 +1,5 @@
 // AddConvo.jsx
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { FaChevronDown } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -10,7 +10,14 @@ function AddConvo({ show, onHide, units = [], onSave }) {
   const [rate, setRate] = useState("");
   const [showBaseDropdown, setShowBaseDropdown] = useState(false);
   const [showSecondaryDropdown, setShowSecondaryDropdown] = useState(false);
-
+// Add this useEffect right after your state declarations
+useEffect(() => {
+  if (show) {
+    setBaseUnit("None");
+    setSecondaryUnit("None");
+    setRate("");
+  }
+}, [show]);
   const getShortCode = (name) => {
     if (!name || name === "None") return "";
     const match = name.match(/\(([^)]+)\)/);
@@ -156,7 +163,7 @@ function AddConvo({ show, onHide, units = [], onSave }) {
                       onClick={() => {
                         setSecondaryUnit("None");
                         setShowSecondaryDropdown(false);
-                        setRate("");
+                        // setRate("");
                       }}
                     >
                       None
