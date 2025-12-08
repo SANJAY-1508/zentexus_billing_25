@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { createCategory, updateCategory } from "../../slice/CategorySlice";
-
+import { toast } from "react-toastify";
 function AddCate({ show, onHide, onSaveSuccess, categoryToEdit }) {
   const dispatch = useDispatch();
   const [categoryName, setCategoryName] = useState("");
@@ -17,24 +17,31 @@ function AddCate({ show, onHide, onSaveSuccess, categoryToEdit }) {
     }
   }, [categoryToEdit, show]);
 
-  const handleSave = async () => {
-    if (!categoryName.trim()) return alert("Category name is required");
 
-    setLoading(true);
-    const data = { category_name: categoryName.trim() };
+ const handleSave = async () => {
+  if (!categoryName.trim()) return alert("Category name is required");
 
+  setLoading(true);
+  const data = { category_name: categoryName.trim() };
+
+  try {
     if (categoryToEdit) {
       data.category_id = categoryToEdit.category_id;
-      await dispatch(updateCategory(data));
+      await dispatch(updateCategory(data)).unwrap();
+      toast.success("Category updated successfully!");
     } else {
-      await dispatch(createCategory(data));
+      await dispatch(createCategory(data)).unwrap();
+      toast.success("Category created successfully!");
     }
 
     setLoading(false);
     onSaveSuccess();
     onHide();
-  };
-
+  } catch (error) {
+    setLoading(false);
+    toast.error("A category with this name already exists!");
+  }
+};
   return (
     <Modal show={show} onHide={onHide} centered backdrop="static" dialogClassName="category">
       <Modal.Header className="border-0 d-flex justify-content-between align-items-center p-3">
