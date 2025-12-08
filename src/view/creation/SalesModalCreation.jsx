@@ -1,3 +1,5 @@
+
+
 // import React, { useState, useEffect } from "react";
 // import {
 //   Container,
@@ -45,10 +47,10 @@
 // const TAX_OPTIONS = [
 //   { value: "", label: "Select" },
 //   { value: 0, label: "0%" },
-//   { value: 5, label: "5%" },
-//   { value: 12, label: "12%" },
-//   { value: 18, label: "18%" },
-//   { value: 28, label: "28%" },
+//   { value: 5, label: "Gst@5%" },
+//   { value: 12, label: "Gst@12%" },
+  
+  
 // ];
 // const STATE_OF_SUPPLY_OPTIONS = [
 //   { value: "", label: "Select" },
@@ -104,6 +106,17 @@
 // const SaleCreation = ({ tabNumber = 1 }) => {
 //   const dispatch = useDispatch();
 //   const navigate = useNavigate();
+  
+//   // ============== TAB FUNCTIONALITY START ==============
+//   // Multiple Tabs State
+//   const [tabs, setTabs] = useState([
+//     { id: 1, title: "Sale#1", active: true }
+//   ]);
+//   const [nextTabId, setNextTabId] = useState(2);
+//   const [availableTabIds, setAvailableTabIds] = useState([]); // Track reusable IDs
+//   // Store form data for each tab
+//   const [tabForms, setTabForms] = useState({});
+//   // ============== TAB FUNCTIONALITY END ==============
   
 //   const { id } = useParams();
 //   const location = useLocation();
@@ -180,6 +193,185 @@
 //     },
 //   });
 
+//   // ============== TAB FUNCTIONS START ==============
+//   const addNewTab = () => {
+//     let newTabId;
+    
+//     // Check if we have available (reusable) tab IDs
+//     if (availableTabIds.length > 0) {
+//       // Use the smallest available ID (for proper ordering)
+//       newTabId = availableTabIds[0];
+      
+//       // Remove this ID from available list
+//       setAvailableTabIds(prev => prev.filter(id => id !== newTabId));
+//     } else {
+//       // No reusable IDs, use next sequential ID
+//       newTabId = nextTabId;
+//       setNextTabId(prev => prev + 1);
+//     }
+    
+//     // Get all invoice numbers from ALL tabs (including current formData)
+//     const allInvoiceNumbers = [];
+    
+//     // Add invoice numbers from all stored tabs
+//     Object.values(tabForms).forEach(tabForm => {
+//       if (tabForm.invoice_no) {
+//         allInvoiceNumbers.push(tabForm.invoice_no);
+//       }
+//     });
+    
+//     // Add current active tab's invoice number
+//     if (formData.invoice_no && formData.invoice_no !== "Generating...") {
+//       allInvoiceNumbers.push(formData.invoice_no);
+//     }
+    
+//     const currentYearMonth = "INV" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
+    
+//     let nextInvoiceNumber = "0001";
+    
+//     if (allInvoiceNumbers.length > 0) {
+//       const currentMonthInvoices = allInvoiceNumbers.filter(inv => 
+//         inv?.startsWith(currentYearMonth)
+//       );
+      
+//       if (currentMonthInvoices.length > 0) {
+//         const numbers = currentMonthInvoices.map((inv) => {
+//           const numPart = inv.split("-")[1];
+//           return parseInt(numPart || "0");
+//         });
+//         const maxNum = Math.max(...numbers);
+//         nextInvoiceNumber = String(maxNum + 1).padStart(4, "0");
+//       }
+//     }
+    
+//     const nextInvoiceNo = `${currentYearMonth}-${nextInvoiceNumber}`;
+    
+//     // Create new form data for the new tab
+//     const newFormData = {
+//       parties_id: "",
+//       name: "",
+//       phone: "",
+//       billing_address: "",
+//       shipping_address: "",
+//       invoice_no: nextInvoiceNo,
+//       invoice_date: new Date().toISOString().split("T")[0],
+//       state_of_supply: "",
+//       payment_type: "",
+//       description: "",
+//       add_image: "",
+//       rows: [{ ...INITIAL_ROW, id: generateUniqueId() }],
+//       rount_off: 0,
+//       round_off_amount: "0",
+//       total: "0.00",
+//       received_amount: " ",
+//       visibleColumns: {
+//         category: false,
+//         description: false,
+//         hsn_code: false,
+//         discount: false,
+//       },
+//     };
+    
+//     // Save current tab's form data before switching
+//     const activeTab = tabs.find(tab => tab.active);
+//     if (activeTab) {
+//       setTabForms(prev => ({
+//         ...prev,
+//         [activeTab.id]: formData
+//       }));
+//     }
+    
+//     // Save new tab's form data
+//     setTabForms(prev => ({
+//       ...prev,
+//       [newTabId]: newFormData
+//     }));
+    
+//     // Update tabs
+//     setTabs(prev => [
+//       ...prev.map(tab => ({ ...tab, active: false })),
+//       { id: newTabId, title: `Sale#${newTabId}`, active: true }
+//     ]);
+    
+//     // Set the new form data
+//     setFormData(newFormData);
+    
+//     // Reset other states
+//     setSelectedPartyOption(null);
+//     setImagePreview("");
+//     setImageFileName("");
+//     setAttachedDocs([]);
+//     setHasUserUploadedImage(false);
+//     setAutoFillReceived(false);
+//     setShowProductTable(false);
+//     setCredit(true);
+//     setIsManualRoundOff(false);
+//   };
+
+//   const switchTab = (tabId) => {
+//     // Save current tab's form data
+//     const activeTab = tabs.find(tab => tab.active);
+//     if (activeTab) {
+//       setTabForms(prev => ({
+//         ...prev,
+//         [activeTab.id]: formData
+//       }));
+//     }
+    
+//     // Update tabs
+//     setTabs(prev => prev.map(tab => ({
+//       ...tab,
+//       active: tab.id === tabId
+//     })));
+    
+//     // Load the form data for the selected tab
+//     if (tabForms[tabId]) {
+//       const savedFormData = tabForms[tabId];
+//       setFormData(savedFormData);
+      
+//       // Restore associated states
+//       if (savedFormData.add_image) {
+//         setImagePreview(savedFormData.add_image);
+//       } else {
+//         setImagePreview("");
+//       }
+//       setImageFileName("");
+//       setHasUserUploadedImage(false);
+//       setAutoFillReceived(false);
+//     }
+//   };
+
+//   const closeTab = (tabId) => {
+//     if (tabs.length === 1) return;
+    
+//     const newTabs = tabs.filter(tab => tab.id !== tabId);
+//     const isClosingActiveTab = tabs.find(tab => tab.id === tabId)?.active;
+    
+//     // Add the closed tab ID to available IDs (for reuse)
+//     setAvailableTabIds(prev => [...prev, tabId].sort((a, b) => a - b));
+    
+//     // Remove the tab's form data
+//     setTabForms(prev => {
+//       const newTabForms = { ...prev };
+//       delete newTabForms[tabId];
+//       return newTabForms;
+//     });
+    
+//     // If the closed tab was active, activate another tab
+//     if (isClosingActiveTab && newTabs.length > 0) {
+//       const lastTab = newTabs[newTabs.length - 1];
+//       newTabs[newTabs.length - 1].active = true;
+      
+//       // Load the activated tab's form data
+//       if (tabForms[lastTab.id]) {
+//         setFormData(tabForms[lastTab.id]);
+//       }
+//     }
+    
+//     setTabs(newTabs);
+//   };
+//   // ============== TAB FUNCTIONS END ==============
+
 //   // Initialize column visibility from saved data
 //   useEffect(() => {
 //     if (saleToEdit) {
@@ -249,12 +441,25 @@
 //             ...prev,
 //             invoice_no: nextInvoiceNo,
 //           }));
+          
+//           // Also save to tabForms for the first tab
+//           setTabForms(prev => ({
+//             ...prev,
+//             1: { ...prev[1], invoice_no: nextInvoiceNo }
+//           }));
 //         } else {
 //           const currentYearMonth =
 //             "INV" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
+//           const firstInvoice = currentYearMonth + "-0001";
 //           setFormData((prev) => ({
 //             ...prev,
-//             invoice_no: currentYearMonth + "-0001",
+//             invoice_no: firstInvoice,
+//           }));
+          
+//           // Also save to tabForms for the first tab
+//           setTabForms(prev => ({
+//             ...prev,
+//             1: { ...prev[1], invoice_no: firstInvoice }
 //           }));
 //         }
 //       });
@@ -979,6 +1184,55 @@
 //   // Fixed: Wrap the entire component in a return statement
 //   return (
 //     <div id="main">
+//       {/* ============== TAB NAVIGATION START ============== */}
+//       <div className="bg-white border-bottom shadow-sm">
+//         <div className="d-flex align-items-center">
+//           {tabs.map((tab, index) => (
+//             <div key={tab.id} className="d-flex align-items-center">
+//               <div
+//                 onClick={() => switchTab(tab.id)}
+//                 className={`px-4 py-5 d-flex align-items-center gap-2 cursor-pointer position-relative ${
+//                   tab.active ? "bg-light border-top border-primary border-3" : "text-muted"
+//                 }`}
+//                 style={{ 
+//                   marginTop: tab.active ? "-2px" : "0",
+//                   minWidth: "120px",
+//                   borderRight: "1px solid #dee2e6"
+//                 }}
+//               >
+//                 <span className="fw-bold">{tab.title}</span>
+//                 {tabs.length > 1 && (
+//                   <FaTimes
+//                     className="text-danger ms-2"
+//                     style={{ fontSize: "14px", cursor: "pointer" }}
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       closeTab(tab.id);
+//                     }}
+//                   />
+//                 )}
+//               </div>
+
+//               {/* + Icon next to last tab */}
+//               {index === tabs.length - 1 && !isViewMode && !isEditMode && (
+//                 <button
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     addNewTab();
+//                   }}
+//                   className="btn btn-link text-primary ms-2"
+//                   style={{ fontSize: "20px" }}
+//                   title="Add New Tab"
+//                 >
+//                   <FaPlus />
+//                 </button>
+//               )}
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//       {/* ============== TAB NAVIGATION END ============== */}
+
 //       <Container fluid className="py-5">
 //         <Row className="py-3">
 //           <Col>
@@ -1085,30 +1339,6 @@
 //                     />
 //                   </Col>
 //                 </Row>
-//                 {/* {credit && (
-//                   <Row className="mb-3">
-//                     <Col md={3}>
-//                       <TextArea
-//                         textlabel="Billing Address"
-//                         value={formData.billing_address}
-//                         onChange={(e) =>
-//                           handleInputChange("billing_address", e.target.value)
-//                         }
-//                         readOnly={isDisabled}
-//                       />
-//                     </Col>
-//                     <Col md={3}>
-//                       <TextArea
-//                         textlabel="Shipping Address"
-//                         value={formData.shipping_address}
-//                         onChange={(e) =>
-//                           handleInputChange("shipping_address", e.target.value)
-//                         }
-//                         readOnly={isDisabled}
-//                       />
-//                     </Col>
-//                   </Row>
-//                 )} */}
 //                 {/* Show billing/shipping address ALWAYS in view mode, conditionally in edit/create */}
 // {(isViewMode || credit) && (
 //   <Row className="mb-3">
@@ -2647,7 +2877,7 @@ import NotifyData from "../../components/NotifyData";
 import Modal from "react-bootstrap/Modal";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
-
+import "./SalesModalCreation.css"
 import { fetchCategories } from "../../slice/CategorySlice";
 import { fetchProducts } from "../../slice/ProductSlice";
 import PartyModal from "../creation/PartyModalCreation";
@@ -2661,10 +2891,10 @@ const PRICE_UNIT_TYPES = ["Without Tax", "With Tax"];
 const TAX_OPTIONS = [
   { value: "", label: "Select" },
   { value: 0, label: "0%" },
-  { value: 5, label: "Gst@5%" },
-  { value: 12, label: "Gst@12%" },
-  
-  
+  { value: 5, label: "5%" },
+  { value: 12, label: "12%" },
+  { value: 18, label: "18%" },
+  { value: 28, label: "28%" },
 ];
 const STATE_OF_SUPPLY_OPTIONS = [
   { value: "", label: "Select" },
@@ -2860,7 +3090,7 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     
     const nextInvoiceNo = `${currentYearMonth}-${nextInvoiceNumber}`;
     
-    // Create new form data for the new tab
+    // Create COMPLETELY NEW form data for the new tab
     const newFormData = {
       parties_id: "",
       name: "",
@@ -2891,7 +3121,14 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     if (activeTab) {
       setTabForms(prev => ({
         ...prev,
-        [activeTab.id]: formData
+        [activeTab.id]: {
+          ...formData,
+          _selectedPartyOption: selectedPartyOption,
+          _imagePreview: imagePreview,
+          _attachedDocs: attachedDocs,
+          _autoFillReceived: autoFillReceived,
+          _credit: credit,
+        }
       }));
     }
     
@@ -2910,7 +3147,7 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     // Set the new form data
     setFormData(newFormData);
     
-    // Reset other states
+    // RESET ALL SHARED STATES for new tab
     setSelectedPartyOption(null);
     setImagePreview("");
     setImageFileName("");
@@ -2923,12 +3160,20 @@ const SaleCreation = ({ tabNumber = 1 }) => {
   };
 
   const switchTab = (tabId) => {
-    // Save current tab's form data
+    // Save current tab's form data with all associated states
     const activeTab = tabs.find(tab => tab.active);
     if (activeTab) {
       setTabForms(prev => ({
         ...prev,
-        [activeTab.id]: formData
+        [activeTab.id]: {
+          ...formData,
+          _selectedPartyOption: selectedPartyOption,
+          _imagePreview: imagePreview,
+          _attachedDocs: attachedDocs,
+          _autoFillReceived: autoFillReceived,
+          _credit: credit,
+          _isManualRoundOff: isManualRoundOff,
+        }
       }));
     }
     
@@ -2939,19 +3184,31 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     })));
     
     // Load the form data for the selected tab
-    if (tabForms[tabId]) {
-      const savedFormData = tabForms[tabId];
-      setFormData(savedFormData);
+    const savedTabData = tabForms[tabId];
+    if (savedTabData) {
+      // Load main form data (excluding underscore prefixed fields)
+      const { 
+        _selectedPartyOption, 
+        _imagePreview, 
+        _attachedDocs, 
+        _autoFillReceived, 
+        _credit,
+        _isManualRoundOff,
+        ...formDataToLoad 
+      } = savedTabData;
       
-      // Restore associated states
-      if (savedFormData.add_image) {
-        setImagePreview(savedFormData.add_image);
-      } else {
-        setImagePreview("");
-      }
+      setFormData(formDataToLoad);
+      
+      // Load associated states
+      setSelectedPartyOption(_selectedPartyOption || null);
+      setImagePreview(_imagePreview || "");
+      setAttachedDocs(_attachedDocs || []);
+      setAutoFillReceived(_autoFillReceived || false);
+      setCredit(_credit !== undefined ? _credit : true);
+      setIsManualRoundOff(_isManualRoundOff || false);
       setImageFileName("");
       setHasUserUploadedImage(false);
-      setAutoFillReceived(false);
+      setShowProductTable(false);
     }
   };
 
@@ -2977,8 +3234,30 @@ const SaleCreation = ({ tabNumber = 1 }) => {
       newTabs[newTabs.length - 1].active = true;
       
       // Load the activated tab's form data
-      if (tabForms[lastTab.id]) {
-        setFormData(tabForms[lastTab.id]);
+      const savedTabData = tabForms[lastTab.id];
+      if (savedTabData) {
+        const { 
+          _selectedPartyOption, 
+          _imagePreview, 
+          _attachedDocs, 
+          _autoFillReceived, 
+          _credit,
+          _isManualRoundOff,
+          ...formDataToLoad 
+        } = savedTabData;
+        
+        setFormData(formDataToLoad);
+        
+        // Load associated states
+        setSelectedPartyOption(_selectedPartyOption || null);
+        setImagePreview(_imagePreview || "");
+        setAttachedDocs(_attachedDocs || []);
+        setAutoFillReceived(_autoFillReceived || false);
+        setCredit(_credit !== undefined ? _credit : true);
+        setIsManualRoundOff(_isManualRoundOff || false);
+        setImageFileName("");
+        setHasUserUploadedImage(false);
+        setShowProductTable(false);
       }
     }
     
@@ -3059,7 +3338,16 @@ const SaleCreation = ({ tabNumber = 1 }) => {
           // Also save to tabForms for the first tab
           setTabForms(prev => ({
             ...prev,
-            1: { ...prev[1], invoice_no: nextInvoiceNo }
+            1: { 
+              ...prev[1], 
+              invoice_no: nextInvoiceNo,
+              _selectedPartyOption: selectedPartyOption,
+              _imagePreview: imagePreview,
+              _attachedDocs: attachedDocs,
+              _autoFillReceived: autoFillReceived,
+              _credit: credit,
+              _isManualRoundOff: isManualRoundOff,
+            }
           }));
         } else {
           const currentYearMonth =
@@ -3073,7 +3361,16 @@ const SaleCreation = ({ tabNumber = 1 }) => {
           // Also save to tabForms for the first tab
           setTabForms(prev => ({
             ...prev,
-            1: { ...prev[1], invoice_no: firstInvoice }
+            1: { 
+              ...prev[1], 
+              invoice_no: firstInvoice,
+              _selectedPartyOption: selectedPartyOption,
+              _imagePreview: imagePreview,
+              _attachedDocs: attachedDocs,
+              _autoFillReceived: autoFillReceived,
+              _credit: credit,
+              _isManualRoundOff: isManualRoundOff,
+            }
           }));
         }
       });
@@ -3478,6 +3775,41 @@ const SaleCreation = ({ tabNumber = 1 }) => {
         discount: hasDiscount,
       },
     });
+    
+    // Save to tabForms for the first tab
+    setTabForms(prev => ({
+      ...prev,
+      1: {
+        parties_id: saleToEdit.parties_id || "",
+        name: saleToEdit.name || "",
+        phone: saleToEdit.phone || "",
+        billing_address: saleToEdit.billing_address || "",
+        shipping_address: saleToEdit.shipping_address || "",
+        invoice_no: saleToEdit.invoice_no || "",
+        invoice_date: saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
+        state_of_supply: saleToEdit.state_of_supply || "",
+        payment_type: saleToEdit.payment_type || "",
+        description: saleToEdit.description || "",
+        add_image: saleToEdit.add_image || "",
+        rows,
+        rount_off,
+        round_off_amount,
+        total,
+        received_amount: saleToEdit.received_amount || " ",
+        visibleColumns: {
+          category: hasCategory,
+          description: hasDescription,
+          hsn_code: hasHsn,
+          discount: hasDiscount,
+        },
+        _selectedPartyOption: selectedPartyOption,
+        _imagePreview: saleToEdit.add_image || "",
+        _attachedDocs: docs.map((d) => ({ name: d.name, data: d.data })),
+        _autoFillReceived: false,
+        _credit: true,
+        _isManualRoundOff: manual,
+      }
+    }));
   }, [saleToEdit, parties]);
 
   // Handle party selection
@@ -3750,6 +4082,7 @@ const SaleCreation = ({ tabNumber = 1 }) => {
         products: JSON.stringify(formData.rows),
         add_image: formData.add_image || "",
         documents: documentsJson,
+        // invoice_no: formData.invoice_no,
         invoice_no: formData.invoice_no,
         total: formData.total,
         rount_off: formData.rount_off ? 1 : 0,
@@ -3810,14 +4143,15 @@ const SaleCreation = ({ tabNumber = 1 }) => {
                 }`}
                 style={{ 
                   marginTop: tab.active ? "-2px" : "0",
-                  minWidth: "120px",
+                  minWidth: "80px",
+                  
                   borderRight: "1px solid #dee2e6"
                 }}
               >
                 <span className="fw-bold">{tab.title}</span>
                 {tabs.length > 1 && (
                   <FaTimes
-                    className="text-danger ms-2"
+                    className="text-danger ms-5"
                     style={{ fontSize: "14px", cursor: "pointer" }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -4050,105 +4384,167 @@ const SaleCreation = ({ tabNumber = 1 }) => {
               </Col>
             </Row>
             
-            <Row className="item-table-row mt-4">
+           <Row className="item-table-row mt-4">
   <Col>
-    <Table
-      bordered
-      hover
-      className="mb-0"
-      style={{ minWidth: "1600px", tableLayout: "fixed" }}
+    {/* Scrollable container for the table */}
+    <div 
+      style={{ 
+        maxHeight: "400px", // Adjust this value as needed
+        overflow: "auto",
+        border: "1px solid #dee2e6",
+        borderRadius: "6px",
+        position: "relative"
+      }}
     >
-      <thead
-        className="table-light"
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "#f8f9fa",
+      <Table
+        bordered
+        hover
+        className="mb-0"
+        style={{ 
+          minWidth: "1600px", 
+          tableLayout: "fixed",
+          marginBottom: "0"
         }}
       >
-        <tr>
-          <th style={{ width: "50px" }}>#</th>
-          {formData.visibleColumns.category && <th style={{ width: "180px" }}>Category</th>}
-          <th style={{ width: "300px" }}>Item</th>
-          {formData.visibleColumns.description && (
-            <th style={{ width: "180px" }}>Description</th>
-          )}
-          {formData.visibleColumns.hsn_code && <th style={{ width: "100px" }}>HSN_code</th>}
-          <th style={{ width: "100px" }}>Qty</th>
-          <th style={{ width: "150px" }}>Unit</th>
-          <th style={{ width: "100px" }}>Price</th>
-          <th style={{ width: "100px" }}>Price/unit</th>
-          {formData.visibleColumns.discount && <th style={{ width: "150px" }}>Discount</th>}
-          <th style={{ width: "120px" }}>Tax</th>
-          <th style={{ width: "120px" }}>
-            {!isViewMode ? (
-              <DropdownButton
-                id="amount-column-dropdown"
-                title={
-                  <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
-                    Amount <FaPlus />
-                  </span>
-                }
-                size="sm"
-                align="end"
-                className="p-0 border-0 text-success shadow-none"
-                style={{ background: "transparent", boxShadow: "none" }}
-              >
-                {[
-                  { key: "category", label: "Category" },
-                  { key: "hsn_code", label: "HSN-Code" },
-                  { key: "description", label: "Description" },
-                  { key: "discount", label: "Discount" },
-                ].map((col) => (
-                  <Dropdown.Item
-                    key={col.key}
-                    as="div"
-                    className="d-flex align-items-center px-3 py-2"
-                  >
-                    <Form.Check
-                      type="checkbox"
-                      label={col.label}
-                      checked={formData.visibleColumns[col.key] || false}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          visibleColumns: {
-                            ...prev.visibleColumns,
-                            [col.key]: e.target.checked,
-                          },
-                        }))
-                      }
-                      disabled={isDisabled}
-                    />
-                  </Dropdown.Item>
-                ))}
-                <Dropdown.Divider />
-                <Dropdown.Item
-                  className="text-primary fw-bold d-flex align-items-center gap-2"
-                  onClick={() => setShowSettingsModal(true)}
-                >
-                  <BsGearWideConnected style={{ fontSize: "1.25rem" }} />
-                  More Settings
-                </Dropdown.Item>
-              </DropdownButton>
-            ) : (
-              <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
-                Amount
-              </span>
+        <thead
+          className="table-light"
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            background: "#f8f9fa",
+          }}
+        >
+          <tr>
+            <th style={{ width: "50px" }}>#</th>
+            {formData.visibleColumns.category && <th style={{ width: "180px" }}>Category</th>}
+            <th style={{ width: "300px" }}>Item</th>
+            {formData.visibleColumns.description && (
+              <th style={{ width: "180px" }}>Description</th>
             )}
-          </th>
-          <th style={{ width: "80px" }}>Actions</th>
-        </tr>
-      </thead>
+            {formData.visibleColumns.hsn_code && <th style={{ width: "100px" }}>HSN_code</th>}
+            <th style={{ width: "100px" }}>Qty</th>
+            <th style={{ width: "150px" }}>Unit</th>
+            <th style={{ width: "100px" }}>Price</th>
+            <th style={{ width: "100px" }}>Price/unit</th>
+            {formData.visibleColumns.discount && <th style={{ width: "150px" }}>Discount</th>}
+            <th style={{ width: "120px" }}>Tax</th>
+            <th style={{ width: "120px" }}>
+              {!isViewMode ? (
+                <DropdownButton
+                  id="amount-column-dropdown"
+                  title={
+                    <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
+                      Amount <FaPlus />
+                    </span>
+                  }
+                  size="sm"
+                  align="end"
+                  className="p-0 border-0 text-success shadow-none"
+                  style={{ background: "transparent", boxShadow: "none" }}
+                >
+                  {[
+                    { key: "category", label: "Category" },
+                    { key: "hsn_code", label: "HSN-Code" },
+                    { key: "description", label: "Description" },
+                    { key: "discount", label: "Discount" },
+                  ].map((col) => (
+                    <Dropdown.Item
+                      key={col.key}
+                      as="div"
+                      className="d-flex align-items-center px-3 py-2"
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        label={col.label}
+                        checked={formData.visibleColumns[col.key] || false}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            visibleColumns: {
+                              ...prev.visibleColumns,
+                              [col.key]: e.target.checked,
+                            },
+                          }))
+                        }
+                        disabled={isDisabled}
+                      />
+                    </Dropdown.Item>
+                  ))}
+                  <Dropdown.Divider />
+                  <Dropdown.Item
+                    className="text-primary fw-bold d-flex align-items-center gap-2"
+                    onClick={() => setShowSettingsModal(true)}
+                  >
+                    <BsGearWideConnected style={{ fontSize: "1.25rem" }} />
+                    More Settings
+                  </Dropdown.Item>
+                </DropdownButton>
+              ) : (
+                <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
+                  Amount
+                </span>
+              )}
+            </th>
+            <th style={{ width: "80px" }}>Actions</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        {formData.rows.map((row, index) => (
-          <tr key={row.id}>
-            <td>{index + 1}</td>
+        <tbody>
+          {formData.rows.map((row, index) => (
+            <tr key={row.id}>
+              <td>{index + 1}</td>
 
-            {formData.visibleColumns.category && (
-              <td>
+              {formData.visibleColumns.category && (
+                <td>
+                  {isViewMode ? (
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        border: "1px solid #ced4da",
+                        borderRadius: "6px",
+                        backgroundColor: "#e9ecef",
+                        minHeight: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ color: "#000" }}>
+                        {row.category || "ALL"}
+                      </span>
+                    </div>
+                  ) : (
+                    <Select
+                      options={[
+                        { value: "", label: "ALL" },
+                        ...categories.map((cat) => ({
+                          value: cat.category_name,
+                          label: cat.category_name,
+                        })),
+                      ]}
+                      value={{
+                        value: row.category || "",
+                        label: row.category ? row.category : "ALL",
+                      }}
+                      onChange={(option) => {
+                        const selectedCat = option.value;
+                        onRowChange(row.id, "category", selectedCat);
+                      }}
+                      placeholder="Select Category"
+                      isDisabled={isDisabled}
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({
+                          ...base,
+                          zIndex: 9999,
+                        }),
+                      }}
+                    />
+                  )}
+                </td>
+              )}
+
+              <td style={{ position: "relative" }}>
                 {isViewMode ? (
                   <div
                     style={{
@@ -4162,274 +4558,298 @@ const SaleCreation = ({ tabNumber = 1 }) => {
                     }}
                   >
                     <span style={{ color: "#000" }}>
-                      {row.category || "ALL"}
+                      {row.product_name || "No item selected"}
                     </span>
                   </div>
                 ) : (
-                  <Select
-                    options={[
-                      { value: "", label: "ALL" },
-                      ...categories.map((cat) => ({
-                        value: cat.category_name,
-                        label: cat.category_name,
-                      })),
-                    ]}
-                    value={{
-                      value: row.category || "",
-                      label: row.category ? row.category : "ALL",
+                  <div
+                    onClick={() => !isDisabled && setShowProductTable(true)}
+                    style={{
+                      padding: "8px 12px",
+                      border: "1px solid #ced4da",
+                      borderRadius: "6px",
+                      backgroundColor: isDisabled ? "#e9ecef" : "white",
+                      cursor: isDisabled ? "not-allowed" : "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      minHeight: "38px",
                     }}
-                    onChange={(option) => {
-                      const selectedCat = option.value;
-                      onRowChange(row.id, "category", selectedCat);
-                    }}
-                    placeholder="Select Category"
-                    isDisabled={isDisabled}
-                    menuPortalTarget={document.body}
-                    styles={{
-                      menuPortal: (base) => ({
-                        ...base,
-                        zIndex: 9999,
-                      }),
-                    }}
-                  />
+                  >
+                    <span style={{ color: row.product_name ? "#000" : "#999" }}>
+                      {row.product_name || "Click to select item..."}
+                    </span>
+                  </div>
                 )}
-              </td>
-            )}
 
-            <td style={{ position: "relative" }}>
-              {isViewMode ? (
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ced4da",
-                    borderRadius: "6px",
-                    backgroundColor: "#e9ecef",
-                    minHeight: "38px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ color: "#000" }}>
-                    {row.product_name || "No item selected"}
-                  </span>
-                </div>
-              ) : (
-                <div
-                  onClick={() => !isDisabled && setShowProductTable(true)}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ced4da",
-                    borderRadius: "6px",
-                    backgroundColor: isDisabled ? "#e9ecef" : "white",
-                    cursor: isDisabled ? "not-allowed" : "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    minHeight: "38px",
-                  }}
-                >
-                  <span style={{ color: row.product_name ? "#000" : "#999" }}>
-                    {row.product_name || "Click to select item..."}
-                  </span>
-                </div>
-              )}
-
-              {showProductTable && !isViewMode && (
-                <div
-                  style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    width: "100vw",
-                    height: "100vh",
-                    backgroundColor: "rgba(0,0,0,0.5)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 9999,
-                  }}
-                  onClick={() => setShowProductTable(false)}
-                >
+                {showProductTable && !isViewMode && (
                   <div
                     style={{
-                      width: "90%",
-                      maxWidth: "1100px",
-                      height: "85vh",
-                      background: "white",
-                      borderRadius: "12px",
-                      overflow: "hidden",
-                      boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      width: "100vw",
+                      height: "100vh",
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 9999,
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => setShowProductTable(false)}
                   >
-                    <div className="p-2 bg-primary text-white d-flex justify-content-between align-items-center">
-                      <div className="d-flex gap-3">
+                    <div
+                      style={{
+                        width: "90%",
+                        maxWidth: "1100px",
+                        height: "85vh",
+                        background: "white",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-2 bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div className="d-flex gap-3">
+                          <Button
+                            variant="light"
+                            size="sm"
+                            className="fw-bold px-4 d-flex align-items-center gap-2"
+                            onClick={() => {
+                              setShowAddItemModal(true);
+                              setShowProductTable(false);
+                            }}
+                          >
+                            Add Item
+                          </Button>
+                        </div>
                         <Button
                           variant="light"
                           size="sm"
-                          className="fw-bold px-4 d-flex align-items-center gap-2"
-                          onClick={() => {
-                            setShowAddItemModal(true);
-                            setShowProductTable(false);
-                          }}
+                          onClick={() => setShowProductTable(false)}
                         >
-                          Add Item
+                          X Close
                         </Button>
                       </div>
-                      <Button
-                        variant="light"
-                        size="sm"
-                        onClick={() => setShowProductTable(false)}
-                      >
-                        X Close
-                      </Button>
-                    </div>
 
-                    <div
-                      style={{
-                        height: "calc(85vh - 140px)",
-                        overflowY: "auto",
-                      }}
-                    >
-                      <Table bordered hover className="mb-0">
-                        <thead className="table-light sticky-top">
-                          <tr>
-                            <th>Product Name</th>
-                            <th className="text-end">Sale Price</th>
-                            <th className="text-end">Stock</th>
-                            <th>Location</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products
-                            .filter((product) => {
+                      <div
+                        style={{
+                          height: "calc(85vh - 140px)",
+                          overflowY: "auto",
+                        }}
+                      >
+                        <Table bordered hover className="mb-0">
+                          <thead className="table-light sticky-top">
+                            <tr>
+                              <th>Product Name</th>
+                              <th className="text-end">Sale Price</th>
+                              <th className="text-end">Stock</th>
+                              <th>Location</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {products
+                              .filter((product) => {
+                                if (
+                                  !row.category ||
+                                  row.category === "" ||
+                                  row.category === "ALL"
+                                )
+                                  return true;
+
+                                const productCat =
+                                  product.category_name || "";
+                                return productCat === row.category;
+                              })
+                              .map((product) => {
+                                let salePrice = "0";
+                                let stock = "0";
+                                let location = "-";
+
+                                try {
+                                  const sp = JSON.parse(
+                                    product.sale_price || "{}"
+                                  );
+                                  salePrice = sp.price || "0";
+                                } catch (e) { }
+                                try {
+                                  const st = JSON.parse(
+                                    product.stock || "{}"
+                                  );
+                                  stock = st.opening_qty || "0";
+                                  location = st.location || "-";
+                                } catch (e) { }
+
+                                return (
+                                  <tr
+                                    key={product.product_id}
+                                    style={{ cursor: "pointer" }}
+                                    className="hover-row"
+                                    onClick={() => {
+                                      onRowChange(
+                                        row.id,
+                                        "product_name",
+                                        product.product_name
+                                      );
+                                      onRowChange(
+                                        row.id,
+                                        "product_id",
+                                        product.product_id
+                                      );
+                                      onRowChange(
+                                        row.id,
+                                        "hsn_code",
+                                        product.hsn_code || ""
+                                      );
+                                      onRowChange(
+                                        row.id,
+                                        "price",
+                                        salePrice
+                                      );
+                                      onRowChange(row.id, "qty", " ");
+
+                                      const cat =
+                                        product.category_name || "";
+                                      onRowChange(
+                                        row.id,
+                                        "category",
+                                        cat
+                                      );
+                                      const unitValue =
+                                        product.unit_value || "";
+                                      onRowChange(
+                                        row.id,
+                                        "unit",
+                                        unitValue
+                                      );
+
+                                      setShowProductTable(false);
+                                    }}
+                                  >
+                                    <td>
+                                      <strong>{product.product_name}</strong>
+                                    </td>
+                                    <td className="text-end text-success fw-bold">
+                                      ₹{salePrice}
+                                    </td>
+                                    <td className="text-center">
+                                      {stock}
+                                    </td>
+                                    <td className="text-center">
+                                      {location}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+
+                            {products.filter((p) => {
                               if (
                                 !row.category ||
                                 row.category === "" ||
                                 row.category === "ALL"
                               )
                                 return true;
-
-                              const productCat =
-                                product.category_name || "";
-                              return productCat === row.category;
-                            })
-                            .map((product) => {
-                              let salePrice = "0";
-                              let stock = "0";
-                              let location = "-";
-
-                              try {
-                                const sp = JSON.parse(
-                                  product.sale_price || "{}"
-                                );
-                                salePrice = sp.price || "0";
-                              } catch (e) { }
-                              try {
-                                const st = JSON.parse(
-                                  product.stock || "{}"
-                                );
-                                stock = st.opening_qty || "0";
-                                location = st.location || "-";
-                              } catch (e) { }
-
-                              return (
-                                <tr
-                                  key={product.product_id}
-                                  style={{ cursor: "pointer" }}
-                                  className="hover-row"
-                                  onClick={() => {
-                                    onRowChange(
-                                      row.id,
-                                      "product_name",
-                                      product.product_name
-                                    );
-                                    onRowChange(
-                                      row.id,
-                                      "product_id",
-                                      product.product_id
-                                    );
-                                    onRowChange(
-                                      row.id,
-                                      "hsn_code",
-                                      product.hsn_code || ""
-                                    );
-                                    onRowChange(
-                                      row.id,
-                                      "price",
-                                      salePrice
-                                    );
-                                    onRowChange(row.id, "qty", " ");
-
-                                    const cat =
-                                      product.category_name || "";
-                                    onRowChange(
-                                      row.id,
-                                      "category",
-                                      cat
-                                    );
-                                    const unitValue =
-                                      product.unit_value || "";
-                                    onRowChange(
-                                      row.id,
-                                      "unit",
-                                      unitValue
-                                    );
-
-                                    setShowProductTable(false);
-                                  }}
-                                >
-                                  <td>
-                                    <strong>{product.product_name}</strong>
-                                  </td>
-                                  <td className="text-end text-success fw-bold">
-                                    ₹{salePrice}
-                                  </td>
-                                  <td className="text-center">
-                                    {stock}
-                                  </td>
-                                  <td className="text-center">
-                                    {location}
+                              const cat = p.category_name || "";
+                              return cat === row.category;
+                            }).length === 0 && (
+                                <tr>
+                                  <td
+                                    colSpan="4"
+                                    className="text-center py-5 text-muted"
+                                  >
+                                    <h5>
+                                      No products found in "
+                                      {row.category}" category
+                                    </h5>
+                                    <small>
+                                      Available categories: stationary,
+                                      groceries
+                                    </small>
                                   </td>
                                 </tr>
-                              );
-                            })}
-
-                          {products.filter((p) => {
-                            if (
-                              !row.category ||
-                              row.category === "" ||
-                              row.category === "ALL"
-                            )
-                              return true;
-                            const cat = p.category_name || "";
-                            return cat === row.category;
-                          }).length === 0 && (
-                              <tr>
-                                <td
-                                  colSpan="4"
-                                  className="text-center py-5 text-muted"
-                                >
-                                  <h5>
-                                    No products found in "
-                                    {row.category}" category
-                                  </h5>
-                                  <small>
-                                    Available categories: stationary,
-                                    groceries
-                                  </small>
-                                </td>
-                              </tr>
-                            )}
-                        </tbody>
-                      </Table>
+                              )}
+                          </tbody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </td>
+                )}
+              </td>
 
-            {formData.visibleColumns.description && (
+              {formData.visibleColumns.description && (
+                <td>
+                  {isViewMode ? (
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        border: "1px solid #ced4da",
+                        borderRadius: "6px",
+                        backgroundColor: "#e9ecef",
+                        minHeight: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ color: "#000" }}>
+                        {row.Description || "N/A"}
+                      </span>
+                    </div>
+                  ) : (
+                    <TextArea
+                      value={row.Description || ""}
+                      onChange={(e) =>
+                        onRowChange(row.id, "Description", e.target.value)
+                      }
+                      readOnly={isDisabled}
+                      placeholder="Enter item description"
+                      rows={2}
+                    />
+                  )}
+                </td>
+              )}
+              
+              {formData.visibleColumns.hsn_code && (
+                <td>
+                  {isViewMode ? (
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        border: "1px solid #ced4da",
+                        borderRadius: "6px",
+                        backgroundColor: "#e9ecef",
+                        minHeight: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ color: "#000" }}>
+                        {String(row.hsn_code || "").trim() || "N/A"}
+                      </span>
+                    </div>
+                  ) : (
+                    <TextArea
+                      type="text"
+                      value={String(row.hsn_code || "").trim()}
+                      onChange={(e) =>
+                        onRowChange(row.id, "hsn_code", e.target.value)
+                      }
+                      readOnly={isDisabled}
+                    />
+                  )}
+                </td>
+              )}
+
+              <td>
+                <TextInputform
+                  expanse="number"
+                  value={row.qty}
+                  onChange={(e) =>
+                    onRowChange(row.id, "qty", e.target.value)
+                  }
+                  readOnly={isDisabled}
+                />
+              </td>
               <td>
                 {isViewMode ? (
                   <div
@@ -4444,204 +4864,20 @@ const SaleCreation = ({ tabNumber = 1 }) => {
                     }}
                   >
                     <span style={{ color: "#000" }}>
-                      {row.Description || "N/A"}
+                      {row.unit || "NONE"}
                     </span>
                   </div>
                 ) : (
-                  <TextArea
-                    value={row.Description || ""}
-                    onChange={(e) =>
-                      onRowChange(row.id, "Description", e.target.value)
-                    }
-                    readOnly={isDisabled}
-                    placeholder="Enter item description"
-                    rows={2}
-                  />
-                )}
-              </td>
-            )}
-            
-            {formData.visibleColumns.hsn_code && (
-              <td>
-                {isViewMode ? (
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid #ced4da",
-                      borderRadius: "6px",
-                      backgroundColor: "#e9ecef",
-                      minHeight: "38px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span style={{ color: "#000" }}>
-                      {String(row.hsn_code || "").trim() || "N/A"}
-                    </span>
-                  </div>
-                ) : (
-                  <TextArea
-                    type="text"
-                    value={String(row.hsn_code || "").trim()}
-                    onChange={(e) =>
-                      onRowChange(row.id, "hsn_code", e.target.value)
-                    }
-                    readOnly={isDisabled}
-                  />
-                )}
-              </td>
-            )}
-
-            <td>
-              <TextInputform
-                expanse="number"
-                value={row.qty}
-                onChange={(e) =>
-                  onRowChange(row.id, "qty", e.target.value)
-                }
-                readOnly={isDisabled}
-              />
-            </td>
-            <td>
-              {isViewMode ? (
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ced4da",
-                    borderRadius: "6px",
-                    backgroundColor: "#e9ecef",
-                    minHeight: "38px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ color: "#000" }}>
-                    {row.unit || "NONE"}
-                  </span>
-                </div>
-              ) : (
-                <Select
-                  value={
-                    unitOptions.find(
-                      (opt) => opt.value === row.unit
-                    ) || unitOptions[0]
-                  }
-                  options={unitOptions}
-                  onChange={(selectedOption) =>
-                    onRowChange(row.id, "unit", selectedOption.value)
-                  }
-                  isDisabled={isDisabled}
-                  menuPortalTarget={document.body}
-                  styles={{
-                    menuPortal: (base) => ({
-                      ...base,
-                      zIndex: 9999,
-                    }),
-                  }}
-                />
-              )}
-            </td>
-            <td>
-              <TextInputform
-                expanse="number"
-                value={row.price}
-                onChange={(e) =>
-                  onRowChange(row.id, "price", e.target.value)
-                }
-                readOnly={isDisabled}
-              />
-            </td>
-            <td>
-              {isViewMode ? (
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ced4da",
-                    borderRadius: "6px",
-                    backgroundColor: "#e9ecef",
-                    minHeight: "38px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ color: "#000" }}>
-                    {row.priceUnitType || "Without Tax"}
-                  </span>
-                </div>
-              ) : (
-                <DropDown
-                  value={row.priceUnitType}
-                  onChange={(v) =>
-                    onRowChange(row.id, "priceUnitType", v)
-                  }
-                  options={priceUnitTypeOptions}
-                  disabled={isDisabled}
-                />
-              )}
-            </td>
-
-            {formData.visibleColumns.discount && (
-              <td>
-                <InputGroup size="sm">
-                  <FormControl
-                    expanse="number"
-                    placeholder="%"
-                    value={row.discountPercent}
-                    onChange={(e) =>
-                      onRowChange(
-                        row.id,
-                        "discountPercent",
-                        e.target.value
-                      )
-                    }
-                    readOnly={isDisabled}
-                  />
-                  <FormControl
-                    value={row.discountAmount}
-                    readOnly
-                  />
-                </InputGroup>
-              </td>
-            )}
-
-            <td>
-              {isViewMode ? (
-                <div>
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid #ced4da",
-                      borderRadius: "6px",
-                      backgroundColor: "#e9ecef",
-                      minHeight: "38px",
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "5px",
-                    }}
-                  >
-                    <span style={{ color: "#000" }}>
-                      {row.taxPercent}%
-                    </span>
-                  </div>
-                  <TextInputform
-                    readOnly
-                    value={row.taxAmount || "0.00"}
-                    style={{ marginTop: "5px" }}
-                    className="text-center"
-                  />
-                </div>
-              ) : (
-                <>
                   <Select
                     value={
-                      TAX_OPTIONS.find(
-                        (opt) => String(opt.value) === String(row.taxPercent)
-                      ) || TAX_OPTIONS[0]
+                      unitOptions.find(
+                        (opt) => opt.value === row.unit
+                      ) || unitOptions[0]
                     }
-                    onChange={(v) =>
-                      onRowChange(row.id, "taxPercent", v.value)
+                    options={unitOptions}
+                    onChange={(selectedOption) =>
+                      onRowChange(row.id, "unit", selectedOption.value)
                     }
-                    options={TAX_OPTIONS}
                     isDisabled={isDisabled}
                     menuPortalTarget={document.body}
                     styles={{
@@ -4651,94 +4887,206 @@ const SaleCreation = ({ tabNumber = 1 }) => {
                       }),
                     }}
                   />
-                  <TextInputform
-                    readOnly
-                    value={row.taxAmount || "0.00"}
-                    style={{ marginTop: "5px" }}
-                    className="text-center"
+                )}
+              </td>
+              <td>
+                <TextInputform
+                  expanse="number"
+                  value={row.price}
+                  onChange={(e) =>
+                    onRowChange(row.id, "price", e.target.value)
+                  }
+                  readOnly={isDisabled}
+                />
+              </td>
+              <td>
+                {isViewMode ? (
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      border: "1px solid #ced4da",
+                      borderRadius: "6px",
+                      backgroundColor: "#e9ecef",
+                      minHeight: "38px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{ color: "#000" }}>
+                      {row.priceUnitType || "Without Tax"}
+                    </span>
+                  </div>
+                ) : (
+                  <DropDown
+                    value={row.priceUnitType}
+                    onChange={(v) =>
+                      onRowChange(row.id, "priceUnitType", v)
+                    }
+                    options={priceUnitTypeOptions}
+                    disabled={isDisabled}
                   />
-                </>
-              )}
-            </td>
-            <td>
-              <TextInputform readOnly value={row.amount} />
-            </td>
-            <td>
-              {!isViewMode && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => deleteRow(row.id)}
-                >
-                  <FaTimes />
-                </Button>
-              )}
-            </td>
-          </tr>
-        ))}
+                )}
+              </td>
 
-        {!isViewMode && (
+              {formData.visibleColumns.discount && (
+                <td>
+                  <InputGroup size="sm">
+                    <FormControl
+                      expanse="number"
+                      placeholder="%"
+                      value={row.discountPercent}
+                      onChange={(e) =>
+                        onRowChange(
+                          row.id,
+                          "discountPercent",
+                          e.target.value
+                        )
+                      }
+                      readOnly={isDisabled}
+                    />
+                    <FormControl
+                      value={row.discountAmount}
+                      readOnly
+                    />
+                  </InputGroup>
+                </td>
+              )}
+
+              <td>
+                {isViewMode ? (
+                  <div>
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        border: "1px solid #ced4da",
+                        borderRadius: "6px",
+                        backgroundColor: "#e9ecef",
+                        minHeight: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "5px",
+                      }}
+                    >
+                      <span style={{ color: "#000" }}>
+                        {row.taxPercent}%
+                      </span>
+                    </div>
+                    <TextInputform
+                      readOnly
+                      value={row.taxAmount || "0.00"}
+                      style={{ marginTop: "5px" }}
+                      className="text-center"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <Select
+                      value={
+                        TAX_OPTIONS.find(
+                          (opt) => String(opt.value) === String(row.taxPercent)
+                        ) || TAX_OPTIONS[0]
+                      }
+                      onChange={(v) =>
+                        onRowChange(row.id, "taxPercent", v.value)
+                      }
+                      options={TAX_OPTIONS}
+                      isDisabled={isDisabled}
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({
+                          ...base,
+                          zIndex: 9999,
+                        }),
+                      }}
+                    />
+                    <TextInputform
+                      readOnly
+                      value={row.taxAmount || "0.00"}
+                      style={{ marginTop: "5px" }}
+                      className="text-center"
+                    />
+                  </>
+                )}
+              </td>
+              <td>
+                <TextInputform readOnly value={row.amount} />
+              </td>
+              <td>
+                {!isViewMode && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => deleteRow(row.id)}
+                  >
+                    <FaTimes />
+                  </Button>
+                )}
+              </td>
+            </tr>
+          ))}
+
+          {!isViewMode && (
+            <tr>
+              <td colSpan={
+                1 + // #
+                (formData.visibleColumns.category ? 1 : 0) +
+                1 + // Item
+                (formData.visibleColumns.description ? 1 : 0) +
+                (formData.visibleColumns.hsn_code ? 1 : 0) +
+                1 + // Qty
+                1 + // Unit
+                1 + // Price
+                1 + // Price/unit
+                (formData.visibleColumns.discount ? 1 : 0) +
+                1 + // Tax
+                1 + // Amount
+                1 // Actions
+              }>
+                <Button size="sm" onClick={addRow}>
+                  <FaPlus /> ADD ROW
+                </Button>
+              </td>
+            </tr>
+          )}
+
+          {/* FIXED TOTAL ROW */}
           <tr>
+            {/* "TOTAL" label - spans columns up to Qty */}
             <td colSpan={
               1 + // #
               (formData.visibleColumns.category ? 1 : 0) +
               1 + // Item
               (formData.visibleColumns.description ? 1 : 0) +
-              (formData.visibleColumns.hsn_code ? 1 : 0) +
-              1 + // Qty
-              1 + // Unit
-              1 + // Price
-              1 + // Price/unit
-              (formData.visibleColumns.discount ? 1 : 0) +
-              1 + // Tax
-              1 + // Amount
-              1 // Actions
+              (formData.visibleColumns.hsn_code ? 1 : 0)
             }>
-              <Button size="sm" onClick={addRow}>
-                <FaPlus /> ADD ROW
-              </Button>
+              <strong>TOTAL</strong>
             </td>
+
+            {/* Qty total */}
+            <td className="fw-bold text-center">{totalQty}</td>
+
+            {/* Empty columns for Unit, Price, Price/unit */}
+            <td></td> {/* Unit */}
+            <td></td> {/* Price */}
+            <td></td> {/* Price/unit */}
+
+            {/* Empty Discount column if shown */}
+            {formData.visibleColumns.discount && <td></td>}
+
+            {/* Tax total */}
+            <td className="fw-bold text-center">{totalTax.toFixed(2)}</td>
+
+            {/* Amount total */}
+            <td className="fw-bold text-end">{totalAmountRaw.toFixed(2)}</td>
+
+            {/* Empty Actions column */}
+            <td></td>
           </tr>
-        )}
-
-        {/* FIXED TOTAL ROW */}
-        <tr>
-          {/* "TOTAL" label - spans columns up to Qty */}
-          <td colSpan={
-            1 + // #
-            (formData.visibleColumns.category ? 1 : 0) +
-            1 + // Item
-            (formData.visibleColumns.description ? 1 : 0) +
-            (formData.visibleColumns.hsn_code ? 1 : 0)
-          }>
-            <strong>TOTAL</strong>
-          </td>
-
-          {/* Qty total */}
-          <td className="fw-bold text-center">{totalQty}</td>
-
-          {/* Empty columns for Unit, Price, Price/unit */}
-          <td></td> {/* Unit */}
-          <td></td> {/* Price */}
-          <td></td> {/* Price/unit */}
-
-          {/* Empty Discount column if shown */}
-          {formData.visibleColumns.discount && <td></td>}
-
-          {/* Tax total */}
-          <td className="fw-bold text-center">{totalTax.toFixed(2)}</td>
-
-          {/* Amount total */}
-          <td className="fw-bold text-end">{totalAmountRaw.toFixed(2)}</td>
-
-          {/* Empty Actions column */}
-          <td></td>
-        </tr>
-      </tbody>
-    </Table>
+        </tbody>
+      </Table>
+    </div>
   </Col>
 </Row>
-
             <Row className="additional-actions mt-3 align-items-center">
               <Col xs={3}>
                 {isViewMode ? (
