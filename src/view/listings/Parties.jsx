@@ -67,7 +67,23 @@ function Parties() {
       setSelectedParty(parties[0]);
     }
   }, [parties]);
+useEffect(() => {
+    // Only run if a party is currently selected
+    if (selectedParty) {
+      // Find the *latest* version of the selected party in the partiesWithBalance list
+      // This list is derived from the updated Redux state.
+      const latestFullParty = partiesWithBalance.find(
+        (p) => p.parties_id === selectedParty.parties_id
+      );
 
+      // If the latest version is found and its reference is different, update the selectedParty state
+      if (latestFullParty && latestFullParty !== selectedParty) {
+          setSelectedParty(latestFullParty);
+      }
+    }
+    // Dependency includes partiesWithBalance to ensure it runs when Redux parties are updated
+    // and the calculated balances change.
+  }, [selectedParty]);
   const handleOpenModal = (party = null) => {
     if (party) {
       setIsEdit(true);
@@ -135,7 +151,7 @@ function Parties() {
       state_of_supply: formData.state_of_supply,
       billing_address: formData.billing_address,
       shipping_address: formData.shipping_address,
-      amount: parseFloat(formData.amount) || 0,
+     amount: formData.amount || '0',
       creditlimit:
         formData.limitType === "custom"
           ? parseFloat(formData.creditlimit) || 0
@@ -230,7 +246,7 @@ function Parties() {
       state_of_supply: selectedParty.state_of_supply || "",
       billing_address: selectedParty.billing_address || "",
       shipping_address: selectedParty.shipping_address || "",
-      amount: 0,
+      amount: "0",
       creditlimit: selectedParty.creditlimit || 0,
       transactionType: selectedParty.transaction_type,
       additional_field: selectedParty.additional_field || "[]",
