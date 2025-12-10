@@ -1,5 +1,6 @@
 
 
+
 // import React, { useEffect, useState, useMemo } from "react";
 // import { useDispatch, useSelector } from "react-redux";
 // import { Container, Row, Col, Button } from "react-bootstrap";
@@ -17,7 +18,6 @@
 // import { FaWhatsapp, FaChevronDown, FaRegCalendarAlt } from "react-icons/fa";
 // import { SiGmail } from "react-icons/si";
 // import { MdSms } from "react-icons/md";
-// import Estimate from "./Estimate";
 
 // // ADD THIS IMPORT - date-fns for filtering
 // import {
@@ -33,7 +33,13 @@
 //   parseISO,
 // } from "date-fns";
 
-// const Sale = () => {
+
+// const Estimate = () => {
+//   const [showCreateForm, setShowCreateForm] = useState(false);
+
+//   if (showCreateForm) {
+//     return <EstimateCreation onBack={() => setShowCreateForm(false)} />;
+//   }
 //   const dispatch = useDispatch();
 //   const navigate = useNavigate();
 //   const { sales = [] } = useSelector((state) => state.sale);
@@ -44,40 +50,12 @@
 //   const [openShareId, setOpenShareId] = useState(null);
 //   const [statusFilter, setStatusFilter] = useState("All");
 //   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-//   const [activeView, setActiveView] = useState("estimate");
+
 //   // Date filter states
 //   const [selectedPeriod, setSelectedPeriod] = useState("This Year");
 //   const [periodOpen, setPeriodOpen] = useState(false);
 //   const [selectedFirm, setSelectedFirm] = useState("All Firms");
 //   const [firmOpen, setFirmOpen] = useState(false);
-
-//   // Multiple Tabs State
-//   const [tabs, setTabs] = useState([
-//     { id: 1, title: "Sale#1", active: true }
-//   ]);
-//   const [nextTabId, setNextTabId] = useState(2);
-
-//   const addNewTab = () => {
-//     const newTab = { id: nextTabId, title: `Sale#${nextTabId}`, active: true };
-//     setTabs(prev => [
-//       ...prev.map(t => ({ ...t, active: false })), // old tabs inactive
-//       newTab
-//     ]);
-//     setNextTabId(nextTabId + 1);
-//   };
-
-//   const closeTab = (id) => {
-//     if (tabs.length === 1) return;
-//     const filtered = tabs.filter(t => t.id !== id);
-//     if (filtered.length > 0 && !filtered.some(t => t.active)) {
-//       filtered[filtered.length - 1].active = true;
-//     }
-//     setTabs(filtered);
-//   };
-
-//   const switchTab = (id) => {
-//     setTabs(prev => prev.map(t => ({ ...t, active: t.id === id })));
-//   };
 
 //   // Fetch sales on search change
 //   useEffect(() => {
@@ -174,15 +152,6 @@
 //   const handleCreate = () => navigate("/sale/create");
 //   const handleEdit = (sale) => navigate(`/sale/edit/${sale.sale_id}`);
 //   const handleView = (sale) => navigate(`/sale/view/${sale.sale_id}`);
-
-//   // In the dropdown, change the click handler:
-//   const handleMenuClick = (item) => {
-//     setOpen(false);
-//     if (item === "Estimate/Quotation") {
-//       setActiveView("estimate");  // Switch to Estimate view
-//     }
-//     // You can add more later if needed
-//   };
 
 //   const handleDelete = async (saleId) => {
 //     if (!window.confirm("Are you sure you want to delete this sale?")) return;
@@ -360,48 +329,18 @@
 //     : [];
 
 //   return (
-//     <div id="main" style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
-    
+//     <div  style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
 //       <Container fluid className="py-5">
-        
 //         <Row>
 //           <Col xl={12}>
-//             {/* Business Name */}
-//             <div className="d-flex align-items-center">
-//               <span style={{ color: "red", fontWeight: "bold", fontSize: "1.5rem" }}>•</span>
-//               {isEditing ? (
-//                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px" }}>
-//                   <input
-//                     type="text"
-//                     value={businessName}
-//                     onChange={(e) => setBusinessName(e.target.value)}
-//                     placeholder="Enter Business Name"
-//                     autoFocus
-//                     style={{ border: "1px solid #ccc", borderRadius: "6px", padding: "5px 10px", fontSize: "1rem", width: "250px" }}
-//                     onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-//                   />
-//                   <Button variant="info" onClick={() => setIsEditing(false)}>
-//                     Save
-//                   </Button>
-//                 </div>
-//               ) : (
-//                 <span className="ms-2 text-muted" style={{ cursor: "pointer" }} onClick={() => setIsEditing(true)}>
-//                   {businessName || "Enter Business Name"}
-//                 </span>
-//               )}
-//               <div className="ms-auto d-flex align-items-center gap-2">
-//                 <Button variant="danger" onClick={handleCreate}>+Add Sale</Button>
-//                 <Button variant="success" onClick={handleCreate}>+Add Purchase</Button>
-//                 <Button variant="info">+Add More</Button>
-//                 <Button variant="light">:</Button>
-//               </div>
-//             </div>
+//             {/* Business Name (Kept in Estimate for standalone use, but is duplicated/ignored when rendered inside Sale.jsx) */}
+           
 
-//             {/* Header */}
+//             {/* Header - This is the Estimate/Quotation Dropdown */}
 //             <Row className="align-items-center mb-3">
 //               <Col>
-//                 <h5 style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
-//                   Sale Invoices <FaChevronDown />
+//                 <h5 style={{ cursor: "pointer" }} onClick={() => navigate("/estimate/create")}>
+//                   Estimate <FaChevronDown />
 //                 </h5>
 
 //                 {open && (
@@ -414,29 +353,23 @@
 //                     width: "180px",
 //                     zIndex: 999,
 //                   }}>
-                  
-    
-      
-    
-                  
 //                     {["Sale Invoices", "Estimate/Quotation", "Proforma Invoice", "Payment-In", "sale Order", "Delivery Challan", "sale Return", "Purchase Bill", "Payment-Out", "Expenses", "Purchase Order", "Purchase Return"].map((x) => (
-//                        <div 
-//                           key={x} 
-//                           onClick={() => {
-//                           setOpen(false);
-
-//                           if (x === "Estimate/Quotation") {
-//                           setActiveView("estimate");  // <-- THIS IS THE FIX
-//                         }
-//                      }}style={{ padding: "8px 12px", cursor: "pointer" }} > {x}</div>
-    
- 
-   
-  
+//                       <div key={x} onClick={() => setOpen(false)} style={{ padding: "8px 12px", cursor: "pointer" }}>
+//                         {x}
+//                       </div>
 //                     ))}
 //                   </div>
 //                 )}
-                
+//               </Col>
+//               <Col className="text-end">
+//                 <Button
+//                  variant="danger"
+//                  size="sm"
+//                  className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+//                 style={{
+//                 fontSize: "1.2rem",
+//                 letterSpacing: "0.5px",}}onClick={() => navigate("/estimate/create")}>+ Add Estimate
+//                 </Button>
 //               </Col>
 //             </Row>
 
@@ -530,21 +463,45 @@
 //             {/* Totals Card */}
 //             <Row className="mb-3">
 //               <Col>
-//                 <div className="total-sales-card bg-white rounded shadow-sm border" style={{ width: "500px" }}>
-//                   <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
+//                 <div className="p-3 bg-white rounded shadow-sm border" style={{ width: "500px" }}>
+//                   <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ 0.00</strong></h5>
 //                   <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
 //                   <div className="text-muted mt-2">
-//                     Received: <strong>₹ {totals.totalReceived}</strong> | 
-//                     Balance Due: <strong style={{ color: "#e74c3c" }}>₹ {totals.totalBalance}</strong>
+//                     Received: <strong>₹ 0.00</strong> | 
+//                     Balance Due: <strong style={{ color: "#e74c3c" }}>₹ 0.00</strong>
 //                   </div>
 //                 </div>
 //               </Col>
 //             </Row>
 
 //             {/* Table */}
-//             <Col lg={12} xs={12}>
-//               <TableUI headers={SaleHead} body={SaleData} className="table-end" />
-//             </Col>
+//             <div className="d-flex justify-content-center align-items-center"
+//   style={{ minHeight: "60vh" }}   // adjust height as needed
+// >
+//   {/* <Button
+//     variant="danger"
+//     size="lg"
+//     className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+//     style={{
+//       fontSize: "1.2rem",
+//       letterSpacing: "0.5px",
+//     }}
+//   >
+//     + Add Estimate
+//   </Button> */}
+//    <Button
+//                   variant="danger"
+//                   size="sm"
+//                   className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+//                   style={{
+//                     fontSize: "1.2rem",
+//                     letterSpacing: "0.5px",
+//                   }}
+//                   onClick={() => setShowCreateForm(true)} // Show creation form
+//                 >
+//                   + Add Estimate
+//                 </Button>
+// </div>
 //           </Col>
 //         </Row>
 //       </Container>
@@ -552,7 +509,8 @@
 //   );
 // };
 
-// export default Sale;
+// export default Estimate;
+
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -571,8 +529,9 @@ import { FiPrinter, FiShare2 } from "react-icons/fi";
 import { FaWhatsapp, FaChevronDown, FaRegCalendarAlt } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import { MdSms } from "react-icons/md";
-import Estimate from "./Estimate";
-import "./sale.css";
+
+// IMPORT THE ESTIMATE CREATION COMPONENT
+import EstimateCreation from "../creation/EstimateCreationModal"; // Adjust the path as needed
 
 // ADD THIS IMPORT - date-fns for filtering
 import {
@@ -588,7 +547,8 @@ import {
   parseISO,
 } from "date-fns";
 
-const Sale = () => {
+const Estimate = () => {
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { sales = [] } = useSelector((state) => state.sale);
@@ -599,40 +559,12 @@ const Sale = () => {
   const [openShareId, setOpenShareId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("All");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [activeView, setActiveView] = useState("sale"); // Changed to 'sale' as default view
+
   // Date filter states
   const [selectedPeriod, setSelectedPeriod] = useState("This Year");
   const [periodOpen, setPeriodOpen] = useState(false);
   const [selectedFirm, setSelectedFirm] = useState("All Firms");
   const [firmOpen, setFirmOpen] = useState(false);
-
-  // Multiple Tabs State (Kept for compatibility, though not used in conditional rendering logic below)
-  const [tabs, setTabs] = useState([
-    { id: 1, title: "Sale#1", active: true }
-  ]);
-  const [nextTabId, setNextTabId] = useState(2);
-
-  const addNewTab = () => {
-    const newTab = { id: nextTabId, title: `Sale#${nextTabId}`, active: true };
-    setTabs(prev => [
-      ...prev.map(t => ({ ...t, active: false })), // old tabs inactive
-      newTab
-    ]);
-    setNextTabId(nextTabId + 1);
-  };
-
-  const closeTab = (id) => {
-    if (tabs.length === 1) return;
-    const filtered = tabs.filter(t => t.id !== id);
-    if (filtered.length > 0 && !filtered.some(t => t.active)) {
-      filtered[filtered.length - 1].active = true;
-    }
-    setTabs(filtered);
-  };
-
-  const switchTab = (id) => {
-    setTabs(prev => prev.map(t => ({ ...t, active: t.id === id })));
-  };
 
   // Fetch sales on search change
   useEffect(() => {
@@ -652,7 +584,7 @@ const Sale = () => {
     return "Unpaid";
   };
 
-  // MAIN FILTERING LOGIC - Status + Date Period (Kept unchanged)
+  // MAIN FILTERING LOGIC - Status + Date Period
   const filteredSales = useMemo(() => {
     let filtered = [...sales];
 
@@ -701,7 +633,7 @@ const Sale = () => {
     });
   }, [sales, statusFilter, selectedPeriod]);
 
-  // Calculate totals from FILTERED data (Kept unchanged)
+  // Calculate totals from FILTERED data
   const totals = useMemo(() => {
     const totalSales = filteredSales.reduce((sum, s) => sum + parseFloat(s.total || 0), 0);
     const totalReceived = filteredSales.reduce((sum, s) => sum + parseFloat(s.received_amount || 0), 0);
@@ -740,7 +672,7 @@ const Sale = () => {
     }
   };
 
-  // Table headers (Kept unchanged)
+  // Table headers
   const SaleHead = [
     "Date",
     "Invoice No",
@@ -797,7 +729,7 @@ const Sale = () => {
     </div>,
   ];
 
-  // Close dropdown on outside click (Kept unchanged)
+  // Close dropdown on outside click
   useEffect(() => {
     const close = () => {
       document.querySelectorAll('div[style*="z-index: 9999"]').forEach(d => d.style.display = "none");
@@ -806,7 +738,6 @@ const Sale = () => {
     return () => document.removeEventListener("click", close);
   }, []);
 
-  // Table Data (Kept unchanged)
   const SaleData = filteredSales.length > 0
     ? filteredSales.map((item) => {
         const total = Number(item.total || 0).toFixed(2);
@@ -906,202 +837,173 @@ const Sale = () => {
       })
     : [];
 
+  // CONDITIONAL RENDERING - MUST BE AFTER ALL HOOKS
+  if (showCreateForm) {
+    return <EstimateCreation onBack={() => setShowCreateForm(false)} />;
+  }
+
   return (
-    <div id="main" style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
-    
+    <div  style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
       <Container fluid className="py-5">
-        
         <Row>
           <Col xl={12}>
-            {/* Business Name */}
-            <div className="d-flex align-items-center">
-              <span style={{ color: "red", fontWeight: "bold", fontSize: "1.5rem" }}>•</span>
-              {isEditing ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px" }}>
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Enter Business Name"
-                    autoFocus
-                    style={{ border: "1px solid #ccc", borderRadius: "6px", padding: "5px 10px", fontSize: "1rem", width: "250px" }}
-                    onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-                  />
-                  <Button variant="info" onClick={() => setIsEditing(false)}>
-                    Save
-                  </Button>
+            {/* Header - This is the Estimate/Quotation Dropdown */}
+            <Row className="align-items-center mb-3">
+              <Col>
+                <h5 style={{ cursor: "pointer" }}>
+                  Estimate / Quotation<FaChevronDown />
+                </h5>
+
+                {open && (
+                  <div style={{
+                    position: "absolute",
+                    background: "white",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    padding: "5px 0",
+                    width: "180px",
+                    zIndex: 999,
+                  }}>
+                    {["Sale Invoices", "Estimate/Quotation", "Proforma Invoice", "Payment-In", "sale Order", "Delivery Challan", "sale Return", "Purchase Bill", "Payment-Out", "Expenses", "Purchase Order", "Purchase Return"].map((x) => (
+                      <div key={x} onClick={() => setOpen(false)} style={{ padding: "8px 12px", cursor: "pointer" }}>
+                        {x}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Col>
+              <Col className="text-end">
+                <Button
+                 variant="danger"
+                 size="sm"
+                 className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+                style={{
+                fontSize: "1.2rem",
+                letterSpacing: "0.5px",}}
+                onClick={() => setShowCreateForm(true)}>
+                  + Add Estimate
+                </Button>
+              </Col>
+            </Row>
+
+            {/* Filter Card */}
+            <Row className="mb-3">
+              <Col lg={12} className="p-3 pb-3 d-flex align-items-center flex-wrap gap-3 bg-white rounded shadow-sm border">
+                <span className="text-muted fw-medium">Filter by :</span>
+
+                {/* Period Dropdown */}
+                <div className="position-relative">
+                  <button
+                    onClick={() => setPeriodOpen(!periodOpen)}
+                    className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
+                    style={{
+                      backgroundColor: "#e3f2fd",
+                      color: "#1565c0",
+                      fontWeight: "500",
+                      padding: "8px 20px",
+                    }}
+                  >
+                    {selectedPeriod} <FaChevronDown className={`transition-transform ${periodOpen ? 'rotate-180' : ''}`} size={12} />
+                  </button>
+
+                  {periodOpen && (
+                    <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "200px" }}>
+                      {["All Time", "Today", "Yesterday", "This Week", "This Month", "This Year", "Last Year", "Custom Range"].map((item) => (
+                        <div
+                          key={item}
+                          onClick={() => {
+                            setSelectedPeriod(item);
+                            setPeriodOpen(false);
+                          }}
+                          className="px-4 py-2 hover-bg-light cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item === selectedPeriod ? <strong>{item}</strong> : item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <span className="ms-2 text-muted" style={{ cursor: "pointer" }} onClick={() => setIsEditing(true)}>
-                  {businessName || "Enter Business Name"}
-                </span>
-              )}
-              <div className="ms-auto d-flex align-items-center gap-2">
-                <Button variant="danger" onClick={handleCreate}>+Add Sale</Button>
-                <Button variant="success" onClick={handleCreate}>+Add Purchase</Button>
-                <Button variant="info">+Add More</Button>
-                <Button variant="light">:</Button>
-              </div>
-            </div>
 
-            {/* Conditional Rendering Start */}
-            {activeView === "estimate" ? (
-              // RENDER ESTIMATE COMPONENT
-              <Estimate />
-            ) : (
-              // RENDER SALE INVOICES LIST (Original Logic)
-              <>
-                {/* Header (Sale Invoices Dropdown) */}
-                <Row className="align-items-center mb-3">
-                  <Col>
-                    <h5 style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
-                      Sale Invoices <FaChevronDown />
-                    </h5>
+                {/* Date Range Display */}
+                <div
+                  className="d-flex align-items-center gap-3 px-4 py-2 rounded-pill shadow-sm"
+                  style={{
+                    backgroundColor: "#e3f2fd",
+                    color: "#1565c0",
+                    fontWeight: "500",
+                  }}
+                >
+                  01/01/2025 <span className="text-muted">To</span> 31/12/2025
+                </div>
 
-                    {open && (
-                      <div style={{
-                        position: "absolute",
-                        background: "white",
-                        border: "1px solid #ddd",
-                        borderRadius: "6px",
-                        padding: "5px 0",
-                        width: "180px",
-                        zIndex: 999,
-                      }}>
-                        {["Sale Invoices", "Estimate/Quotation", "Proforma Invoice", "Payment-In", "sale Order", "Delivery Challan", "sale Return", "Purchase Bill", "Payment-Out", "Expenses", "Purchase Order", "Purchase Return"].map((x) => (
-                           <div 
-                              key={x} 
-                              onClick={() => {
-                                setOpen(false);
-                                if (x === "Estimate/Quotation") {
-                                  setActiveView("estimate");  // Switch to Estimate view
-                                } else if (x === "Sale Invoices") {
-                                  setActiveView("sale"); // Switch back to Sale view
-                                }
-                              }}
-                              style={{ 
-                                padding: "8px 12px", 
-                                cursor: "pointer",
-                                // Optional: Highlight active view in dropdown
-                                fontWeight: (x === "Estimate/Quotation" && activeView === "estimate") || (x === "Sale Invoices" && activeView === "sale") ? "bold" : "normal"
-                              }}
-                            > 
-                              {x}
-                            </div>
-                        ))}
-                      </div>
-                    )}
-                  </Col>
-                </Row>
+                {/* Firm Dropdown */}
+                <div className="position-relative">
+                  <button
+                    onClick={() => setFirmOpen(!firmOpen)}
+                    className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
+                    style={{
+                      backgroundColor: "#e3f2fd",
+                      color: "#1565c0",
+                      fontWeight: "500",
+                      padding: "8px 24px",
+                    }}
+                  >
+                    {selectedFirm} <FaChevronDown className={`transition-transform ${firmOpen ? 'rotate-180' : ''}`} size={12} />
+                  </button>
 
-                {/* Filter Card */}
-                <Row className="mb-3">
-                  <Col lg={12} className="p-3 pb-3 d-flex align-items-center flex-wrap gap-3 bg-white rounded shadow-sm border">
-                    <span className="text-muted fw-medium">Filter by :</span>
-
-                    {/* Period Dropdown */}
-                    <div className="position-relative">
-                      <button
-                        onClick={() => setPeriodOpen(!periodOpen)}
-                        className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
-                        style={{
-                          backgroundColor: "#e3f2fd",
-                          color: "#1565c0",
-                          fontWeight: "500",
-                          padding: "8px 20px",
-                        }}
-                      >
-                        {selectedPeriod} <FaChevronDown className={`transition-transform ${periodOpen ? 'rotate-180' : ''}`} size={12} />
-                      </button>
-
-                      {periodOpen && (
-                        <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "200px" }}>
-                          {["All Time", "Today", "Yesterday", "This Week", "This Month", "This Year", "Last Year", "Custom Range"].map((item) => (
-                            <div
-                              key={item}
-                              onClick={() => {
-                                setSelectedPeriod(item);
-                                setPeriodOpen(false);
-                              }}
-                              className="px-4 py-2 hover-bg-light cursor-pointer"
-                              style={{ cursor: "pointer" }}
-                            >
-                              {item === selectedPeriod ? <strong>{item}</strong> : item}
-                            </div>
-                          ))}
+                  {firmOpen && (
+                    <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "220px" }}>
+                      {["All Firms", "My Company Pvt Ltd", "ABC Traders", "XYZ Enterprises", "Global Exports"].map((firm) => (
+                        <div
+                          key={firm}
+                          onClick={() => {
+                            setSelectedFirm(firm);
+                            setFirmOpen(false);
+                          }}
+                          className="px-4 py-2 hover-bg-light cursor-pointer"
+                          style={{ cursor: "pointer" }}
+                        >
+                          {firm === selectedFirm ? <strong>{firm}</strong> : firm}
                         </div>
-                      )}
+                      ))}
                     </div>
+                  )}
+                </div>
+              </Col>
+            </Row>
 
-                    {/* Date Range Display */}
-                    <div
-                      className="d-flex align-items-center gap-3 px-4 py-2 rounded-pill shadow-sm"
-                      style={{
-                        backgroundColor: "#e3f2fd",
-                        color: "#1565c0",
-                        fontWeight: "500",
-                      }}
-                    >
-                      01/01/2025 <span className="text-muted">To</span> 31/12/2025
-                    </div>
+            {/* Totals Card */}
+            <Row className="mb-3">
+              <Col>
+                <div className="p-3 bg-white rounded shadow-sm border" style={{ width: "500px" }}>
+                  <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ 0.00</strong></h5>
+                  <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
+                  <div className="text-muted mt-2">
+                    Received: <strong>₹ 0.00</strong> | 
+                    Balance Due: <strong style={{ color: "#e74c3c" }}>₹ 0.00</strong>
+                  </div>
+                </div>
+              </Col>
+            </Row>
 
-                    {/* Firm Dropdown */}
-                    <div className="position-relative">
-                      <button
-                        onClick={() => setFirmOpen(!firmOpen)}
-                        className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
-                        style={{
-                          backgroundColor: "#e3f2fd",
-                          color: "#1565c0",
-                          fontWeight: "500",
-                          padding: "8px 24px",
-                        }}
-                      >
-                        {selectedFirm} <FaChevronDown className={`transition-transform ${firmOpen ? 'rotate-180' : ''}`} size={12} />
-                      </button>
-
-                      {firmOpen && (
-                        <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "220px" }}>
-                          {["All Firms", "My Company Pvt Ltd", "ABC Traders", "XYZ Enterprises", "Global Exports"].map((firm) => (
-                            <div
-                              key={firm}
-                              onClick={() => {
-                                setSelectedFirm(firm);
-                                setFirmOpen(false);
-                              }}
-                              className="px-4 py-2 hover-bg-light cursor-pointer"
-                              style={{ cursor: "pointer" }}
-                            >
-                              {firm === selectedFirm ? <strong>{firm}</strong> : firm}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Col>
-                  <Row className=" mb-3">
-                  <Col>
-                    <div className=" total-sales-card bg-white rounded shadow-sm border" style={{ width: "500px" }}>
-                      <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
-                      <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
-                      <div className="text-muted mt-2">
-                        Received: <strong>₹ {totals.totalReceived}</strong> | 
-                        Balance Due: <strong style={{ color: "#e74c3c" }}>₹ {totals.totalBalance}</strong>
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-                </Row>
-
-                {/* Totals Card */}
-                
-
-                {/* Table */}
-                <Col lg={12} xs={12}>
-                  <TableUI headers={SaleHead} body={SaleData} className="table-end" />
-                </Col>
-              </>
-            )}
+            {/* Table */}
+            <div className="d-flex justify-content-center align-items-center"
+  style={{ minHeight: "60vh" }}
+>
+  <Button
+    variant="danger"
+    size="lg"
+    className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+    style={{
+      fontSize: "1.2rem",
+      letterSpacing: "0.5px",
+    }}
+    onClick={() => setShowCreateForm(true)}
+  >
+    + Add Estimate
+  </Button>
+</div>
           </Col>
         </Row>
       </Container>
@@ -1109,5 +1011,4 @@ const Sale = () => {
   );
 };
 
-export default Sale;
-
+export default Estimate;
