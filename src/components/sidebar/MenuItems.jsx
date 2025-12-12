@@ -40,6 +40,11 @@ const MenuItems = [
     
   },
   {
+    path:"/sale",
+    text: "Sales Invoices",
+  
+  },
+  {
     path:"/estimate",
     text: "Estimate/Quotation",
   
