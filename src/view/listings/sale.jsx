@@ -17,6 +17,8 @@ import { FiPrinter, FiShare2 } from "react-icons/fi";
 import { FaWhatsapp, FaChevronDown, FaRegCalendarAlt } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import { MdSms } from "react-icons/md";
+import Estimate from "./Estimate";
+import "./sale.css";
 
 // ADD THIS IMPORT - date-fns for filtering
 import {
@@ -43,14 +45,14 @@ const Sale = () => {
   const [openShareId, setOpenShareId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("All");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
- 
+  const [activeView, setActiveView] = useState("sale"); // Changed to 'sale' as default view
   // Date filter states
   const [selectedPeriod, setSelectedPeriod] = useState("This Year");
   const [periodOpen, setPeriodOpen] = useState(false);
   const [selectedFirm, setSelectedFirm] = useState("All Firms");
   const [firmOpen, setFirmOpen] = useState(false);
 
-  // Multiple Tabs State
+  // Multiple Tabs State (Kept for compatibility, though not used in conditional rendering logic below)
   const [tabs, setTabs] = useState([
     { id: 1, title: "Sale#1", active: true }
   ]);
@@ -96,7 +98,7 @@ const Sale = () => {
     return "Unpaid";
   };
 
-  // MAIN FILTERING LOGIC - Status + Date Period
+  // MAIN FILTERING LOGIC - Status + Date Period (Kept unchanged)
   const filteredSales = useMemo(() => {
     let filtered = [...sales];
 
@@ -145,7 +147,7 @@ const Sale = () => {
     });
   }, [sales, statusFilter, selectedPeriod]);
 
-  // Calculate totals from FILTERED data
+  // Calculate totals from FILTERED data (Kept unchanged)
   const totals = useMemo(() => {
     const totalSales = filteredSales.reduce((sum, s) => sum + parseFloat(s.total || 0), 0);
     const totalReceived = filteredSales.reduce((sum, s) => sum + parseFloat(s.received_amount || 0), 0);
@@ -184,7 +186,7 @@ const Sale = () => {
     }
   };
 
-  // Table headers
+  // Table headers (Kept unchanged)
   const SaleHead = [
     "Date",
     "Invoice No",
@@ -241,7 +243,7 @@ const Sale = () => {
     </div>,
   ];
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click (Kept unchanged)
   useEffect(() => {
     const close = () => {
       document.querySelectorAll('div[style*="z-index: 9999"]').forEach(d => d.style.display = "none");
@@ -250,6 +252,7 @@ const Sale = () => {
     return () => document.removeEventListener("click", close);
   }, []);
 
+  // Table Data (Kept unchanged)
   const SaleData = filteredSales.length > 0
     ? filteredSales.map((item) => {
         const total = Number(item.total || 0).toFixed(2);
@@ -340,6 +343,10 @@ const Sale = () => {
                   { label: "View", icon: <TbCircleLetterI />, onClick: () => handleView(item) },
                   { label: "Edit", icon: <TbCircleLetterI />, onClick: () => handleEdit(item) },
                   { label: "Delete", icon: <MdOutlineDelete />, onClick: () => handleDelete(item.sale_id) },
+                  { label: "Duplicate", icon: <TbCircleLetterI />},
+                  { label: "Open PDF", icon: <TbCircleLetterI />},
+                  { label: "Preview", icon: <TbCircleLetterI />},
+                  { label: "Print", icon: <TbCircleLetterI />}
                 ]}
                 label={<HiOutlineDotsVertical />}
               />
@@ -351,7 +358,9 @@ const Sale = () => {
 
   return (
     <div id="main" style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
+    
       <Container fluid className="py-5">
+        
         <Row>
           <Col xl={12}>
             {/* Business Name */}
@@ -385,153 +394,161 @@ const Sale = () => {
               </div>
             </div>
 
-            {/* Header */}
-            <Row className="align-items-center mb-3">
-              <Col>
-                <h5 style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
-                  Sale Invoices <FaChevronDown />
-                </h5>
+            {/* Conditional Rendering Start */}
+            {activeView === "estimate" ? (
+              // RENDER ESTIMATE COMPONENT
+              <Estimate />
+            ) : (
+              // RENDER SALE INVOICES LIST (Original Logic)
+              <>
+                {/* Header (Sale Invoices Dropdown) */}
+                <Row className="align-items-center mb-3">
+                  <Col>
+                    <h5 style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
+                      Sale Invoices <FaChevronDown />
+                    </h5>
 
-                {open && (
-                  <div style={{
-                    position: "absolute",
-                    background: "white",
-                    border: "1px solid #ddd",
-                    borderRadius: "6px",
-                    padding: "5px 0",
-                    width: "180px",
-                    zIndex: 999,
-                  }}>
-                  
-    
-      
-    
-                  
-                    {["Sale Invoices", "Estimate/Quotation", "Proforma Invoice", "Payment-In", "sale Order", "Delivery Challan", "sale Return", "Purchase Bill", "Payment-Out", "Expenses", "Purchase Order", "Purchase Return"].map((x) => (
-                       <div 
+                    {open && (
+                      <div style={{
+                        position: "absolute",
+                        background: "white",
+                        border: "1px solid #ddd",
+                        borderRadius: "6px",
+                        padding: "5px 0",
+                        width: "180px",
+                        zIndex: 999,
+                      }}>
+                        {["Sale Invoices", "Estimate/Quotation", "Proforma Invoice", "Payment-In", "sale Order", "Delivery Challan", "sale Return", "Purchase Bill", "Payment-Out", "Expenses", "Purchase Order", "Purchase Return"].map((x) => (
+                            <div 
     key={x} 
     onClick={() => {
       setOpen(false);
-
-      if (x === "Estimate/Quotation") {
-        navigate("/estimate");   // <-- THIS IS THE FIX
+      // Add navigation based on the item clicked
+      if (x === "Sale Invoices") {
+        navigate("/Sale");
+      } else if (x === "Estimate/Quotation") {
+        navigate("/estimate");
       }
-    }}
+      // Add other navigations as needed
+    }} 
     style={{ padding: "8px 12px", cursor: "pointer" }}
   >
     {x}
   </div>
-                    ))}
-                  </div>
-                )}
-              </Col>
-            </Row>
+                        ))}
+                      </div>
+                    )}
+                  </Col>
+                </Row>
 
-            {/* Filter Card */}
-            <Row className="mb-3">
-              <Col lg={12} className="p-3 pb-3 d-flex align-items-center flex-wrap gap-3 bg-white rounded shadow-sm border">
-                <span className="text-muted fw-medium">Filter by :</span>
+                {/* Filter Card */}
+                <Row className="mb-3">
+                  <Col lg={12} className="p-3 pb-3 d-flex align-items-center flex-wrap gap-3 bg-white rounded shadow-sm border">
+                    <span className="text-muted fw-medium">Filter by :</span>
 
-                {/* Period Dropdown */}
-                <div className="position-relative">
-                  <button
-                    onClick={() => setPeriodOpen(!periodOpen)}
-                    className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
-                    style={{
-                      backgroundColor: "#e3f2fd",
-                      color: "#1565c0",
-                      fontWeight: "500",
-                      padding: "8px 20px",
-                    }}
-                  >
-                    {selectedPeriod} <FaChevronDown className={`transition-transform ${periodOpen ? 'rotate-180' : ''}`} size={12} />
-                  </button>
+                    {/* Period Dropdown */}
+                    <div className="position-relative">
+                      <button
+                        onClick={() => setPeriodOpen(!periodOpen)}
+                        className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
+                        style={{
+                          backgroundColor: "#e3f2fd",
+                          color: "#1565c0",
+                          fontWeight: "500",
+                          padding: "8px 20px",
+                        }}
+                      >
+                        {selectedPeriod} <FaChevronDown className={`transition-transform ${periodOpen ? 'rotate-180' : ''}`} size={12} />
+                      </button>
 
-                  {periodOpen && (
-                    <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "200px" }}>
-                      {["All Time", "Today", "Yesterday", "This Week", "This Month", "This Year", "Last Year", "Custom Range"].map((item) => (
-                        <div
-                          key={item}
-                          onClick={() => {
-                            setSelectedPeriod(item);
-                            setPeriodOpen(false);
-                          }}
-                          className="px-4 py-2 hover-bg-light cursor-pointer"
-                          style={{ cursor: "pointer" }}
-                        >
-                          {item === selectedPeriod ? <strong>{item}</strong> : item}
+                      {periodOpen && (
+                        <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "200px" }}>
+                          {["All Time", "Today", "Yesterday", "This Week", "This Month", "This Year", "Last Year", "Custom Range"].map((item) => (
+                            <div
+                              key={item}
+                              onClick={() => {
+                                setSelectedPeriod(item);
+                                setPeriodOpen(false);
+                              }}
+                              className="px-4 py-2 hover-bg-light cursor-pointer"
+                              style={{ cursor: "pointer" }}
+                            >
+                              {item === selectedPeriod ? <strong>{item}</strong> : item}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Date Range Display */}
-                <div
-                  className="d-flex align-items-center gap-3 px-4 py-2 rounded-pill shadow-sm"
-                  style={{
-                    backgroundColor: "#e3f2fd",
-                    color: "#1565c0",
-                    fontWeight: "500",
-                  }}
-                >
-                  01/01/2025 <span className="text-muted">To</span> 31/12/2025
-                </div>
+                    {/* Date Range Display */}
+                    <div
+                      className="d-flex align-items-center gap-3 px-4 py-2 rounded-pill shadow-sm"
+                      style={{
+                        backgroundColor: "#e3f2fd",
+                        color: "#1565c0",
+                        fontWeight: "500",
+                      }}
+                    >
+                      01/01/2025 <span className="text-muted">To</span> 31/12/2025
+                    </div>
 
-                {/* Firm Dropdown */}
-                <div className="position-relative">
-                  <button
-                    onClick={() => setFirmOpen(!firmOpen)}
-                    className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
-                    style={{
-                      backgroundColor: "#e3f2fd",
-                      color: "#1565c0",
-                      fontWeight: "500",
-                      padding: "8px 24px",
-                    }}
-                  >
-                    {selectedFirm} <FaChevronDown className={`transition-transform ${firmOpen ? 'rotate-180' : ''}`} size={12} />
-                  </button>
+                    {/* Firm Dropdown */}
+                    <div className="position-relative">
+                      <button
+                        onClick={() => setFirmOpen(!firmOpen)}
+                        className="btn rounded-pill border-0 shadow-sm d-flex align-items-center gap-2"
+                        style={{
+                          backgroundColor: "#e3f2fd",
+                          color: "#1565c0",
+                          fontWeight: "500",
+                          padding: "8px 24px",
+                        }}
+                      >
+                        {selectedFirm} <FaChevronDown className={`transition-transform ${firmOpen ? 'rotate-180' : ''}`} size={12} />
+                      </button>
 
-                  {firmOpen && (
-                    <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "220px" }}>
-                      {["All Firms", "My Company Pvt Ltd", "ABC Traders", "XYZ Enterprises", "Global Exports"].map((firm) => (
-                        <div
-                          key={firm}
-                          onClick={() => {
-                            setSelectedFirm(firm);
-                            setFirmOpen(false);
-                          }}
-                          className="px-4 py-2 hover-bg-light cursor-pointer"
-                          style={{ cursor: "pointer" }}
-                        >
-                          {firm === selectedFirm ? <strong>{firm}</strong> : firm}
+                      {firmOpen && (
+                        <div className="position-absolute top-100 start-0 mt-2 bg-white rounded-3 shadow-lg border" style={{ zIndex: 1000, minWidth: "220px" }}>
+                          {["All Firms", "My Company Pvt Ltd", "ABC Traders", "XYZ Enterprises", "Global Exports"].map((firm) => (
+                            <div
+                              key={firm}
+                              onClick={() => {
+                                setSelectedFirm(firm);
+                                setFirmOpen(false);
+                              }}
+                              className="px-4 py-2 hover-bg-light cursor-pointer"
+                              style={{ cursor: "pointer" }}
+                            >
+                              {firm === selectedFirm ? <strong>{firm}</strong> : firm}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
-              </Col>
-            </Row>
+                  </Col>
+                  <Row className=" mb-3">
+                  <Col>
+                    <div className=" total-sales-card bg-white rounded shadow-sm border" style={{ width: "500px" }}>
+                      <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
+                      <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
+                      <div className="text-muted mt-2">
+                        Received: <strong>₹ {totals.totalReceived}</strong> | 
+                        Balance Due: <strong style={{ color: "#e74c3c" }}>₹ {totals.totalBalance}</strong>
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+                </Row>
 
-            {/* Totals Card */}
-            <Row className="mb-3">
-              <Col>
-                <div className="p-3 bg-white rounded shadow-sm border" style={{ width: "500px" }}>
-                  <h5>Total Sales: <strong style={{ fontSize: "1.8rem" }}>₹ {totals.totalSales}</strong></h5>
-                  <small className="opacity-75"><span style={{ color: "#45eb45ff" }}>100% up</span> vs last month</small>
-                  <div className="text-muted mt-2">
-                    Received: <strong>₹ {totals.totalReceived}</strong> | 
-                    Balance Due: <strong style={{ color: "#e74c3c" }}>₹ {totals.totalBalance}</strong>
-                  </div>
-                </div>
-              </Col>
-            </Row>
+                {/* Totals Card */}
+                
 
-            {/* Table */}
-            <Col lg={12} xs={12}>
-              <TableUI headers={SaleHead} body={SaleData} className="table-end" />
-            </Col>
+                {/* Table */}
+                <Col lg={12} xs={12}>
+                  <TableUI headers={SaleHead} body={SaleData} className="table-end" />
+                </Col>
+              </>
+            )}
           </Col>
         </Row>
       </Container>

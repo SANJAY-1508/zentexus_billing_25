@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -17,10 +16,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   fetchParties,
-  createSale,
-  updateSale,
-  searchSales,
-} from "../../slice/saleSlice";
+  createEstimate,
+  updateEstimate,
+  searchEstimates,
+} from "../../slice/estimateSlice";
 import {
   TextInputform,
   TextArea,
@@ -32,7 +31,7 @@ import NotifyData from "../../components/NotifyData";
 import Modal from "react-bootstrap/Modal";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import "./SalesModalCreation.css"
+import "./EstimateCreationModal.css"
 import { fetchCategories } from "../../slice/CategorySlice";
 import { fetchProducts } from "../../slice/ProductSlice";
 import PartyModal from "../creation/PartyModalCreation";
@@ -67,20 +66,7 @@ const PAYMENT_OPTIONS = [
   { value: "check", label: "Check" },
   { value: "Cash", label: "Cash" },
 ];
-const tableStyles = {
-  table: {
-    minWidth: "1600px", // increased for more columns
-    tableLayout: "fixed", // THIS IS THE MAGIC — forces equal spacing
-  },
-  th: {
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
-  td: {
-    verticalAlign: "middle",
-  }
-};
+
 const generateUniqueId = () =>
   `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -102,18 +88,17 @@ const INITIAL_ROW = {
   amount: "0.00",
 };
 
-const SaleCreation = ({ tabNumber = 1 }) => {
+const EstimateCreation = ({ tabNumber = 1 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
- 
   
   // ============== TAB FUNCTIONALITY START ==============
   // Multiple Tabs State
   const [tabs, setTabs] = useState([
-    { id: 1, title: "Sale#1", active: true }
+    { id: 1, title: "Estimate#1", active: true }
   ]);
   const [nextTabId, setNextTabId] = useState(2);
-  const [availableTabIds, setAvailableTabIds] = useState([]); // Track reusable IDs
+  const [availableTabIds, setAvailableTabIds] = useState([]);
   // Store form data for each tab
   const [tabForms, setTabForms] = useState({});
   // ============== TAB FUNCTIONALITY END ==============
@@ -121,21 +106,28 @@ const SaleCreation = ({ tabNumber = 1 }) => {
   const { id } = useParams();
   const location = useLocation();
   const [selectedPartyOption, setSelectedPartyOption] = useState(null);
-  const { parties, partiesStatus, sales } = useSelector((state) => state.sale);
-  const isEditMode = location.pathname.startsWith("/sale/edit");
-  const isViewMode = location.pathname.startsWith("/sale/view");
-  const isCreateMode = location.pathname === "/sale/create";
+  
+  // FIXED: Correct Redux selector structure
+  const estimateState = useSelector((state) => state.estimate);
+  const { parties = [], partiesStatus = "idle", estimates = [] } = estimateState || {};
+  
+  const categoryState = useSelector((state) => state.category);
+  const { categories = [], status: categoryStatus = "idle" } = categoryState || {};
+  
+  const productState = useSelector((state) => state.product);
+  const { products = [], status: productStatus = "idle" } = productState || {};
+  
+  const unitState = useSelector((state) => state.unit);
+  const { units = [], status: unitStatus = "idle" } = unitState || {};
+  
+  const isEditMode = location.pathname.startsWith("/estimate/edit");
+  const isViewMode = location.pathname.startsWith("/estimate/view");
+  const isCreateMode = location.pathname === "/estimate/create";
   const isDisabled = isViewMode;
   const [imagePreview, setImagePreview] = useState("");
   const [imageFileName, setImageFileName] = useState("");
   const [attachedDocs, setAttachedDocs] = useState([]);
-  const { categories = [], status: categoryStatus = "idle" } = useSelector(
-    (state) => state.category
-  );
-  const { products, status: productStatus } = useSelector(
-    (state) => state.product
-  );
-  const { units, status: unitStatus } = useSelector((state) => state.unit);
+  
   const [showPartyModal, setShowPartyModal] = useState(false);
   const [partyForm, setPartyForm] = useState({
     name: "",
@@ -166,23 +158,23 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     { value: "", label: "Select Party" },
   ]);
   const [isManualRoundOff, setIsManualRoundOff] = useState(false);
-  const saleToEdit = id ? sales.find((s) => s.sale_id == id) : null;
-   const fromEstimate = location.state?.fromEstimate;
-   const estimateData = location.state?.estimateData;
+  const estimateToEdit = id ? estimates.find((e) => e.estimate_id == id) : null;
+  const [firstEstimateNo, setFirstEstimateNo] = useState(null);
+  
   const [formData, setFormData] = useState({
     parties_id: "",
     name: "",
     phone: "",
     billing_address: "",
     shipping_address: "",
-    invoice_no: "",
-    invoice_date: new Date().toISOString().split("T")[0],
+    estimate_no: "", 
+    estimate_date: new Date().toISOString().split("T")[0], 
     state_of_supply: "",
     payment_type: "",
     description: "",
     add_image: "",
     rows: [INITIAL_ROW],
-    rount_off: 0,
+    round_off: 0,
     round_off_amount: "0",
     total: "0.00",
     received_amount: " ",
@@ -193,6 +185,18 @@ const SaleCreation = ({ tabNumber = 1 }) => {
       discount: false,
     },
   });
+
+  // // ============== DEBUGGING ==============
+  // useEffect(() => {
+  //   console.log("=== REDUX STATE DEBUG ===");
+  //   console.log("Products:", products);
+  //   console.log("Categories:", categories);
+  //   console.log("Parties:", parties);
+  //   console.log("Units:", units);
+  //   console.log("Product Status:", productStatus);
+  //   console.log("Category Status:", categoryStatus);
+  //   console.log("=== END DEBUG ===");
+  // }, [products, categories, parties, units, productStatus, categoryStatus]);
 
   // ============== TAB FUNCTIONS START ==============
   const addNewTab = () => {
@@ -211,41 +215,39 @@ const SaleCreation = ({ tabNumber = 1 }) => {
       setNextTabId(prev => prev + 1);
     }
     
-    // Get all invoice numbers from ALL tabs (including current formData)
-    const allInvoiceNumbers = [];
+    const allEstimateNumbers = [];
     
-    // Add invoice numbers from all stored tabs
     Object.values(tabForms).forEach(tabForm => {
-      if (tabForm.invoice_no) {
-        allInvoiceNumbers.push(tabForm.invoice_no);
+      if (tabForm.estimate_no) {
+        allEstimateNumbers.push(tabForm.estimate_no);
       }
     });
     
     // Add current active tab's invoice number
-    if (formData.invoice_no && formData.invoice_no !== "Generating...") {
-      allInvoiceNumbers.push(formData.invoice_no);
+    if (formData.estimate_no && formData.estimate_no !== "Generating...") {
+      allEstimateNumbers.push(formData.estimate_no);
     }
     
-    const currentYearMonth = "INV" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
+    const currentYearMonth = "EST" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
     
-    let nextInvoiceNumber = "0001";
+    let nextEstimateNumber = "0001";
     
-    if (allInvoiceNumbers.length > 0) {
-      const currentMonthInvoices = allInvoiceNumbers.filter(inv => 
-        inv?.startsWith(currentYearMonth)
+    if (allEstimateNumbers.length > 0) {
+      const currentMonthEstimates = allEstimateNumbers.filter(est => 
+        est?.startsWith(currentYearMonth)
       );
       
-      if (currentMonthInvoices.length > 0) {
-        const numbers = currentMonthInvoices.map((inv) => {
-          const numPart = inv.split("-")[1];
+      if (currentMonthEstimates.length > 0) {
+        const numbers = currentMonthEstimates.map((est) => {
+          const numPart = est.split("-")[1];
           return parseInt(numPart || "0");
         });
         const maxNum = Math.max(...numbers);
-        nextInvoiceNumber = String(maxNum + 1).padStart(4, "0");
+        nextEstimateNumber = String(maxNum + 1).padStart(4, "0");
       }
     }
     
-    const nextInvoiceNo = `${currentYearMonth}-${nextInvoiceNumber}`;
+    const nextEstimateNo = `${currentYearMonth}-${nextEstimateNumber}`;
     
     // Create COMPLETELY NEW form data for the new tab
     const newFormData = {
@@ -254,14 +256,14 @@ const SaleCreation = ({ tabNumber = 1 }) => {
       phone: "",
       billing_address: "",
       shipping_address: "",
-      invoice_no: nextInvoiceNo,
-      invoice_date: new Date().toISOString().split("T")[0],
+      estimate_no: nextEstimateNo, 
+      estimate_date: new Date().toISOString().split("T")[0], 
       state_of_supply: "",
       payment_type: "",
       description: "",
       add_image: "",
       rows: [{ ...INITIAL_ROW, id: generateUniqueId() }],
-      rount_off: 0,
+      round_off: 0,
       round_off_amount: "0",
       total: "0.00",
       received_amount: " ",
@@ -296,9 +298,9 @@ const SaleCreation = ({ tabNumber = 1 }) => {
     }));
     
     // Update tabs
-    setTabs(prev => [
+   setTabs(prev => [
       ...prev.map(tab => ({ ...tab, active: false })),
-      { id: newTabId, title: `Sale#${newTabId}`, active: true }
+      { id: newTabId, title: `Estimate#${newTabId}`, active: true }
     ]);
     
     // Set the new form data
@@ -424,10 +426,10 @@ const SaleCreation = ({ tabNumber = 1 }) => {
 
   // Initialize column visibility from saved data
   useEffect(() => {
-    if (saleToEdit) {
+    if (estimateToEdit) {
       let itemsArray = [];
       try {
-        itemsArray = JSON.parse(saleToEdit.products || "[]");
+        itemsArray = JSON.parse(estimateToEdit.products || "[]");
       } catch (e) {
         console.error("Failed to parse products JSON", e);
         itemsArray = [];
@@ -457,114 +459,39 @@ const SaleCreation = ({ tabNumber = 1 }) => {
         }
       }));
     }
-  }, [saleToEdit]);
-   // Add this useEffect - ithu thaan missing piece!
-useEffect(() => {
-  if (fromEstimate && estimateData) {
-    // Auto-fill all fields from estimate
-    setFormData(prev => ({
-      ...prev,
-      from_estimate_id: estimateData.estimate_id,
-      parties_id: estimateData.parties_id || "",
-      name: estimateData.name || "",
-      phone: estimateData.phone || "",
-      billing_address: estimateData.billing_address || "",
-      shipping_address: estimateData.shipping_address || "",
-      invoice_date: estimateData.estimate_date || new Date().toISOString().split("T")[0],
-      state_of_supply: estimateData.state_of_supply || "",
-      payment_type: estimateData.payment_type || "",
-      description: estimateData.description || "",
-      total: estimateData.total || "0.00",
-      received_amount: estimateData.received_amount || "0.00",
-      rount_off: estimateData.round_off || 0,
-      round_off_amount: estimateData.round_off_amount || "0.00",
-
-      // Products - JSON string-a parse pannu
-      rows: estimateData.products && estimateData.products !== "[]" && estimateData.products !== "null"
-        ? JSON.parse(estimateData.products).map(item => ({
-            ...INITIAL_ROW,
-            id: generateUniqueId(),
-            product_id: item.product_id || "",
-            product_name: item.product_name || "",
-            category: item.category || "",
-            Description: item.Description || "",
-            hsn_code: item.hsn_code || "",
-            qty: item.qty || "",
-            unit: item.unit || "NONE",
-            priceUnitType: item.priceUnitType || "Without Tax",
-            price: item.price || "",
-            discountPercent: item.discountPercent || "",
-            discountAmount: item.discountAmount || "0.00",
-            taxPercent: item.taxPercent || 0,
-            taxAmount: item.taxAmount || "0.00",
-            amount: item.amount || "0.00",
-          }))
-        : [INITIAL_ROW],
-    }));
-
-    // Party select dropdown-la show panna
-    if (estimateData.name) {
-      setSelectedPartyOption({
-        value: estimateData.parties_id || estimateData.name,
-        label: estimateData.name ,
-      });
-    }
-
-    // Image iruntha
-    if (estimateData.add_image) {
-      setImagePreview(estimateData.add_image);
-      setHasUserUploadedImage(true);
-    }
-
-    // Documents iruntha
-    if (estimateData.documents && estimateData.documents !== "[]" && estimateData.documents !== "null") {
-      try {
-        setAttachedDocs(JSON.parse(estimateData.documents));
-      } catch (e) {
-        console.log("Documents parse error:", e);
-      }
-    }
-
-    // Success notification
-    NotifyData(`Estimate #${estimateData.estimate_no} loaded for conversion to Sale`, "success");
-
-    // Clean state to prevent re-fill on refresh
-    navigate(location.pathname, { replace: true, state: {} });
-  }
-}, [fromEstimate, estimateData, navigate, location.pathname]);
-  // =====================================================================
+  }, [estimateToEdit]);
 
   // Generate invoice number in create mode
   useEffect(() => {
     if (isCreateMode) {
-      dispatch(searchSales("")).then((action) => {
+      dispatch(searchEstimates("")).then((action) => {
         if (action.payload && action.payload.length > 0) {
-          const allInvoices = action.payload.map((sale) => sale.invoice_no);
+          const allEstimates = action.payload.map((estimate) => estimate.estimate_no);
           const currentYearMonth =
-            "INV" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
+            "EST" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
 
-          const currentMonthInvoices = allInvoices.filter((inv) =>
-            inv?.startsWith(currentYearMonth)
+          const currentMonthEstimates = allEstimates.filter((est) =>
+            est?.startsWith(currentYearMonth)
           );
 
           let nextNum = 1;
-          if (currentMonthInvoices.length > 0) {
-            const numbers = currentMonthInvoices.map((inv) => {
-              const numPart = inv.split("-")[1];
+          if (currentMonthEstimates.length > 0) {
+            const numbers = currentMonthEstimates.map((est) => {
+              const numPart = est.split("-")[1];
               return parseInt(numPart || "0");
             });
             const maxNum = Math.max(...numbers);
             nextNum = maxNum + 1;
           }
 
-          const nextInvoiceNo = `${currentYearMonth}-${String(nextNum).padStart(
+          const nextEstimateNo = `${currentYearMonth}-${String(nextNum).padStart(
             4,
             "0"
           )}`;
 
           setFormData((prev) => ({
             ...prev,
-            invoice_no: nextInvoiceNo,
+            estimate_no: nextEstimateNo,
           }));
           
           // Also save to tabForms for the first tab
@@ -572,7 +499,7 @@ useEffect(() => {
             ...prev,
             1: { 
               ...prev[1], 
-              invoice_no: nextInvoiceNo,
+              estimate_no: nextEstimateNo,
               _selectedPartyOption: selectedPartyOption,
               _imagePreview: imagePreview,
               _attachedDocs: attachedDocs,
@@ -583,11 +510,12 @@ useEffect(() => {
           }));
         } else {
           const currentYearMonth =
-            "INV" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
-          const firstInvoice = currentYearMonth + "-0001";
+            "EST" + new Date().toISOString().slice(0, 7).replace(/-/g, "");
+          const firstEstimate = currentYearMonth + "-0001";
+          setFirstEstimateNo(firstEstimate);
           setFormData((prev) => ({
             ...prev,
-            invoice_no: firstInvoice,
+            estimate_no: firstEstimate,
           }));
           
           // Also save to tabForms for the first tab
@@ -595,7 +523,7 @@ useEffect(() => {
             ...prev,
             1: { 
               ...prev[1], 
-              invoice_no: firstInvoice,
+              estimate_no: firstEstimate,
               _selectedPartyOption: selectedPartyOption,
               _imagePreview: imagePreview,
               _attachedDocs: attachedDocs,
@@ -609,41 +537,363 @@ useEffect(() => {
     }
   }, [isCreateMode, dispatch]);
 
-  const handleReceivedAmountChange = (e) => {
-    const value = e.target.value;
+  // FIXED: Fetch categories with proper dependency
+  useEffect(() => {
+    if (categoryStatus === "idle") {
+      console.log("Fetching categories...");
+      dispatch(fetchCategories());
+    }
+  }, [categoryStatus, dispatch]);
+
+  // FIXED: Fetch products with proper dependency
+  useEffect(() => {
+    if (productStatus === "idle") {
+      console.log("Fetching products...");
+      dispatch(fetchProducts(""));
+    }
+  }, [productStatus, dispatch]);
+
+  // Fetch parties on mount
+  useEffect(() => {
+    if (partiesStatus === "idle") {
+      console.log("Fetching parties...");
+      dispatch(fetchParties());
+    }
+  }, [partiesStatus, dispatch]);
+
+  // Fetch units on mount
+  useEffect(() => {
+    if (unitStatus === "idle") {
+      console.log("Fetching units...");
+      dispatch(fetchUnits());
+    }
+  }, [unitStatus, dispatch]);
+
+  // Fetch estimates for edit/view
+  useEffect(() => {
+    if ((isEditMode || isViewMode) && estimates.length === 0) {
+      dispatch(searchEstimates(""));
+    }
+  }, [isEditMode, isViewMode, estimates.length, dispatch]);
+
+  // Update customers options
+  useEffect(() => {
+    if (parties && Array.isArray(parties)) {
+      console.log("Updating customer options from parties:", parties);
+      const customerOptions = parties.map((p) => ({
+        value: p.id || p.parties_id || "",
+        label: p.name || "Unnamed Party",
+      }));
+      setCustomers([
+        { value: "", label: "Select Party" },
+        { value: "add_party", label: "+ Add Party" },
+        ...customerOptions,
+      ]);
+    }
+  }, [parties]);
+
+  useEffect(() => {
+    if (isCreateMode) {
+      setImagePreview("");
+      setImageFileName("");
+      setAttachedDocs([]);
+      setHasUserUploadedImage(false);
+      // Reset auto-fill checkbox in create mode
+      setAutoFillReceived(false);
+    }
+  }, [isCreateMode]);
+
+  // FIXED: Product options with better error handling
+  const productOptions = React.useMemo(() => {
+    console.log("Generating product options from:", products);
+    
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      console.log("No products available");
+      return [];
+    }
+    
+    return products.map((p) => {
+      let salePrice = "0";
+      try {
+        const sp = JSON.parse(p.sale_price || "{}");
+        salePrice = sp.price || "0";
+      } catch (e) {
+        console.error("Error parsing sale_price for product:", p.product_name, e);
+      }
+
+      return {
+        value: p.product_name || p.name || "",
+        label: `${p.product_name || p.name || ""} - ₹${salePrice}`,
+        product_id: p.product_id || p.id || "",
+        hsn_code: p.hsn_code || "",
+        salePrice: salePrice,
+        category: p.category_name || p.category || "",
+        unit_value: p.unit_value || "NONE",
+      };
+    }).filter(option => option.value); // Filter out empty options
+  }, [products]);
+
+  // FIXED: Unit options with better handling
+  const unitOptions = React.useMemo(() => {
+    console.log("Generating unit options from:", units);
+    
+    // Start with "NONE" option
+    const options = [{ value: "NONE", label: "NONE" }];
+
+    // Filter active units (delete_at = 0) from your database
+    const activeUnits = units.filter((unit) => unit.delete_at === 0);
+
+    // Add each active unit to options
+    activeUnits.forEach((unit) => {
+      if (unit.unit_name) {
+        options.push({
+          value: unit.unit_name,
+          label: unit.unit_name,
+        });
+      }
+    });
+
+    return options;
+  }, [units]);
+
+  // FIXED: Category options with better handling
+  const categoryOptions = React.useMemo(() => {
+    console.log("Generating category options from:", categories);
+    
+    const options = [{ value: "", label: "ALL" }];
+    
+    if (categories && Array.isArray(categories)) {
+      categories.forEach((cat) => {
+        if (cat && cat.category_name) {
+          options.push({
+            value: cat.category_name,
+            label: cat.category_name,
+          });
+        }
+      });
+    }
+    
+    return options;
+  }, [categories]);
+
+  // Auto-show HSN column when any row has HSN filled
+  useEffect(() => {
+    const hasAnyHsn = formData.rows.some((row) => {
+      const hsn = String(row.hsn_code || "").trim();
+      return hsn !== "";
+    });
     setFormData((prev) => ({
       ...prev,
-      received_amount: value || " ",
+      visibleColumns: {
+        ...prev.visibleColumns,
+        hsn_code: hasAnyHsn,
+      },
     }));
-  };
+  }, [formData.rows]);
 
-  // Handle auto-fill checkbox
-  const handleAutoFillReceived = (e) => {
-    const isChecked = e.target.checked;
-    setAutoFillReceived(isChecked);
-
-    if (isChecked) {
-      setFormData((prev) => ({
-        ...prev,
-        received_amount: prev.total || "0",
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        received_amount: " ",
-      }));
-    }
-  };
-
-  // Update received amount when total changes and auto-fill is checked
+  // Load edit/view data
   useEffect(() => {
-    if (autoFillReceived) {
+    if (!estimateToEdit) return;
+    console.log("Loading edit data for estimate:", estimateToEdit);
+
+    let itemsArray = [];
+    try {
+      itemsArray = JSON.parse(estimateToEdit.products || "[]");
+    } catch (e) {
+      console.error("Failed to parse products JSON", e);
+      itemsArray = [];
+    }
+
+    const rows =
+      Array.isArray(itemsArray) && itemsArray.length > 0
+        ? itemsArray.map((product) => ({
+            id: generateUniqueId(),
+            product_id: product.product_id || "",
+            product_name: product.product_name || "",
+            hsn_code: String(product.hsn_code || ""),
+            category: String(product.category || ""),
+            Description: String(product.Description || ""),
+            qty: String(product.qty || ""),
+            unit: String(product.unit || "NONE"),
+            priceUnitType: String(product.priceUnitType || "Without Tax"),
+            price: String(product.price || ""),
+            discountPercent: String(product.discountPercent || ""),
+            discountAmount: String(product.discountAmount || "0.00"),
+            taxPercent: Number(product.taxPercent || 0),
+            taxAmount: String(product.taxAmount || "0.00"),
+            amount: String(product.amount || "0.00"),
+          }))
+        : [INITIAL_ROW];
+
+    // Set party selection
+    if (estimateToEdit.parties_id) {
+      const partyFromList = parties.find(
+        (p) =>
+          p.id == estimateToEdit.parties_id || p.parties_id == estimateToEdit.parties_id
+      );
+      if (partyFromList) {
+        setSelectedPartyOption({
+          value: partyFromList.id || partyFromList.parties_id,
+          label: partyFromList.name,
+        });
+      }
+    }
+
+    const totalAmountRaw = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
+    const round_off = Number(estimateToEdit.round_off || 0);
+    const round_off_amount = String(estimateToEdit.round_off_amount || "0");
+    const finalRound = round_off === 1 ? Number(round_off_amount) : 0;
+    const total = (totalAmountRaw + finalRound).toFixed(2);
+
+    // Auto vs Manual round-off detection
+    let manual = false;
+    if (round_off === 1) {
+      const autoRound = calculateAutoRoundOff(totalAmountRaw);
+      manual = Math.abs(Number(round_off_amount) - Number(autoRound)) > 0.01;
+    }
+    setIsManualRoundOff(manual);
+
+    // Reset image state properly
+    setImagePreview(estimateToEdit.add_image || "");
+    setImageFileName("");
+    setHasUserUploadedImage(false);
+
+    // Parse documents
+    let docs = [];
+    if (estimateToEdit.documents) {
+      try {
+        docs = JSON.parse(estimateToEdit.documents);
+      } catch (e) {
+        console.error("Failed to parse documents", e);
+      }
+    }
+    setAttachedDocs(docs.map((d) => ({ name: d.name, data: d.data })));
+
+    // Reset auto-fill checkbox in edit/view mode
+    setAutoFillReceived(false);
+
+    // Determine visible columns from data
+    const hasCategory = rows.some(row => row.category && String(row.category).trim() !== "");
+    const hasDescription = rows.some(row => row.Description && String(row.Description).trim() !== "");
+    const hasHsn = rows.some(row => row.hsn_code && String(row.hsn_code).trim() !== "");
+    const hasDiscount = rows.some(row => row.discountPercent && parseFloat(row.discountPercent) > 0);
+
+    setFormData({
+      parties_id: estimateToEdit.parties_id || "",
+      name: estimateToEdit.name || "",
+      phone: estimateToEdit.phone || "",
+      billing_address: estimateToEdit.billing_address || "",
+      shipping_address: estimateToEdit.shipping_address || "",
+      estimate_no: estimateToEdit.estimate_no || "", // Changed from invoice_no
+      estimate_date: // Changed from invoice_date
+        estimateToEdit.estimate_date || new Date().toISOString().split("T")[0],
+      state_of_supply: estimateToEdit.state_of_supply || "",
+      payment_type: estimateToEdit.payment_type || "",
+      description: estimateToEdit.description || "",
+      add_image: estimateToEdit.add_image || "",
+      rows,
+      round_off,
+      round_off_amount,
+      total,
+      received_amount: estimateToEdit.received_amount || " ",
+      visibleColumns: {
+        category: hasCategory,
+        description: hasDescription,
+        hsn_code: hasHsn,
+        discount: hasDiscount,
+      },
+    });
+    
+    // Save to tabForms for the first tab
+    setTabForms(prev => ({
+      ...prev,
+      1: {
+        parties_id: estimateToEdit.parties_id || "",
+        name: estimateToEdit.name || "",
+        phone: estimateToEdit.phone || "",
+        billing_address: estimateToEdit.billing_address || "",
+        shipping_address: estimateToEdit.shipping_address || "",
+       estimate_no: estimateToEdit.estimate_no || "", 
+        estimate_date: estimateToEdit.estimate_date || new Date().toISOString().split("T")[0],
+        state_of_supply: estimateToEdit.state_of_supply || "",
+        payment_type: estimateToEdit.payment_type || "",
+        description: estimateToEdit.description || "",
+        add_image: estimateToEdit.add_image || "",
+        rows,
+        round_off,
+        round_off_amount,
+        total,
+        received_amount: estimateToEdit.received_amount || " ",
+        visibleColumns: {
+          category: hasCategory,
+          description: hasDescription,
+          hsn_code: hasHsn,
+          discount: hasDiscount,
+        },
+        _selectedPartyOption: selectedPartyOption,
+        _imagePreview: estimateToEdit.add_image || "",
+        _attachedDocs: docs.map((d) => ({ name: d.name, data: d.data })),
+        _autoFillReceived: false,
+        _credit: true,
+        _isManualRoundOff: manual,
+      }
+    }));
+  }, [estimateToEdit, parties]);
+
+  // Handle party selection
+  const handlePartySelect = (selectedOption) => {
+    if (!selectedOption) {
+      setSelectedPartyOption(null);
       setFormData((prev) => ({
         ...prev,
-        received_amount: prev.total || "0",
+        parties_id: "",
+        name: "",
+        phone: "",
+        billing_address: "",
+        shipping_address: "",
+        state_of_supply: "",
+      }));
+      return;
+    }
+
+    if (selectedOption.value === "add_party") {
+      // Reset form and open modal
+      setPartyForm({
+        name: "",
+        phone: "",
+        gstin: "",
+        email: "",
+        state_of_supply: "",
+        billing_address: "",
+        shipping_address: "",
+        amount: 0,
+        transaction_type: "to receive",
+        additional_field: "[]",
+        creditlimit: 0,
+        gstin_type_id: "",
+        gstin_type_name: "",
+      });
+      handleOpenPartyModal();
+      return;
+    }
+
+    const selectedParty = parties.find(
+      (p) => p.id === selectedOption.value || p.parties_id === selectedOption.value
+    );
+    if (selectedParty) {
+      setSelectedPartyOption(selectedOption);
+
+      setFormData((prev) => ({
+        ...prev,
+        parties_id: selectedParty.parties_id || selectedParty.id || "",
+        name: selectedParty.name || "",
+        phone: selectedParty.phone || "",
+        billing_address: selectedParty.billing_address || "",
+        shipping_address: selectedParty.shipping_address || "",
+        state_of_supply: selectedParty.state_of_supply || "",
       }));
     }
-  }, [formData.total, autoFillReceived]);
+  };
 
   // ====================== PARTY CREATION FUNCTION ======================
   const handleAddParty = async () => {
@@ -758,18 +1008,6 @@ useEffect(() => {
       NotifyData(errorMessage || "Failed to create party", "error");
     }
   };
-  const handleConvertToSale = () => {
-    
-
-    const currentEstimateData = formData; 
-
-    navigate("/sale/create", {
-      state: {
-        fromEstimate: true,
-        estimateData: currentEstimateData,  
-      },
-    });
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -791,323 +1029,6 @@ useEffect(() => {
         }));
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  // Fetch parties on mount
-  useEffect(() => {
-    if (partiesStatus === "idle") {
-      dispatch(fetchParties());
-    }
-  }, [partiesStatus, dispatch]);
-
-  // Fetch units on mount
-  useEffect(() => {
-    if (unitStatus === "idle") {
-      dispatch(fetchUnits());
-    }
-  }, [unitStatus, dispatch]);
-
-  // Fetch sales for edit/view
-  useEffect(() => {
-    if ((isEditMode || isViewMode) && sales.length === 0) {
-      dispatch(searchSales(""));
-    }
-  }, [isEditMode, isViewMode, sales.length, dispatch]);
-
-  const loadCategories = () => {
-    dispatch(fetchCategories());
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, [dispatch]);
-
-  // Update customers options
-  useEffect(() => {
-    const customerOptions = parties.map((p) => ({
-      value: p.id || p.parties_id,
-      label: p.name,
-    }));
-    setCustomers([
-      { value: "", label: "Select Party" },
-      { value: "add_party", label: "+ Add Party" },
-      ...customerOptions,
-    ]);
-  }, [parties]);
-
-  useEffect(() => {
-    if (isCreateMode) {
-      setImagePreview("");
-      setImageFileName("");
-      setAttachedDocs([]);
-      setHasUserUploadedImage(false);
-      // Reset auto-fill checkbox in create mode
-      setAutoFillReceived(false);
-    }
-  }, [isCreateMode]);
-
-  // Fetch products when component mounts
-  useEffect(() => {
-    if (productStatus === "idle") {
-      dispatch(fetchProducts(""));
-    }
-  }, [productStatus, dispatch]);
-
-  const productOptions = React.useMemo(() => {
-    return products.map((p) => {
-      let salePrice = "0";
-      try {
-        const sp = JSON.parse(p.sale_price || "{}");
-        salePrice = sp.price || "0";
-      } catch (e) {}
-
-      return {
-        value: p.product_name,
-        label: `${p.product_name} - ₹${salePrice}`,
-        product_id: p.product_id,
-        hsn_code: p.hsn_code || "",
-        salePrice: salePrice,
-      };
-    });
-  }, [products]);
-
-  // Generate unit options from database
-  const unitOptions = React.useMemo(() => {
-    // Start with "NONE" option
-    const options = [{ value: "NONE", label: "NONE" }];
-
-    // Filter active units (delete_at = 0) from your database
-    const activeUnits = units.filter((unit) => unit.delete_at === 0);
-
-    // Add each active unit to options
-    activeUnits.forEach((unit) => {
-      if (unit.unit_name) {
-        options.push({
-          value: unit.unit_name,
-          label: unit.unit_name,
-        });
-      }
-    });
-
-    return options;
-  }, [units]);
-
-  // Auto-show HSN column when any row has HSN filled
-  useEffect(() => {
-    const hasAnyHsn = formData.rows.some((row) => {
-      const hsn = String(row.hsn_code || "").trim();
-      return hsn !== "";
-    });
-    setFormData((prev) => ({
-      ...prev,
-      visibleColumns: {
-        ...prev.visibleColumns,
-        hsn_code: hasAnyHsn,
-      },
-    }));
-  }, [formData.rows]);
-
-  // Load edit/view data
-  useEffect(() => {
-    if (!saleToEdit) return;
-
-    let itemsArray = [];
-    try {
-      itemsArray = JSON.parse(saleToEdit.products || "[]");
-    } catch (e) {
-      console.error("Failed to parse products JSON", e);
-      itemsArray = [];
-    }
-
-    const rows =
-      Array.isArray(itemsArray) && itemsArray.length > 0
-        ? itemsArray.map((product) => ({
-            id: generateUniqueId(),
-            product_id: product.product_id || "",
-            product_name: product.product_name || "",
-            hsn_code: String(product.hsn_code || ""),
-            category: String(product.category || ""),
-            Description: String(product.Description || ""),
-            qty: String(product.qty || ""),
-            unit: String(product.unit || "NONE"),
-            priceUnitType: String(product.priceUnitType || "Without Tax"),
-            price: String(product.price || ""),
-            discountPercent: String(product.discountPercent || ""),
-            discountAmount: String(product.discountAmount || "0.00"),
-            taxPercent: Number(product.taxPercent || 0),
-            taxAmount: String(product.taxAmount || "0.00"),
-            amount: String(product.amount || "0.00"),
-          }))
-        : [INITIAL_ROW];
-
-    // Set party selection
-    if (saleToEdit.parties_id) {
-      const partyFromList = parties.find(
-        (p) =>
-          p.id == saleToEdit.parties_id || p.parties_id == saleToEdit.parties_id
-      );
-      if (partyFromList) {
-        setSelectedPartyOption({
-          value: partyFromList.id || partyFromList.parties_id,
-          label: partyFromList.name,
-        });
-      }
-    }
-
-    const totalAmountRaw = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
-    const rount_off = Number(saleToEdit.rount_off || 0);
-    const round_off_amount = String(saleToEdit.round_off_amount || "0");
-    const finalRound = rount_off === 1 ? Number(round_off_amount) : 0;
-    const total = (totalAmountRaw + finalRound).toFixed(2);
-
-    // Auto vs Manual round-off detection
-    let manual = false;
-    if (rount_off === 1) {
-      const autoRound = calculateAutoRoundOff(totalAmountRaw);
-      manual = Math.abs(Number(round_off_amount) - Number(autoRound)) > 0.01;
-    }
-    setIsManualRoundOff(manual);
-
-    // Reset image state properly
-    setImagePreview(saleToEdit.add_image || "");
-    setImageFileName("");
-    setHasUserUploadedImage(false);
-
-    // Parse documents
-    let docs = [];
-    if (saleToEdit.documents) {
-      try {
-        docs = JSON.parse(saleToEdit.documents);
-      } catch (e) {
-        console.error("Failed to parse documents", e);
-      }
-    }
-    setAttachedDocs(docs.map((d) => ({ name: d.name, data: d.data })));
-
-    // Reset auto-fill checkbox in edit/view mode
-    setAutoFillReceived(false);
-
-    // Determine visible columns from data
-    const hasCategory = rows.some(row => row.category && String(row.category).trim() !== "");
-    const hasDescription = rows.some(row => row.Description && String(row.Description).trim() !== "");
-    const hasHsn = rows.some(row => row.hsn_code && String(row.hsn_code).trim() !== "");
-    const hasDiscount = rows.some(row => row.discountPercent && parseFloat(row.discountPercent) > 0);
-
-    setFormData({
-      parties_id: saleToEdit.parties_id || "",
-      name: saleToEdit.name || "",
-      phone: saleToEdit.phone || "",
-      billing_address: saleToEdit.billing_address || "",
-      shipping_address: saleToEdit.shipping_address || "",
-      invoice_no: saleToEdit.invoice_no || "",
-      invoice_date:
-        saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
-      state_of_supply: saleToEdit.state_of_supply || "",
-      payment_type: saleToEdit.payment_type || "",
-      description: saleToEdit.description || "",
-      add_image: saleToEdit.add_image || "",
-      rows,
-      rount_off,
-      round_off_amount,
-      total,
-      received_amount: saleToEdit.received_amount || " ",
-      visibleColumns: {
-        category: hasCategory,
-        description: hasDescription,
-        hsn_code: hasHsn,
-        discount: hasDiscount,
-      },
-    });
-    
-    // Save to tabForms for the first tab
-    setTabForms(prev => ({
-      ...prev,
-      1: {
-        parties_id: saleToEdit.parties_id || "",
-        name: saleToEdit.name || "",
-        phone: saleToEdit.phone || "",
-        billing_address: saleToEdit.billing_address || "",
-        shipping_address: saleToEdit.shipping_address || "",
-        invoice_no: saleToEdit.invoice_no || "",
-        invoice_date: saleToEdit.invoice_date || new Date().toISOString().split("T")[0],
-        state_of_supply: saleToEdit.state_of_supply || "",
-        payment_type: saleToEdit.payment_type || "",
-        description: saleToEdit.description || "",
-        add_image: saleToEdit.add_image || "",
-        rows,
-        rount_off,
-        round_off_amount,
-        total,
-        received_amount: saleToEdit.received_amount || " ",
-        visibleColumns: {
-          category: hasCategory,
-          description: hasDescription,
-          hsn_code: hasHsn,
-          discount: hasDiscount,
-        },
-        _selectedPartyOption: selectedPartyOption,
-        _imagePreview: saleToEdit.add_image || "",
-        _attachedDocs: docs.map((d) => ({ name: d.name, data: d.data })),
-        _autoFillReceived: false,
-        _credit: true,
-        _isManualRoundOff: manual,
-      }
-    }));
-  }, [saleToEdit, parties]);
-
-  // Handle party selection
-  const handlePartySelect = (selectedOption) => {
-    if (!selectedOption) {
-      setSelectedPartyOption(null);
-      setFormData((prev) => ({
-        ...prev,
-        parties_id: "",
-        name: "",
-        phone: "",
-        billing_address: "",
-        shipping_address: "",
-        state_of_supply: "",
-      }));
-      return;
-    }
-
-    if (selectedOption.value === "add_party") {
-      // Reset form and open modal
-      setPartyForm({
-        name: "",
-        phone: "",
-        gstin: "",
-        email: "",
-        state_of_supply: "",
-        billing_address: "",
-        shipping_address: "",
-        amount: 0,
-        transaction_type: "to receive",
-        additional_field: "[]",
-        creditlimit: 0,
-        gstin_type_id: "",
-        gstin_type_name: "",
-      });
-      handleOpenPartyModal();
-      return;
-    }
-
-    const selectedParty = parties.find(
-      (p) => p.id === selectedOption.value || p.parties_id === selectedOption.value
-    );
-    if (selectedParty) {
-      setSelectedPartyOption(selectedOption);
-
-      setFormData((prev) => ({
-        ...prev,
-        parties_id: selectedParty.parties_id || selectedParty.id || "",
-        name: selectedParty.name || "",
-        phone: selectedParty.phone || "",
-        billing_address: selectedParty.billing_address || "",
-        shipping_address: selectedParty.shipping_address || "",
-        state_of_supply: selectedParty.state_of_supply || "",
-      }));
     }
   };
 
@@ -1138,6 +1059,42 @@ useEffect(() => {
     setAttachedDocs((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleReceivedAmountChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      received_amount: value || " ",
+    }));
+  };
+
+  // Handle auto-fill checkbox
+  const handleAutoFillReceived = (e) => {
+    const isChecked = e.target.checked;
+    setAutoFillReceived(isChecked);
+
+    if (isChecked) {
+      setFormData((prev) => ({
+        ...prev,
+        received_amount: prev.total || "0",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        received_amount: " ",
+      }));
+    }
+  };
+
+  // Update received amount when total changes and auto-fill is checked
+  useEffect(() => {
+    if (autoFillReceived) {
+      setFormData((prev) => ({
+        ...prev,
+        received_amount: prev.total || "0",
+      }));
+    }
+  }, [formData.total, autoFillReceived]);
+
   // Computed totals
   const totalQty = formData.rows.reduce(
     (a, r) => a + (Number(r.qty) || 0),
@@ -1166,8 +1123,8 @@ useEffect(() => {
       0
     );
     let finalRound =
-      formData.rount_off === 1 ? Number(formData.round_off_amount) : 0;
-    if (formData.rount_off === 1 && !isManualRoundOff) {
+      formData.round_off === 1 ? Number(formData.round_off_amount) : 0;
+    if (formData.round_off === 1 && !isManualRoundOff) {
       const autoRound = calculateAutoRoundOff(newTotalAmountRaw);
       finalRound = Number(autoRound);
       setFormData((prev) => ({ ...prev, round_off_amount: autoRound }));
@@ -1186,8 +1143,8 @@ useEffect(() => {
       0
     );
     let finalRound =
-      formData.rount_off === 1 ? Number(formData.round_off_amount) : 0;
-    if (formData.rount_off === 1 && !isManualRoundOff) {
+      formData.round_off === 1 ? Number(formData.round_off_amount) : 0;
+    if (formData.round_off === 1 && !isManualRoundOff) {
       const autoRound = calculateAutoRoundOff(newTotalAmountRaw);
       finalRound = Number(autoRound);
       setFormData((prev) => ({ ...prev, round_off_amount: autoRound }));
@@ -1245,7 +1202,7 @@ useEffect(() => {
       let finalTotal = totalAmountRaw;
       let roundOffAmt = prev.round_off_amount;
 
-      if (prev.rount_off === 1) {
+      if (prev.round_off === 1) {
         if (!isManualRoundOff) {
           roundOffAmt = (Math.round(totalAmountRaw) - totalAmountRaw).toFixed(2);
         }
@@ -1258,7 +1215,7 @@ useEffect(() => {
         ...prev,
         rows: newRows,
         total: finalTotal,
-        round_off_amount: prev.rount_off === 1 ? roundOffAmt : "0",
+        round_off_amount: prev.round_off === 1 ? roundOffAmt : "0",
       };
     });
   };
@@ -1270,7 +1227,7 @@ useEffect(() => {
       (a, r) => a + Number(r.amount || 0),
       0
     );
-    const finalRound = formData.rount_off === 1 ? Number(val) : 0;
+    const finalRound = formData.round_off === 1 ? Number(val) : 0;
     const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
     setFormData((prev) => ({
       ...prev,
@@ -1298,7 +1255,7 @@ useEffect(() => {
     const newTotal = (newTotalAmountRaw + finalRound).toFixed(2);
     setFormData((prev) => ({
       ...prev,
-      rount_off: checked,
+      round_off: checked,
       round_off_amount: roundOffAmt,
       total: newTotal,
     }));
@@ -1307,24 +1264,9 @@ useEffect(() => {
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const handleSaveSale = async () => {
-  if (isCreateMode || fromEstimate) {
-    // Prepare data – products JSON string ஆக்கு
-    const payload = {
-      ...formData,
-      products: JSON.stringify(formData.rows),
-      documents: JSON.stringify(attachedDocs),
-      from_estimate_id: formData.from_estimate_id || location.state?.estimateData?.estimate_id, // இது இருக்கணும்!
-    };
-
-    dispatch(createSale(payload)); // Redux use பண்ணுறேனா இது
-    // அல்லது
-    // await axiosInstance.post("/sales.php", payload);
-  }
-};
 
   const handleSave = async () => {
-    console.log("444");
+    console.log("Saving estimate...");
     try {
       // 1. Prepare documents JSON
       const documentsJson = JSON.stringify(
@@ -1341,10 +1283,9 @@ useEffect(() => {
         products: JSON.stringify(formData.rows),
         add_image: formData.add_image || "",
         documents: documentsJson,
-        // invoice_no: formData.invoice_no,
-        invoice_no: formData.invoice_no,
+        estimate_no: formData.estimate_no,
         total: formData.total,
-        rount_off: formData.rount_off ? 1 : 0,
+        round_off: formData.round_off ? 1 : 0,
         round_off_amount: formData.round_off_amount,
         received_amount: formData.received_amount || 0,
       };
@@ -1355,39 +1296,53 @@ useEffect(() => {
 
       // VERY IMPORTANT: Only add edit_sales_id in EDIT mode
       if (isEditMode) {
-        payload.edit_sales_id = id;
+        payload.edit_estimates_id = id;
       }
 
       console.log("Sending payload:", payload);
 
       if (isEditMode) {
-        await dispatch(updateSale(payload)).unwrap();
-        NotifyData("Sale Updated Successfully!", "success");
+        await dispatch(updateEstimate(payload)).unwrap();
+        NotifyData("Estimate Updated Successfully!", "success");
       } else {
-        await dispatch(createSale(payload)).unwrap();
-        NotifyData("Sale Created Successfully!", "success");
+        await dispatch(createEstimate(payload)).unwrap();
+        NotifyData("Estimate Created Successfully!", "success");
       }
 
-      dispatch(searchSales(""));
-      navigate("/sale");
+      dispatch(searchEstimates(""));
+      navigate("/estimate");
     } catch (err) {
       console.error("Save error:", err);
-      NotifyData(err || "Failed to save sale", "error");
+      NotifyData(err?.message || "Failed to save estimate", "error");
     }
   };
+  
 
-  const handleBack = () => navigate("/Sale");
+  const handleBack = () => navigate("/estimate");
   const title = isViewMode
-    ? "View Sale"
+    ? "View Estimate"
     : isEditMode
-    ? "Edit Sale"
-    : "Create Sale";
+    ? "Edit Estimate"
+    : "Create Estimate";
   const priceUnitTypeOptions = PRICE_UNIT_TYPES.map((pt) => ({
     value: pt,
     label: pt,
   }));
 
-  // Fixed: Wrap the entire component in a return statement
+  // Show loading state if data is still loading
+  if (productStatus === "loading" || categoryStatus === "loading") {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="main">
       {/* ============== TAB NAVIGATION START ============== */}
@@ -1518,19 +1473,32 @@ useEffect(() => {
                           </span>
                         </div>
                       ) : (
+                        // <Select
+                        //   value={selectedPartyOption}
+                        //   onChange={handlePartySelect}
+                        //   options={customers}
+                        //   placeholder="Select Party"
+                        //   isSearchable
+                        //   menuPortalTarget={document.body}
+                        //   styles={{
+                        //     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                        //     control: (base) => ({ ...base, minHeight: 38 }),
+                        //   }}
+                        //   menuPosition="fixed"
+                        // />
                         <Select
-                          value={selectedPartyOption}
-                          onChange={handlePartySelect}
-                          options={customers}
-                          placeholder="Select Party"
-                          isSearchable
-                          menuPortalTarget={document.body}
-                          styles={{
-                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                            control: (base) => ({ ...base, minHeight: 38 }),
-                          }}
-                          menuPosition="fixed"
-                        />
+                                                  value={selectedPartyOption}
+                                                  onChange={handlePartySelect}
+                                                  options={customers}
+                                                  placeholder="Select Party"
+                                                  isSearchable
+                                                  menuPortalTarget={document.body}
+                                                  styles={{
+                                                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                                    control: (base) => ({ ...base, minHeight: 38 }),
+                                                  }}
+                                                  menuPosition="fixed"
+                                                />
                       )}
                     </div>
                   </Col>
@@ -1616,8 +1584,8 @@ useEffect(() => {
               </Col>
               <Col md={2} style={{ zIndex: 100 }}>
                 <TextInputform
-                  formLabel="Invoice No"
-                  value={formData.invoice_no || "Generating..."}
+                  formLabel="Estimate No"
+                  value={formData.estimate_no || "Generating..."}
                   readOnly={true}
                   style={{
                     backgroundColor: "#f0fff0",
@@ -1627,8 +1595,8 @@ useEffect(() => {
                   }}
                 />
                 <Calender
-                  calenderlabel="Invoice Date"
-                  initialDate={formData.invoice_date}
+                  calenderlabel="Estimate Date"
+                  initialDate={formData.estimate_date}
                   readOnly={isDisabled}
                 />
                 <DropDown
@@ -1782,17 +1750,11 @@ useEffect(() => {
                     </div>
                   ) : (
                     <Select
-                      options={[
-                        { value: "", label: "ALL" },
-                        ...categories.map((cat) => ({
-                          value: cat.category_name,
-                          label: cat.category_name,
-                        })),
-                      ]}
-                      value={{
-                        value: row.category || "",
-                        label: row.category ? row.category : "ALL",
-                      }}
+                      options={categoryOptions}
+                      value={
+                        categoryOptions.find(opt => opt.value === row.category) || 
+                        categoryOptions[0]
+                      }
                       onChange={(option) => {
                         const selectedCat = option.value;
                         onRowChange(row.id, "category", selectedCat);
@@ -1927,7 +1889,7 @@ useEffect(() => {
                                   return true;
 
                                 const productCat =
-                                  product.category_name || "";
+                                  product.category_name || product.category || "";
                                 return productCat === row.category;
                               })
                               .map((product) => {
@@ -1946,30 +1908,34 @@ useEffect(() => {
                                     product.purchase_price || "{}"
                                   );
                                   purchasePrice = pp.price || "0";
-                                } catch (e) { }
+                                } catch (e) { 
+                                  console.error("Error parsing prices:", e);
+                                }
                                 try {
                                   const st = JSON.parse(
                                     product.stock || "{}"
                                   );
                                   stock = st.opening_qty || "0";
                                   location = st.location || "-";
-                                } catch (e) { }
+                                } catch (e) { 
+                                  console.error("Error parsing stock:", e);
+                                }
 
                                 return (
                                   <tr
-                                    key={product.product_id}
+                                    key={product.product_id || product.id}
                                     style={{ cursor: "pointer" }}
                                     className="hover-row"
                                     onClick={() => {
                                       onRowChange(
                                         row.id,
                                         "product_name",
-                                        product.product_name
+                                        product.product_name || product.name
                                       );
                                       onRowChange(
                                         row.id,
                                         "product_id",
-                                        product.product_id
+                                        product.product_id || product.id
                                       );
                                       onRowChange(
                                         row.id,
@@ -1981,17 +1947,17 @@ useEffect(() => {
                                         "price",
                                         salePrice
                                       );
-                                      onRowChange(row.id, "qty", " ");
+                                      onRowChange(row.id, "qty", "1");
 
                                       const cat =
-                                        product.category_name || "";
+                                        product.category_name || product.category || "";
                                       onRowChange(
                                         row.id,
                                         "category",
                                         cat
                                       );
                                       const unitValue =
-                                        product.unit_value || "";
+                                        product.unit_value || "NONE";
                                       onRowChange(
                                         row.id,
                                         "unit",
@@ -2002,7 +1968,7 @@ useEffect(() => {
                                     }}
                                   >
                                     <td>
-                                      <strong>{product.product_name}</strong>
+                                      <strong>{product.product_name || product.name}</strong>
                                     </td>
                                     <td className="text-end text-success fw-bold">
                                       ₹{salePrice}
@@ -2027,7 +1993,7 @@ useEffect(() => {
                                 row.category === "ALL"
                               )
                                 return true;
-                              const cat = p.category_name || "";
+                              const cat = p.category_name || p.category || "";
                               return cat === row.category;
                             }).length === 0 && (
                                 <tr>
@@ -2040,8 +2006,9 @@ useEffect(() => {
                                       {row.category}" category
                                     </h5>
                                     <small>
-                                      Available categories: stationary,
-                                      groceries
+                                      {categories.length > 0 
+                                        ? `Available categories: ${categories.map(c => c.category_name).join(", ")}`
+                                        : "No categories available"}
                                     </small>
                                   </td>
                                 </tr>
@@ -2053,6 +2020,7 @@ useEffect(() => {
                   </div>
                 )}
               </td>
+              
 
               {formData.visibleColumns.description && (
                 <td>
@@ -2604,14 +2572,14 @@ useEffect(() => {
                   OnChange={handleRoundOffToggle}
                   boxLabel="Round Off"
                   type="checkbox"
-                  checked={formData.rount_off === 1}
+                  checked={formData.round_off === 1}
                   disabled={isDisabled}
                 />
                 <TextInputform
                   formtype="number"
                   value={formData.round_off_amount}
                   onChange={handleRoundOffChange}
-                  readOnly={formData.rount_off !== 1 || isDisabled}
+                  readOnly={formData.round_off !== 1 || isDisabled}
                 />
                 <strong>Total</strong>
                 <TextInputform readOnly value={formData.total} />
@@ -2683,10 +2651,13 @@ useEffect(() => {
                   Back
                 </Button>
                 {!isViewMode && (
-                  
-                  <Button variant="danger" onClick={handleSaveSale}>  Save Sale</Button>
-  
-
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleSave}
+                    size="lg"
+                  >
+                    {isEditMode ? "Update Estimate" : "Save Estimate"}
+                  </Button>
                 )}
               </Col>
             </Row>
@@ -3078,4 +3049,4 @@ useEffect(() => {
   );
 };
 
-export default SaleCreation;
+export default EstimateCreation;
