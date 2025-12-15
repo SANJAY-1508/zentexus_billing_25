@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useRef } from "react";
+
 import {
   FaWhatsapp,
   FaClock,
@@ -57,7 +58,11 @@ function Parties() {
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState(Initialstate);
-
+// 1. Add this state near your other useState hooks
+const [partyFilter, setPartyFilter] = useState("all"); 
+const [pendingFilter, setPendingFilter] = useState(partyFilter); 
+const filterDropdownRef = useRef(null);
+const [dropdownShow, setDropdownShow] = useState(false);
   useEffect(() => {
     dispatch(searchPartiesAndSales(searchText));
   }, [dispatch, searchText]);
@@ -283,9 +288,23 @@ useEffect(() => {
       ...p,
       running_transaction_type,
       running_balance_amount: Number(running_balance_amount.toFixed(2)),
+      hasOpeningBalance: openingBalance > 0,                // ← Add this line
+    openingTransactionType: p.transaction_type,
     };
   });
-
+// 3. Add this filtered list right after partiesWithBalance
+const filteredParties = partiesWithBalance.filter(p => {
+  if (partyFilter === "all") return true;
+  if (partyFilter === "toReceive") {
+    return p.hasOpeningBalance && p.openingTransactionType === "to receive";
+  }
+  if (partyFilter === "toPay") {
+    return p.hasOpeningBalance && p.openingTransactionType === "to pay";
+  }
+  if (partyFilter === "active") return p.running_transaction_type !== "Nil";
+  if (partyFilter === "inactive") return p.running_transaction_type === "Nil";
+  return true;
+});
  
 const TransactionMenu = ({ transaction, isOpening = false }) => {
   const dispatch = useDispatch();
@@ -527,133 +546,110 @@ const TransactionMenu = ({ transaction, isOpening = false }) => {
                 <div className="d-flex align-items-center">
                     Party Name
                     {/* Dropdown component for the Filter Icon */}
-                    <Dropdown className="ms-1">
-                        <Dropdown.Toggle 
-                            as="span" 
-                            id="dropdown-filter-party-name" 
-                            style={{ cursor: 'pointer', color: 'red' }}
-                        >
-                            {/* NOTE: FaFilter must be imported from 'react-icons/fa' or similar */}
-                            <FaFilter size={14} /> 
-                        </Dropdown.Toggle>
+                    <Dropdown className="ms-1" ref={filterDropdownRef} show={dropdownShow} onToggle={(isOpen) => setDropdownShow(isOpen)}>
+  <Dropdown.Toggle 
+    as="span" 
+    id="dropdown-filter-party-name" 
+    style={{ cursor: 'pointer', color: 'red' }}
+  >
+    <FaFilter size={14} /> 
+  </Dropdown.Toggle>
 
-                        {/* Updated Dropdown Menu Content to include Checkboxes */}
-                        <Dropdown.Menu align="start" style={{ width: '180px', padding: '10px' }}>
-                            
-                            {/* Filter Options Group */}
-                            <div className="mb-3">
-                                
-                                {/* Option: All (Selected State) */}
-                                <div 
-                                    className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
-                                    style={{ backgroundColor: '#e7f3ff', cursor: 'pointer' }} // Simulate selected row
-                                >
-                                    <div className="form-check m-0">
-                                        <input 
-                                            className="form-check-input" 
-                                            type="radio" // Using radio to simulate single selection like in the image
-                                            name="partyFilter" 
-                                            id="filterAll" 
-                                            defaultChecked // Simulate being checked/selected
-                                        />
-                                        <label className="form-check-label fw-bold" htmlFor="filterAll">
-                                            All
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                {/* Option: Active */}
-                                <div 
-                                    className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="form-check m-0">
-                                        <input 
-                                            className="form-check-input" 
-                                            type="radio" 
-                                            name="partyFilter" 
-                                            id="filterActive" 
-                                        />
-                                        <label className="form-check-label" htmlFor="filterActive">
-                                            Active
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                {/* Option: Inactive */}
-                                <div 
-                                    className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="form-check m-0">
-                                        <input 
-                                            className="form-check-input" 
-                                            type="radio" 
-                                            name="partyFilter" 
-                                            id="filterInactive" 
-                                        />
-                                        <label className="form-check-label" htmlFor="filterInactive">
-                                            Inactive
-                                        </label>
-                                    </div>
-                                </div>
+  <Dropdown.Menu align="start" style={{ width: '180px', padding: '10px' }}>
+    <div className="mb-3">
+      {/* All */}
+      <div
+        className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
+        style={{ backgroundColor: pendingFilter === 'all' ? '#e7f3ff' : '', cursor: 'pointer' }}
+        onClick={() => setPendingFilter('all')}
+      >
+        <div className="form-check m-0">
+          <input className="form-check-input" type="radio" name="partyFilter" id="filterAll" checked={pendingFilter === 'all'} readOnly />
+          <label className="form-check-label fw-bold" htmlFor="filterAll">All</label>
+        </div>
+      </div>
 
-                                {/* Option: To Receive */}
-                                <div 
-                                    className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="form-check m-0">
-                                        <input 
-                                            className="form-check-input" 
-                                            type="radio" 
-                                            name="partyFilter" 
-                                            id="filterToReceive" 
-                                        />
-                                        <label className="form-check-label" htmlFor="filterToReceive">
-                                            To Receive
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                {/* Option: To Pay */}
-                                <div 
-                                    className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="form-check m-0">
-                                        <input 
-                                            className="form-check-input" 
-                                            type="radio" 
-                                            name="partyFilter" 
-                                            id="filterToPay" 
-                                        />
-                                        <label className="form-check-label" htmlFor="filterToPay">
-                                            To Pay
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                            
-                            {/* Clear and Apply Buttons */}
-                            <div className="d-flex justify-content-between pt-2 border-top">
-                                <Button variant="outline-secondary" size="sm">
-                                    Clear
-                                </Button>
-                                <Button variant="danger" size="sm">
-                                    Apply
-                                </Button>
-                            </div>
-                        </Dropdown.Menu>
-                    </Dropdown>
+      {/* Active */}
+      <div
+        className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
+        style={{ backgroundColor: pendingFilter === 'active' ? '#e7f3ff' : '', cursor: 'pointer' }}
+        onClick={() => setPendingFilter('active')}
+      >
+        <div className="form-check m-0">
+          <input className="form-check-input" type="radio" name="partyFilter" id="filterActive" checked={pendingFilter === 'active'} readOnly />
+          <label className="form-check-label" htmlFor="filterActive">Active</label>
+        </div>
+      </div>
+
+      {/* Inactive */}
+      <div
+        className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
+        style={{ backgroundColor: pendingFilter === 'inactive' ? '#e7f3ff' : '', cursor: 'pointer' }}
+        onClick={() => setPendingFilter('inactive')}
+      >
+        <div className="form-check m-0">
+          <input className="form-check-input" type="radio" name="partyFilter" id="filterInactive" checked={pendingFilter === 'inactive'} readOnly />
+          <label className="form-check-label" htmlFor="filterInactive">Inactive</label>
+        </div>
+      </div>
+
+      {/* To Receive */}
+      <div
+        className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
+        style={{ backgroundColor: pendingFilter === 'toReceive' ? '#e7f3ff' : '', cursor: 'pointer' }}
+        onClick={() => setPendingFilter('toReceive')}
+      >
+        <div className="form-check m-0">
+          <input className="form-check-input" type="radio" name="partyFilter" id="filterToReceive" checked={pendingFilter === 'toReceive'} readOnly />
+          <label className="form-check-label" htmlFor="filterToReceive">To Receive</label>
+        </div>
+      </div>
+
+      {/* To Pay */}
+      <div
+        className="d-flex justify-content-between align-items-center py-1 px-2 rounded"
+        style={{ backgroundColor: pendingFilter === 'toPay' ? '#e7f3ff' : '', cursor: 'pointer' }}
+        onClick={() => setPendingFilter('toPay')}
+      >
+        <div className="form-check m-0">
+          <input className="form-check-input" type="radio" name="partyFilter" id="filterToPay" checked={pendingFilter === 'toPay'} readOnly />
+          <label className="form-check-label" htmlFor="filterToPay">To Pay</label>
+        </div>
+      </div>
+    </div>
+
+    <div className="d-flex justify-content-between pt-2 border-top">
+      <Button 
+        variant="outline-secondary" 
+        size="sm" 
+        onClick={() => {
+          setPendingFilter('all');
+          setPartyFilter('all');
+          setDropdownShow(false); // This reliably closes the dropdown
+        }}
+      >
+        Clear
+      </Button>
+      <Button 
+        variant="danger" 
+        size="sm" 
+        onClick={() => {
+          setPartyFilter(pendingFilter);
+          setDropdownShow(false); // This reliably closes the dropdown
+        }}
+      >
+        Apply
+      </Button>
+    </div>
+  </Dropdown.Menu>
+</Dropdown>
                 </div>
             </th>
             <th className="text-secondary">Amount</th>
         </tr>
     </thead>
     <tbody>
-    {partiesWithBalance.map((p) => (
+    {filteredParties.map((p) => (
         <tr
             key={p.parties_id}
             onClick={() => setSelectedParty(p)}
