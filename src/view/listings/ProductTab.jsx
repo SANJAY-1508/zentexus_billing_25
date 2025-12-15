@@ -74,7 +74,7 @@ useEffect(() => {
   return (
     <Row className="h-100">
       {/* LEFT PANEL - LIST OF ITEMS */}
-      <Col md={3} className="p-3">
+      <Col md={4} className="p-3">
         <Card className="h-100 shadow-sm">
           <Card.Body className="p-2 d-flex flex-column">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -198,7 +198,7 @@ className={`cursor-pointer ${selectedProduct?.product_id === product.product_id 
       </Col>
 
       {/* RIGHT PANEL - SELECTED ITEM DETAILS */}
-      <Col md={9} className="p-3">
+      <Col md={8} className="p-3">
         {selectedProduct ? (
   <>
     {/* Top Detail Card */}
@@ -237,7 +237,7 @@ const isPurchasePriceIncluded = purchase.tax_type === "Included" || purchase.tax
             })()}
           </div>
           <div className="text-end ">
-            <Button variant="primary" className="mb-3 px-4 py-3 bg-primary text-white" onClick={() => setShowAdjustItem(true)}>
+            <Button variant="primary" className="mb-3 p-2 bg-primary text-white" onClick={() => setShowAdjustItem(true)}>
               ADJUST ITEM
             </Button>
            {(() => {

@@ -117,7 +117,7 @@ const filteredConversions = getConversionsForSelectedUnit().filter(c =>
 
   return (
     <>
-      <Col md={3} className="d-flex flex-column p-3">
+      <Col md={4} className="d-flex flex-column p-3">
         <Card className="h-100">
           <Card.Body className="d-flex flex-column p-0">
             <div className="p-3 d-flex justify-content-between align-items-center">
@@ -135,7 +135,7 @@ const filteredConversions = getConversionsForSelectedUnit().filter(c =>
 
               <Button
                 variant="warning"
-                className="text-white fw-bold px-3"
+                    className="text-white fw-bold small ms-2" style={{minWidth: "155px" }}
                 onClick={() => setShowUnitModal(true)}
               >
                 + Add Unit
@@ -172,7 +172,7 @@ const filteredConversions = getConversionsForSelectedUnit().filter(c =>
       </Col>
 
       {/* Right Side - Main Content */}
-      <Col md={9} className="p-3 d-flex flex-column position-relative">
+      <Col md={8} className="p-3 d-flex flex-column position-relative">
         {/* Top-right "Add Conversion" Button - Exactly like your image */}
         <div className="position-absolute top-0 end-0 mt-3 me-3 px-4  " style={{ zIndex: 10 }}>
           <Button

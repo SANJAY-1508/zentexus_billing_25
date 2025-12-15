@@ -111,7 +111,7 @@ const handleMoveClick = () => {
   return (
     <>
       {/* LEFT PANEL - CATEGORIES */}
-      <Col md={3} className="d-flex flex-column p-3">
+      <Col md={4} className="d-flex flex-column p-3">
         <Card className="h-100">
           <Card.Body className="d-flex flex-column p-0">
             <div className="p-3 d-flex justify-content-between align-items-center">
@@ -251,7 +251,7 @@ const handleMoveClick = () => {
       </Col>
 
       {/* RIGHT PANEL - ITEMS */}
-      <Col md={9} className="p-3 d-flex flex-column">
+      <Col md={8} className="p-3 d-flex flex-column">
         {/* Header Card */}
         <Card className="mb-3">
           <Card.Body>
