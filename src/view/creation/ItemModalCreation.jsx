@@ -25,6 +25,7 @@ import {
   updateService,
   deleteService,
 } from "../../slice/serviceSlice";
+import AddCate from "./CategoryModalCreation";  // Adjust path if needed
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../App.css";
@@ -75,6 +76,7 @@ function AddItem({ show, onHide, activeTab = "PRODUCT", editProduct = null }) {
     (state) => state.category
   );
 
+const [showAddCategoryModal, setShowAddCategoryModal] = useState(false); // ← NEW
 const [showSelectUnitModal, setShowSelectUnitModal] = useState(false);
 const [baseUnit, setBaseUnit] = useState("");        // new
 const [secondaryUnit, setSecondaryUnit] = useState(""); // new
@@ -92,6 +94,14 @@ const [unitMapping, setUnitMapping] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [activePricingTab, setActivePricingTab] = useState("pricing");
+
+  const handleCategorySaveSuccess = () => {
+  // Refetch categories to get the latest list including the new one
+  dispatch(fetchCategories());
+  
+  // Optional: You can leave selection blank or wait for fresh data
+  // We'll handle auto-select via useEffect below
+};
 const handleSaveUnitMapping = (mapping) => {
   setUnitMapping(mapping);
   setSelectedUnit(mapping.baseUnit);   // Set base unit as the selected unit
@@ -311,7 +321,8 @@ try {
     setHsn("");
     setItemCode("");
     setSelectedUnit(units[0]?.unit_name || "");
-    setSelectedCategory(categories[0]?.category_id || "");
+    setSelectedCategory("");
+
     setImagePreview("");
     setImageFileName("");
     setShowWholesale(false);
@@ -700,39 +711,55 @@ const enhancedStock = {
                   <FaChevronDown className="text-primary" />
                 </div>
                 {showCategoryMenu && (
-                  <div
-                    className="position-absolute start-0 end-0 bg-white border shadow-sm rounded mt-1"
-                    style={{
-                      zIndex: 9999,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    <div
+  <div
+    className="position-absolute start-0 end-0 bg-white border shadow-sm rounded mt-1"
+    style={{
+      zIndex: 9999,
+      maxHeight: "200px",
+      overflowY: "auto",
+    }}
+  >
+       {/* + Add Category */}
+    <div className="border-top mt-1 pt-2">
+      <div
+        className="px-3 py-2 text-primary fw-medium d-flex align-items-center gap-2"
+        style={{ cursor: "pointer" }}
+        onClick={() => {
+          setShowCategoryMenu(false);
+          setShowAddCategoryModal(true);
+        }}
+      >
+        <span className="fs-5">+</span> Add New Category
+      </div>
+    </div>
+    <div
       className="px-3 py-2 hover-bg-light"
       style={{ cursor: "pointer", color: "#6c757d", fontStyle: "italic" }}
       onClick={() => {
-        setSelectedCategory(""); // or null / "none" string
+        setSelectedCategory("");
         setShowCategoryMenu(false);
       }}
     >
       None
     </div>
-                    {categories.map((c) => (
-                      <div
-                        key={c.category_id}
-                        className="px-3 py-2 hover-bg-light"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => {
-                          setSelectedCategory(c.category_id);
-                          setShowCategoryMenu(false);
-                        }}
-                      >
-                        {c.category_name}
-                      </div>
-                    ))}
-                  </div>
-                )}
+
+    {categories.map((c) => (
+      <div
+        key={c.category_id}
+        className="px-3 py-2 hover-bg-light"
+        style={{ cursor: "pointer" }}
+        onClick={() => {
+          setSelectedCategory(c.category_id);
+          setShowCategoryMenu(false);
+        }}
+      >
+        {c.category_name}
+      </div>
+    ))}
+
+ 
+  </div>
+)}
               </div>
             </Col>
 
@@ -1084,7 +1111,17 @@ const enhancedStock = {
         </Modal.Footer>
       </Modal>
 
-
+{/* Add/Edit Category Modal */}
+<AddCate
+  show={showAddCategoryModal}
+  onHide={() => setShowAddCategoryModal(false)}
+  onSaveSuccess={() => {
+    handleCategorySaveSuccess();
+    // Try to select the newest category (by name or refetch logic)
+    dispatch(fetchCategories()); // Ensures list is fresh
+  }}
+  categoryToEdit={null} // We're only adding, not editing from here
+/>
 <SelectUnitModal
   show={showSelectUnitModal}
   onHide={() => setShowSelectUnitModal(false)}
