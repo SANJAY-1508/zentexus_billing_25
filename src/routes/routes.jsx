@@ -66,19 +66,19 @@ const routes = [
     component: EstimateCreation,
   },
    {
-    path: "/Proforma",
+    path: "/proforma",
     component: Proforma,
   },
   {
-    path: "/Proforma/create",
+    path: "/proforma/create",
     component: ProformaCreation,
   },
   {
-    path: "/Proforma/edit/:id",
+    path: "/proforma/edit/:id",
     component: ProformaCreation,
   },
   {
-    path: "/Proforma/view/:id",
+    path: "/proforma/view/:id",
     component: ProformaCreation,
   },
   {
