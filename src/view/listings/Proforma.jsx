@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -199,6 +198,86 @@ const Proforma = () => {
     setOpenShareId(null);
   };
 
+  // Status display function
+  const statusDisplay = (item) => {
+    const status = getStatusFromData(item);
+    const colorMap = {
+      Paid: "#27ae60",
+      Unpaid: "#e74c3c",
+      "Partially Paid": "#f39c12",
+      Cancelled: "#0be0f0ff",
+    };
+    return <span style={{ color: colorMap[status], fontWeight: "600" }}>{status}</span>;
+  };
+
+  // Table headers (matching Estimate.jsx structure)
+  const ProformaHead = [
+    "Date",
+    "Reference No",
+    "Party Name",
+    "Transaction",
+    "Payment Type",
+    "Amount",
+    "Balance",
+    <div key="status" style={{ position: "relative", display: "inline-block" }} onClick={(e) => e.stopPropagation()}>
+      <span
+        style={{ cursor: "pointer", fontWeight: "bold", color: "#212529" }}
+        onClick={(e) => {
+          const dropdown = e.currentTarget.nextElementSibling;
+          dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        }}
+      >
+        Status<FaChevronDown style={{ marginLeft: "8px", fontSize: "16px", color: "#212529" }} />
+      </span>
+
+      <div style={{
+        display: "none",
+        position: "absolute",
+        top: "100%",
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "white",
+        border: "1px solid #ddd",
+        borderRadius: "10px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        zIndex: 9999,
+        minWidth: "160px",
+        marginTop: "8px",
+        overflow: "hidden"
+      }}>
+        {["All", "Paid", "Unpaid", "Partially Paid", "Cancelled"].map((status) => (
+          <div
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            style={{
+              padding: "12px 18px",
+              cursor: "pointer",
+              backgroundColor: statusFilter === status ? "#3498db" : "white",
+              color: statusFilter === status ? "white" : "#2c3e50",
+              fontWeight: statusFilter === status ? "bold" : "500",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={(e) => statusFilter !== status && (e.currentTarget.style.backgroundColor = "#f8f9fa")}
+            onMouseLeave={(e) => statusFilter !== status && (e.currentTarget.style.backgroundColor = "white")}
+          >
+            {status}
+          </div>
+        ))}
+      </div>
+    </div>,
+    "Actions",
+    "Proforma Status"
+  ];
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const close = () => {
+      document.querySelectorAll('div[style*="z-index: 9999"]').forEach(d => d.style.display = "none");
+    };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
+
   return (
     <div id="main" style={{ backgroundColor: "#DEE2E6", minHeight: "100vh" }}>
       <Container fluid className="py-5">
@@ -268,6 +347,16 @@ const Proforma = () => {
                       { label: "Sale Invoices", path: "/sale" },
                       { label: "Estimate/Quotation", path: "/estimate" },
                       { label: "Proforma Invoice", path: "/proforma" },
+                      { label: "Payment-In"},
+                      { label: "Sale order"},
+                      { label: "Delivery Challan"},
+                      { label: "Sale Return"},
+                      { label: "Purchase Bill"},
+                      { label: "Payment-Out"},
+                      { label: "Expenses"},
+                      { label: "Purchase Order"},
+                      { label: "Payment-In"},
+                      { label: "Purchase Return"},
                     ].map((item) => (
                       <div
                         key={item.label}
@@ -443,21 +532,14 @@ const Proforma = () => {
               </Col>
             </Row>
 
-            {/* Table */}
+            {/* Table - Exactly like Estimate.jsx */}
             {filteredProforma.length > 0 ? (
               <Table striped bordered hover responsive className="bg-white">
                 <thead className="table-light">
                   <tr>
-                    <th>Date</th>
-                    <th>Reference No</th>
-                    <th>Party Name</th>
-                    <th>Transaction</th>
-                    <th>Payment Type</th>
-                    <th>Amount</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                    <th>Proforma Status</th>
-                    <th>Actions</th>
+                    {ProformaHead.map((head, index) => (
+                      <th key={index}>{head}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -465,9 +547,14 @@ const Proforma = () => {
                     const amount = Number(item.total || 0).toFixed(2);
                     const received = Number(item.received_amount || 0);
                     const balance = (Number(item.total || 0) - received).toFixed(2);
-                    const status = getStatusFromData(item);
-                    const proformaStatus = getProformaStatus(item);
-                    const isConverted = proformaStatus === "Converted";
+                    
+                    const balanceDisplay = balance > 0 ? (
+                      <span style={{ color: "#d63031", fontWeight: "bold" }}>₹ {balance}</span>
+                    ) : (
+                      <span style={{ color: "#27ae60" }}>₹ 0.00</span>
+                    );
+
+                    const isConverted = item.status === "converted";
 
                     return (
                       <tr key={item.proforma_id}>
@@ -477,42 +564,60 @@ const Proforma = () => {
                         <td>Proforma</td>
                         <td>{item.payment_type || "-"}</td>
                         <td>₹ {amount}</td>
-                        <td style={{ color: balance > 0 ? "#d63031" : "#27ae60", fontWeight: "bold" }}>
-                          ₹ {balance}
-                        </td>
+                        <td>{balanceDisplay}</td>
+                        <td>{statusDisplay(item)}</td>
+                        
+                        {/* Actions Column - Exactly like Estimate.jsx */}
                         <td>
-                          <span
-                            style={{
-                              color:
-                                status === "Paid"
-                                  ? "#27ae60"
-                                  : status === "Unpaid"
-                                  ? "#e74c3c"
-                                  : status === "Partially Paid"
-                                  ? "#f39c12"
-                                  : "#95a5a6",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {status}
-                          </span>
-                        </td>
-                        <td style={{ color: isConverted ? "#0795f3" : "#e74c3c", fontWeight: "600" }}>
-                          {proformaStatus}
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center gap-2">
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px", position: "relative" }}>
+                            {/* Convert Dropdown */}
                             <div className="position-relative">
-                              <Button
-                                size="sm"
-                                variant={isConverted ? "secondary" : "primary"}
-                                disabled={isConverted}
-                                onClick={() => handleConvertToSale(item)}
-                                className="rounded-pill"
+                              <button
+                                className="btn btn-sm border rounded-pill d-flex align-items-center gap-2"
+                                style={{
+                                  backgroundColor: "#f8f9fa",
+                                  color: "#495057",
+                                  padding: "4px 12px",
+                                  fontSize: "0.85rem",
+                                }}
+                                onClick={() => setOpenShareId(openShareId === item.proforma_id ? null : item.proforma_id)}
                               >
-                                {isConverted ? "Converted" : "Convert to Sale"}
-                              </Button>
+                                Select <FaChevronDown size={10} />
+                              </button>
+
+                              {openShareId === item.proforma_id && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    left: 0,
+                                    marginTop: "5px",
+                                    background: "white",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                    zIndex: 1000,
+                                    minWidth: "160px",
+                                    border: "1px solid #dee2e6",
+                                  }}
+                                >
+                                  <div
+                                    onClick={() => handleConvertToSale(item)}
+                                    style={{
+                                      padding: "10px 15px",
+                                      cursor: "pointer",
+                                      borderBottom: "1px solid #f1f3f4",
+                                      color: "#2c3e50",
+                                      fontWeight: "500",
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8f9fa"}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+                                  >
+                                    Convert to Sale
+                                  </div>
+                                </div>
+                              )}
                             </div>
+
                             <ActionButton
                               options={[
                                 { label: "View", icon: <TbCircleLetterI />, onClick: () => handleView(item) },
@@ -523,21 +628,39 @@ const Proforma = () => {
                             />
                           </div>
                         </td>
+                        
+                        {/* Proforma Status Column */}
+                        <td>
+                          {isConverted ? (
+                            <span style={{ color: "#0795f3ff", fontWeight: "600" }}>Converted</span>
+                          ) : (
+                            <span style={{ color: "#e74c3c" }}>Open</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </Table>
             ) : (
-              <div className="text-center py-5">
-                <p className="text-muted mb-4">No Proforma found</p>
-                <Button
-                  variant="danger"
-                  className="px-5 py-3 shadow-lg rounded-pill fw-bold"
-                  onClick={() => navigate("/proforma/create")}
-                >
-                  + Add Proforma
-                </Button>
+              <div className="d-flex justify-content-center align-items-center"
+                style={{ minHeight: "60vh" }}
+              >
+                <div className="text-center">
+                  <p className="text-muted mb-4">No Proforma found</p>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="px-5 py-3 shadow-lg rounded-pill fw-bold"
+                    style={{
+                      fontSize: "1.2rem",
+                      letterSpacing: "0.5px",
+                    }}
+                    onClick={() => navigate("/proforma/create")}
+                  >
+                    + Add Proforma
+                  </Button>
+                </div>
               </div>
             )}
           </Col>
